@@ -1,0 +1,36 @@
+{
+  "general": {
+    "default_input_format": "auto",
+    "default_output_format": "markdown",
+    "default_output_directory": "C:\\Users\\kngpn\\Desktop\\converted_documents",
+    "preserve_folder_structure": true,
+    "overwrite_existing_files": false,
+    "auto_open_output_folder": false
+  },
+  "performance": {
+    "enable_caching": true,
+    "max_worker_threads": 4,
+    "memory_threshold_mb": 500,
+    "enable_memory_monitoring": true
+  },
+  "gui": {
+    "window_width": 700,
+    "window_height": 600,
+    "theme": "light",
+    "font_size": 9,
+    "show_advanced_options": true,
+    "remember_window_position": true,
+    "last_window_x": null,
+    "last_window_y": null
+  },
+  "logging": {
+    "log_level": "INFO",
+    "enable_file_logging": true,
+    "log_retention_days": 30,
+    "console_logging": true
+  },
+  "formats": {
+    "custom_extensions": {},
+    "format_preferences": {}
+  }
+}

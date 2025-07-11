@@ -21,7 +21,8 @@ try:
     from universal_document_converter import (
         FormatDetector, UniversalConverter,
         DocxReader, PdfReader, TxtReader, HtmlReader, RtfReader,
-        MarkdownWriter, TxtWriter, HtmlWriter, RtfWriter
+        MarkdownWriter, TxtWriter, HtmlWriter, RtfWriter,
+        DocumentConverterError, UnsupportedFormatError, FileProcessingError, DependencyError
     )
     MODULES_AVAILABLE = True
 except ImportError as e:
@@ -175,8 +176,8 @@ class TestConverters(unittest.TestCase):
         test_file = self.temp_dir / "test.xyz"
         test_file.write_text("content")
         output_file = self.temp_dir / "output.md"
-        
-        with self.assertRaises(ValueError):
+
+        with self.assertRaises(UnsupportedFormatError):
             self.converter.convert_file(test_file, output_file, 'auto', 'markdown')
 
 class TestEdgeCases(unittest.TestCase):
@@ -260,7 +261,7 @@ class TestEdgeCases(unittest.TestCase):
         nonexistent_file = self.temp_dir / "nonexistent.txt"
         output_file = self.temp_dir / "output.md"
 
-        with self.assertRaises((FileNotFoundError, OSError)):
+        with self.assertRaises(FileProcessingError):
             self.converter.convert_file(nonexistent_file, output_file, 'txt', 'markdown')
 
     def test_invalid_output_directory(self):
@@ -271,7 +272,7 @@ class TestEdgeCases(unittest.TestCase):
         # Try to write to a file as if it were a directory
         invalid_output = self.temp_dir / "test.txt" / "output.md"
 
-        with self.assertRaises((FileNotFoundError, OSError, PermissionError)):
+        with self.assertRaises((FileProcessingError, DocumentConverterError)):
             self.converter.convert_file(test_file, invalid_output, 'txt', 'markdown')
 
     def test_case_insensitive_extensions(self):
@@ -450,7 +451,7 @@ class TestErrorHandling(unittest.TestCase):
         test_file.write_text("content", encoding='utf-8')
         output_file = self.temp_dir / "output.md"
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(UnsupportedFormatError):
             self.converter.convert_file(test_file, output_file, 'invalid_format', 'markdown')
 
     def test_invalid_output_format(self):
@@ -459,7 +460,7 @@ class TestErrorHandling(unittest.TestCase):
         test_file.write_text("content", encoding='utf-8')
         output_file = self.temp_dir / "output.invalid"
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(UnsupportedFormatError):
             self.converter.convert_file(test_file, output_file, 'txt', 'invalid_format')
 
     def test_corrupted_file_handling(self):
@@ -485,13 +486,15 @@ class TestErrorHandling(unittest.TestCase):
         test_file = self.temp_dir / "test.txt"
         test_file.write_text("content", encoding='utf-8')
 
-        # Try to write to a directory that doesn't exist (more reliable cross-platform)
-        nonexistent_dir = self.temp_dir / "nonexistent" / "deep" / "path"
-        output_file = nonexistent_dir / "output.md"
+        # Create a file with the same name as the intended output directory
+        # This will cause a conflict when trying to create the directory
+        conflicting_file = self.temp_dir / "conflict"
+        conflicting_file.write_text("blocking file")
+        output_file = conflicting_file / "output.md"  # This should fail
 
-        # This should raise an error because the directory doesn't exist
-        # and we're not creating it
-        with self.assertRaises((FileNotFoundError, OSError, PermissionError)):
+        # This should raise an error because we can't create a directory
+        # where a file already exists
+        with self.assertRaises((FileProcessingError, DocumentConverterError)):
             self.converter.convert_file(test_file, output_file, 'txt', 'markdown')
 
     def test_path_objects_vs_strings(self):
