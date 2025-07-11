@@ -12,6 +12,7 @@ from pathlib import Path
 import shutil
 import time
 from typing import Dict, List, Any
+import tkinter as tk
 
 # Add current directory to path to import our modules
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -1025,6 +1026,151 @@ def run_format_compatibility_test():
             elif output_fmt == 'rtf':
                 row += f" {status:<5}"
         print(row)
+
+class TestResponsiveLayoutAdvanced(unittest.TestCase):
+    """Advanced tests for responsive layout functionality"""
+
+    def setUp(self):
+        """Set up test environment"""
+        self.root = tk.Tk()
+        self.root.withdraw()  # Hide the window during testing
+
+    def tearDown(self):
+        """Clean up test environment"""
+        if self.root:
+            self.root.destroy()
+
+    def test_dynamic_font_scaling(self):
+        """Test that fonts scale dynamically with window size"""
+        try:
+            from universal_document_converter import UniversalDocumentConverterGUI
+
+            gui = UniversalDocumentConverterGUI(self.root)
+
+            # Test that calculate_dynamic_fonts method exists
+            self.assertTrue(hasattr(gui, 'calculate_dynamic_fonts'))
+
+            # Test font scaling for different window sizes
+            # Large window - should have larger fonts
+            large_fonts = gui.calculate_dynamic_fonts(1000, 800, compact=False)
+            self.assertIsInstance(large_fonts, dict)
+            self.assertIn('title', large_fonts)
+            self.assertIn('body', large_fonts)
+
+            # Small window - should have smaller fonts
+            small_fonts = gui.calculate_dynamic_fonts(500, 400, compact=True)
+            self.assertIsInstance(small_fonts, dict)
+
+            # Title font should be larger in large window than small window
+            large_title_size = large_fonts['title'][1]
+            small_title_size = small_fonts['title'][1]
+            self.assertGreater(large_title_size, small_title_size)
+
+        except Exception as e:
+            self.fail(f"Dynamic font scaling not properly implemented: {e}")
+
+    def test_layout_mode_switching(self):
+        """Test that layout modes switch correctly based on window size"""
+        try:
+            from universal_document_converter import UniversalDocumentConverterGUI
+
+            gui = UniversalDocumentConverterGUI(self.root)
+
+            # Test that layout mode attributes exist
+            self.assertTrue(hasattr(gui, 'current_layout_mode'))
+            self.assertTrue(hasattr(gui, 'layout_breakpoint_width'))
+            self.assertTrue(hasattr(gui, 'layout_breakpoint_height'))
+
+            # Test layout detection method
+            self.assertTrue(hasattr(gui, 'detect_and_apply_layout'))
+
+            # Test layout application methods
+            self.assertTrue(hasattr(gui, 'apply_compact_layout'))
+            self.assertTrue(hasattr(gui, 'apply_standard_layout'))
+
+            # Test initial layout mode
+            self.assertIn(gui.current_layout_mode, ['compact', 'standard'])
+
+        except Exception as e:
+            self.fail(f"Layout mode switching not properly implemented: {e}")
+
+    def test_window_resize_detection(self):
+        """Test that window resize events are properly detected and handled"""
+        try:
+            from universal_document_converter import UniversalDocumentConverterGUI
+
+            gui = UniversalDocumentConverterGUI(self.root)
+
+            # Test that resize detection methods exist
+            self.assertTrue(hasattr(gui, 'on_window_resize'))
+            self.assertTrue(hasattr(gui, 'setup_responsive_layout'))
+
+            # Test that resize timer attribute exists
+            self.assertTrue(hasattr(gui, '_resize_timer'))
+
+            # Test that window has resize event binding
+            # Note: This is a basic check - full event testing would require more complex setup
+            self.assertTrue(hasattr(gui.root, 'bind'))
+
+        except Exception as e:
+            self.fail(f"Window resize detection not properly implemented: {e}")
+
+    def test_responsive_layout_accessibility(self):
+        """Test that responsive layout maintains accessibility standards"""
+        try:
+            from universal_document_converter import UniversalDocumentConverterGUI
+
+            gui = UniversalDocumentConverterGUI(self.root)
+
+            # Test minimum font sizes are maintained
+            small_fonts = gui.calculate_dynamic_fonts(400, 300, compact=True)
+
+            # All fonts should be at least 8pt for accessibility
+            for font_type, font_tuple in small_fonts.items():
+                font_size = font_tuple[1]
+                self.assertGreaterEqual(font_size, 8,
+                    f"{font_type} font size {font_size} is below minimum accessibility standard")
+
+            # Test maximum font sizes are reasonable
+            large_fonts = gui.calculate_dynamic_fonts(1600, 1200, compact=False)
+
+            # Fonts shouldn't be excessively large
+            for font_type, font_tuple in large_fonts.items():
+                font_size = font_tuple[1]
+                if font_type == 'title':
+                    self.assertLessEqual(font_size, 24,
+                        f"{font_type} font size {font_size} is too large")
+                else:
+                    self.assertLessEqual(font_size, 14,
+                        f"{font_type} font size {font_size} is too large")
+
+        except Exception as e:
+            self.fail(f"Responsive layout accessibility not properly implemented: {e}")
+
+    def test_layout_consistency(self):
+        """Test that layout changes are applied consistently"""
+        try:
+            from universal_document_converter import UniversalDocumentConverterGUI
+
+            gui = UniversalDocumentConverterGUI(self.root)
+
+            # Test that layout helper methods exist
+            self.assertTrue(hasattr(gui, 'apply_layout_fonts'))
+            self.assertTrue(hasattr(gui, 'adjust_widget_spacing'))
+
+            # Test that main_frame reference exists for layout operations
+            self.assertTrue(hasattr(gui, 'main_frame'))
+            self.assertIsNotNone(gui.main_frame)
+
+            # Test that layout can be applied without errors
+            gui.apply_compact_layout()
+            self.assertEqual(gui.current_layout_mode, 'compact')
+
+            gui.apply_standard_layout()
+            self.assertEqual(gui.current_layout_mode, 'standard')
+
+        except Exception as e:
+            self.fail(f"Layout consistency not properly implemented: {e}")
 
 def main():
     """Run all tests and checks"""
