@@ -1,0 +1,23 @@
+# Universal Document Converter Requirements
+# Designed and built by Beau Lewis (blewisxx@gmail.com)
+
+# Core document processing libraries
+python-docx>=0.8.11       # Microsoft Word document processing
+PyPDF2>=3.0.1             # PDF file reading and text extraction
+beautifulsoup4>=4.12.0    # HTML parsing and processing
+striprtf>=0.0.26          # RTF (Rich Text Format) processing
+
+# GUI and system integration (optional - will fallback gracefully)
+tkinterdnd2>=0.3.0        # Enhanced drag-and-drop support
+
+# Standard library dependencies (included with Python)
+# - tkinter (GUI framework)
+# - threading (background processing)
+# - pathlib (modern path handling)
+# - os, sys (system operations)
+# - mimetypes (file type detection)
+# - re (regular expressions)
+
+# Development and testing (optional)
+# pytest>=7.0.0           # Testing framework
+# pytest-cov>=4.0.0       # Coverage reporting 
