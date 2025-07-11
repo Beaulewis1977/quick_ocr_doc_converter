@@ -612,6 +612,162 @@ Final paragraph."""
                 elif output_format == 'rtf':
                     self.assertIn('{\\rtf1', content)
 
+class TestLoggingAndErrorHandling(unittest.TestCase):
+    """TDD: Test-driven development for enhanced logging and error handling"""
+
+    def setUp(self):
+        """Set up test environment"""
+        if not MODULES_AVAILABLE:
+            self.skipTest("Converter modules not available")
+
+        self.temp_dir = Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        """Clean up test files"""
+        if hasattr(self, 'temp_dir'):
+            shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    def test_logger_initialization(self):
+        """Test that logger can be initialized and configured"""
+        # This test will fail until we implement ConverterLogger
+        try:
+            from universal_document_converter import ConverterLogger
+            logger_instance = ConverterLogger("TestLogger")
+            logger = logger_instance.get_logger()
+
+            self.assertIsNotNone(logger)
+            self.assertEqual(logger.name, "TestLogger")
+            self.assertTrue(len(logger.handlers) > 0)
+        except ImportError:
+            self.fail("ConverterLogger not implemented yet")
+
+    def test_custom_exceptions_exist(self):
+        """Test that custom exception classes are defined"""
+        try:
+            from universal_document_converter import (
+                DocumentConverterError, UnsupportedFormatError,
+                FileProcessingError, DependencyError
+            )
+
+            # Test exception hierarchy
+            self.assertTrue(issubclass(UnsupportedFormatError, DocumentConverterError))
+            self.assertTrue(issubclass(FileProcessingError, DocumentConverterError))
+            self.assertTrue(issubclass(DependencyError, DocumentConverterError))
+
+            # Test exceptions can be raised and caught
+            with self.assertRaises(UnsupportedFormatError):
+                raise UnsupportedFormatError("Test unsupported format")
+
+        except ImportError:
+            self.fail("Custom exception classes not implemented yet")
+
+    def test_enhanced_error_messages(self):
+        """Test that error messages are informative and user-friendly"""
+        converter = UniversalConverter()
+
+        # Test unsupported format error message
+        test_file = self.temp_dir / "test.unknown"
+        test_file.write_text("content")
+        output_file = self.temp_dir / "output.md"
+
+        try:
+            converter.convert_file(test_file, output_file, 'auto', 'markdown')
+            self.fail("Should have raised an exception for unsupported format")
+        except Exception as e:
+            # Error message should be informative
+            error_msg = str(e).lower()
+            self.assertTrue(
+                any(word in error_msg for word in ['unsupported', 'format', 'unknown']),
+                f"Error message not informative enough: {e}"
+            )
+
+    def test_file_processing_error_handling(self):
+        """Test handling of file processing errors with proper logging"""
+        # Create a file that will cause processing errors
+        problematic_file = self.temp_dir / "problematic.txt"
+
+        # Write binary content to a .txt file to cause encoding issues
+        with open(problematic_file, 'wb') as f:
+            f.write(b'\x00\x01\x02\xFF\xFE\xFD')
+
+        output_file = self.temp_dir / "output.md"
+        converter = UniversalConverter()
+
+        # Should handle gracefully and provide useful error info
+        try:
+            converter.convert_file(problematic_file, output_file, 'txt', 'markdown')
+        except Exception as e:
+            # Error should be informative about the encoding issue
+            error_msg = str(e).lower()
+            self.assertTrue(
+                any(word in error_msg for word in ['encoding', 'decode', 'file']),
+                f"Error message should mention encoding issue: {e}"
+            )
+
+    def test_dependency_error_handling(self):
+        """Test handling of missing dependencies"""
+        # This test verifies that missing dependencies are handled gracefully
+        # We'll test this by temporarily making a dependency unavailable
+
+        # For now, just test that the dependency check mechanism exists
+        try:
+            from universal_document_converter import UniversalDocumentConverterGUI
+
+            # Create a mock root for testing
+            import tkinter as tk
+            root = tk.Tk()
+            root.withdraw()  # Hide the window
+
+            try:
+                gui = UniversalDocumentConverterGUI(root)
+                # Should have a method to check dependencies
+                self.assertTrue(hasattr(gui, 'check_dependencies'))
+
+                # Should handle missing dependencies gracefully
+                # (This is more of an integration test)
+
+            finally:
+                root.destroy()
+
+        except Exception as e:
+            self.fail(f"Dependency checking not properly implemented: {e}")
+
+    def test_logging_levels_and_formatting(self):
+        """Test that different log levels work and formatting is appropriate"""
+        try:
+            from universal_document_converter import ConverterLogger
+
+            logger_instance = ConverterLogger("TestFormatter")
+            logger = logger_instance.get_logger()
+
+            # Test that we can log at different levels
+            logger.debug("Debug message")
+            logger.info("Info message")
+            logger.warning("Warning message")
+            logger.error("Error message")
+
+            # If we get here without errors, logging is working
+            self.assertTrue(True)
+
+        except ImportError:
+            self.fail("Enhanced logging not implemented yet")
+
+    def test_error_context_preservation(self):
+        """Test that error context (stack traces, file info) is preserved"""
+        converter = UniversalConverter()
+
+        # Create a scenario that will fail
+        nonexistent_file = self.temp_dir / "nonexistent.txt"
+        output_file = self.temp_dir / "output.md"
+
+        try:
+            converter.convert_file(nonexistent_file, output_file, 'txt', 'markdown')
+            self.fail("Should have raised an exception for nonexistent file")
+        except Exception as e:
+            # Error should preserve useful context
+            error_msg = str(e)
+            self.assertIn("nonexistent.txt", error_msg)
+
 def run_dependency_check():
     """Check and report on dependency availability"""
     print("🔍 Dependency Check Report")
@@ -736,6 +892,7 @@ def main():
         suite.addTest(loader.loadTestsFromTestCase(TestPerformance))
         suite.addTest(loader.loadTestsFromTestCase(TestErrorHandling))
         suite.addTest(loader.loadTestsFromTestCase(TestFormatSpecificFeatures))
+        suite.addTest(loader.loadTestsFromTestCase(TestLoggingAndErrorHandling))
         
         # Run tests
         runner = unittest.TextTestRunner(verbosity=2)

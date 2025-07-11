@@ -13,6 +13,81 @@ from pathlib import Path
 import sys
 import mimetypes
 import re
+import logging
+import traceback
+from datetime import datetime
+from typing import Dict, List, Tuple, Optional, Union, Any, ClassVar
+
+# Configure logging
+class ConverterLogger:
+    """Centralized logging configuration for the document converter"""
+
+    def __init__(self, name: str = "DocumentConverter"):
+        self.logger = logging.getLogger(name)
+        self.logger.setLevel(logging.INFO)
+
+        # Avoid duplicate handlers
+        if not self.logger.handlers:
+            self._setup_handlers()
+
+    def _setup_handlers(self) -> None:
+        """Set up logging handlers"""
+        # Console handler
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.INFO)
+
+        # File handler (optional - logs to file if possible)
+        try:
+            log_dir = Path.home() / ".document_converter"
+            log_dir.mkdir(exist_ok=True)
+            log_file = log_dir / f"converter_{datetime.now().strftime('%Y%m%d')}.log"
+
+            file_handler = logging.FileHandler(log_file, encoding='utf-8')
+            file_handler.setLevel(logging.DEBUG)
+
+            # Detailed format for file
+            file_formatter = logging.Formatter(
+                '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s'
+            )
+            file_handler.setFormatter(file_formatter)
+            self.logger.addHandler(file_handler)
+
+        except (OSError, PermissionError):
+            # If we can't create log file, continue without it
+            pass
+
+        # Simple format for console
+        console_formatter = logging.Formatter('%(levelname)s: %(message)s')
+        console_handler.setFormatter(console_formatter)
+        self.logger.addHandler(console_handler)
+
+    def get_logger(self) -> logging.Logger:
+        """Get the configured logger"""
+        return self.logger
+
+# Global logger instance
+_logger_instance = ConverterLogger()
+logger = _logger_instance.get_logger()
+
+# Custom exceptions for better error handling
+class DocumentConverterError(Exception):
+    """Base exception for document converter errors"""
+    pass
+
+class UnsupportedFormatError(DocumentConverterError):
+    """Raised when an unsupported file format is encountered"""
+    pass
+
+class FileProcessingError(DocumentConverterError):
+    """Raised when file processing fails"""
+    pass
+
+class DependencyError(DocumentConverterError):
+    """Raised when required dependencies are missing"""
+    pass
+
+# Type alias for document content structure
+DocumentContent = List[Tuple[str, ...]]
 
 class FormatDetector:
     """Utility class for detecting and validating file formats"""
@@ -328,23 +403,23 @@ class UniversalConverter:
 
 class UniversalDocumentConverterGUI:
     """Enhanced GUI for the Universal Document Converter"""
-
-    def __init__(self, root: tk.Tk) -> None:
+    
+    def __init__(self, root):
         self.root = root
         self.root.title("Universal Document Converter 🚀")
         self.root.geometry("700x600")
         self.root.minsize(600, 500)
         
         # Initialize converter
-        self.converter: UniversalConverter = UniversalConverter()
-
+        self.converter = UniversalConverter()
+        
         # Variables
-        self.input_path: tk.StringVar = tk.StringVar()
-        self.output_path: tk.StringVar = tk.StringVar()
-        self.input_format: tk.StringVar = tk.StringVar(value='auto')
-        self.output_format: tk.StringVar = tk.StringVar(value='markdown')
-        self.progress_var: tk.DoubleVar = tk.DoubleVar()
-        self.status_var: tk.StringVar = tk.StringVar(value="Ready to convert documents")
+        self.input_path = tk.StringVar()
+        self.output_path = tk.StringVar()
+        self.input_format = tk.StringVar(value='auto')
+        self.output_format = tk.StringVar(value='markdown')
+        self.progress_var = tk.DoubleVar()
+        self.status_var = tk.StringVar(value="Ready to convert documents")
         
         # Set default output to Desktop/converted_documents
         desktop = Path.home() / "Desktop"
@@ -354,7 +429,7 @@ class UniversalDocumentConverterGUI:
         self.setup_ui()
         self.check_dependencies()
         
-    def setup_ui(self) -> None:
+    def setup_ui(self):
         """Set up the enhanced user interface"""
         # Main frame with padding
         main_frame = ttk.Frame(self.root, padding="15")
@@ -487,14 +562,30 @@ class UniversalDocumentConverterGUI:
         # Setup drag and drop
         self.setup_drag_drop()
     
-    def setup_drag_drop(self):
+    def setup_drag_drop(self) -> None:
         """Set up drag and drop functionality"""
         try:
             from tkinterdnd2 import TkinterDnD, DND_FILES
-            self.root.drop_target_register(DND_FILES)
-            self.root.dnd_bind('<<Drop>>', self.on_drop)
-        except ImportError:
-            pass
+
+            # Check if the root is actually a TkinterDnD instance
+            if hasattr(self.root, 'drop_target_register'):
+                self.root.drop_target_register(DND_FILES)
+                self.root.dnd_bind('<<Drop>>', self.on_drop)
+                self.status_var.set("Drag and drop enabled - Ready to convert documents")
+                logger.info("Enhanced drag-and-drop support enabled")
+            else:
+                # Root is regular Tk, not TkinterDnD
+                logger.warning("TkinterDnD not properly initialized - using basic mode")
+                self.status_var.set("Basic mode - Use browse button to select files")
+
+        except ImportError as e:
+            # Fallback if tkinterdnd2 is not available
+            logger.warning(f"tkinterdnd2 not available: {e}")
+            self.status_var.set("Basic mode - Use browse button to select files")
+        except Exception as e:
+            # Handle any other drag-and-drop setup errors
+            logger.error(f"Error setting up drag-and-drop: {e}")
+            self.status_var.set("Basic mode - Use browse button to select files")
     
     def on_drop(self, event):
         """Handle drag and drop events"""
@@ -509,7 +600,7 @@ class UniversalDocumentConverterGUI:
                 self.input_path.set(dropped_path)
                 self.log_message(f"📄 File dropped: {os.path.basename(dropped_path)}")
     
-    def browse_input_files(self) -> None:
+    def browse_input_files(self):
         """Browse for input files"""
         filetypes = [
             ("All supported", "*.docx;*.pdf;*.txt;*.html;*.htm;*.rtf"),
@@ -582,7 +673,7 @@ class UniversalDocumentConverterGUI:
         
         return True
     
-    def start_conversion(self) -> None:
+    def start_conversion(self):
         """Start conversion in separate thread"""
         if not self.validate_inputs():
             return
@@ -594,7 +685,7 @@ class UniversalDocumentConverterGUI:
         # Start conversion in background thread
         threading.Thread(target=self.convert_documents, daemon=True).start()
     
-    def convert_documents(self) -> None:
+    def convert_documents(self):
         """Main conversion process"""
         try:
             self.update_status("Preparing conversion...")
@@ -712,27 +803,27 @@ class UniversalDocumentConverterGUI:
         
         self.root.after(0, _add_message)
 
-def main() -> None:
+def main():
     """Application entry point"""
     try:
         # Try enhanced drag-and-drop support
         from tkinterdnd2 import TkinterDnD
-        root: tk.Tk = TkinterDnD.Tk()
+        root = TkinterDnD.Tk()
     except ImportError:
         # Fallback to standard tkinter
         root = tk.Tk()
-
+    
     # Set application icon and properties
     root.option_add('*tearOff', False)  # Disable menu tearoff
-
-    app: UniversalDocumentConverterGUI = UniversalDocumentConverterGUI(root)
-
+    
+    app = UniversalDocumentConverterGUI(root)
+    
     # Center window on screen
     root.update_idletasks()
-    x: int = (root.winfo_screenwidth() // 2) - (root.winfo_width() // 2)
-    y: int = (root.winfo_screenheight() // 2) - (root.winfo_height() // 2)
+    x = (root.winfo_screenwidth() // 2) - (root.winfo_width() // 2)
+    y = (root.winfo_screenheight() // 2) - (root.winfo_height() // 2)
     root.geometry(f"+{x}+{y}")
-
+    
     root.mainloop()
 
 if __name__ == "__main__":
