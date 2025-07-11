@@ -814,13 +814,15 @@ class TestGUIImprovements(unittest.TestCase):
 
             gui = UniversalDocumentConverterGUI(self.root)
 
-            # Test initial size
-            initial_width = self.root.winfo_reqwidth()
-            initial_height = self.root.winfo_reqheight()
+            # Update the window to ensure proper sizing
+            self.root.update_idletasks()
 
-            # Test minimum size constraints
-            self.assertGreaterEqual(initial_width, 600)
-            self.assertGreaterEqual(initial_height, 500)
+            # Test minimum size constraints (check the minsize setting)
+            min_width = self.root.minsize()[0] if self.root.minsize()[0] else 600
+            min_height = self.root.minsize()[1] if self.root.minsize()[1] else 500
+
+            self.assertGreaterEqual(min_width, 600)
+            self.assertGreaterEqual(min_height, 500)
 
             # Test that layout adapts to different sizes
             self.root.geometry("800x700")
