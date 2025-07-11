@@ -9,6 +9,9 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+import shutil
+import time
+from typing import Dict, List, Any
 
 # Add current directory to path to import our modules
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -175,6 +178,219 @@ class TestConverters(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.converter.convert_file(test_file, output_file, 'auto', 'markdown')
 
+class TestEdgeCases(unittest.TestCase):
+    """Test edge cases and error conditions"""
+
+    def setUp(self):
+        """Set up test environment"""
+        if not MODULES_AVAILABLE:
+            self.skipTest("Converter modules not available")
+
+        self.temp_dir = Path(tempfile.mkdtemp())
+        self.converter = UniversalConverter()
+
+    def tearDown(self):
+        """Clean up test files"""
+        if hasattr(self, 'temp_dir'):
+            shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    def test_empty_file(self):
+        """Test conversion of empty files"""
+        empty_file = self.temp_dir / "empty.txt"
+        empty_file.write_text("", encoding='utf-8')
+        output_file = self.temp_dir / "empty_output.md"
+
+        # Should not raise an error
+        self.converter.convert_file(empty_file, output_file, 'txt', 'markdown')
+        self.assertTrue(output_file.exists())
+
+    def test_whitespace_only_file(self):
+        """Test conversion of files with only whitespace"""
+        whitespace_file = self.temp_dir / "whitespace.txt"
+        whitespace_file.write_text("   \n\n  \t  \n", encoding='utf-8')
+        output_file = self.temp_dir / "whitespace_output.md"
+
+        self.converter.convert_file(whitespace_file, output_file, 'txt', 'markdown')
+        self.assertTrue(output_file.exists())
+
+    def test_very_long_lines(self):
+        """Test conversion of files with very long lines"""
+        long_line = "A" * 10000  # 10KB line
+        long_file = self.temp_dir / "long.txt"
+        long_file.write_text(long_line, encoding='utf-8')
+        output_file = self.temp_dir / "long_output.md"
+
+        self.converter.convert_file(long_file, output_file, 'txt', 'markdown')
+        self.assertTrue(output_file.exists())
+        content = output_file.read_text(encoding='utf-8')
+        self.assertIn("A" * 100, content)  # Check partial content
+
+    def test_unicode_content(self):
+        """Test conversion of files with Unicode characters"""
+        unicode_content = "Hello 世界! 🚀 Café naïve résumé"
+        unicode_file = self.temp_dir / "unicode.txt"
+        unicode_file.write_text(unicode_content, encoding='utf-8')
+        output_file = self.temp_dir / "unicode_output.md"
+
+        self.converter.convert_file(unicode_file, output_file, 'txt', 'markdown')
+        self.assertTrue(output_file.exists())
+        content = output_file.read_text(encoding='utf-8')
+        self.assertIn("世界", content)
+        self.assertIn("🚀", content)
+        self.assertIn("naïve", content)
+
+    def test_special_characters_html(self):
+        """Test HTML conversion with special characters"""
+        html_content = '<html><body><p>&lt;script&gt;alert("test")&lt;/script&gt;</p></body></html>'
+        html_file = self.temp_dir / "special.html"
+        html_file.write_text(html_content, encoding='utf-8')
+        output_file = self.temp_dir / "special_output.md"
+
+        try:
+            self.converter.convert_file(html_file, output_file, 'html', 'markdown')
+            self.assertTrue(output_file.exists())
+            content = output_file.read_text(encoding='utf-8')
+            self.assertIn("script", content)
+        except ImportError:
+            self.skipTest("BeautifulSoup4 not available")
+
+    def test_nonexistent_input_file(self):
+        """Test handling of nonexistent input files"""
+        nonexistent_file = self.temp_dir / "nonexistent.txt"
+        output_file = self.temp_dir / "output.md"
+
+        with self.assertRaises((FileNotFoundError, OSError)):
+            self.converter.convert_file(nonexistent_file, output_file, 'txt', 'markdown')
+
+    def test_invalid_output_directory(self):
+        """Test handling of invalid output directories"""
+        test_file = self.temp_dir / "test.txt"
+        test_file.write_text("content", encoding='utf-8')
+
+        # Try to write to a file as if it were a directory
+        invalid_output = self.temp_dir / "test.txt" / "output.md"
+
+        with self.assertRaises((FileNotFoundError, OSError, PermissionError)):
+            self.converter.convert_file(test_file, invalid_output, 'txt', 'markdown')
+
+    def test_case_insensitive_extensions(self):
+        """Test case-insensitive file extension detection"""
+        test_cases = [
+            ('test.TXT', 'txt'),
+            ('test.HTML', 'html'),
+            ('test.Docx', 'docx'),
+            ('test.PDF', 'pdf'),
+            ('test.RTF', 'rtf')
+        ]
+
+        for filename, expected_format in test_cases:
+            with self.subTest(filename=filename):
+                detected = FormatDetector.detect_format(filename)
+                self.assertEqual(detected, expected_format)
+
+class TestReaderWriterClasses(unittest.TestCase):
+    """Test individual reader and writer classes"""
+
+    def setUp(self):
+        """Set up test environment"""
+        if not MODULES_AVAILABLE:
+            self.skipTest("Converter modules not available")
+
+        self.temp_dir = Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        """Clean up test files"""
+        if hasattr(self, 'temp_dir'):
+            shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    def test_txt_reader_encoding_fallback(self):
+        """Test TXT reader encoding fallback mechanism"""
+        # Create file with Latin-1 encoding
+        latin1_content = "Café naïve résumé"
+        latin1_file = self.temp_dir / "latin1.txt"
+
+        with open(latin1_file, 'w', encoding='latin-1') as f:
+            f.write(latin1_content)
+
+        reader = TxtReader()
+        content = reader.read(latin1_file)
+
+        self.assertIsInstance(content, list)
+        self.assertGreater(len(content), 0)
+        # Should contain the text (possibly with encoding differences)
+        text_content = ' '.join([item[1] for item in content if item[0] == 'paragraph'])
+        self.assertIn("Caf", text_content)  # Partial match to handle encoding differences
+
+    def test_html_reader_malformed_html(self):
+        """Test HTML reader with malformed HTML"""
+        try:
+            malformed_html = "<html><body><h1>Unclosed heading<p>Paragraph without closing"
+            html_file = self.temp_dir / "malformed.html"
+            html_file.write_text(malformed_html, encoding='utf-8')
+
+            reader = HtmlReader()
+            content = reader.read(html_file)
+
+            self.assertIsInstance(content, list)
+            # BeautifulSoup should handle malformed HTML gracefully
+
+        except ImportError:
+            self.skipTest("BeautifulSoup4 not available")
+
+    def test_markdown_writer_heading_levels(self):
+        """Test Markdown writer with different heading levels"""
+        test_content = [
+            ('heading', 1, 'Main Title'),
+            ('heading', 2, 'Subtitle'),
+            ('heading', 3, 'Sub-subtitle'),
+            ('paragraph', 'Some content'),
+            ('heading', 6, 'Deep heading')
+        ]
+
+        output_file = self.temp_dir / "headings.md"
+        writer = MarkdownWriter()
+        writer.write(test_content, output_file)
+
+        content = output_file.read_text(encoding='utf-8')
+        self.assertIn("# Main Title", content)
+        self.assertIn("## Subtitle", content)
+        self.assertIn("### Sub-subtitle", content)
+        self.assertIn("###### Deep heading", content)
+        self.assertIn("Some content", content)
+
+    def test_html_writer_escaping(self):
+        """Test HTML writer character escaping"""
+        test_content = [
+            ('paragraph', 'Text with <script>alert("xss")</script> & "quotes"'),
+            ('heading', 1, 'Title with & ampersand')
+        ]
+
+        output_file = self.temp_dir / "escaped.html"
+        writer = HtmlWriter()
+        writer.write(test_content, output_file)
+
+        content = output_file.read_text(encoding='utf-8')
+        self.assertIn("&lt;script&gt;", content)
+        self.assertIn("&amp;", content)
+        self.assertIn("&quot;", content)
+        self.assertNotIn("<script>", content)  # Should be escaped
+
+    def test_rtf_writer_escaping(self):
+        """Test RTF writer character escaping"""
+        test_content = [
+            ('paragraph', 'Text with {braces} and \\backslashes'),
+            ('heading', 1, 'Title with special chars')
+        ]
+
+        output_file = self.temp_dir / "escaped.rtf"
+        writer = RtfWriter()
+        writer.write(test_content, output_file)
+
+        content = output_file.read_text(encoding='utf-8')
+        self.assertIn("\\{braces\\}", content)
+        self.assertIn("\\\\backslashes", content)
+        self.assertIn("{\\rtf1", content)  # RTF header
+
 class TestPerformance(unittest.TestCase):
     """Test conversion performance"""
     
@@ -206,10 +422,195 @@ class TestPerformance(unittest.TestCase):
             # Verify it completed in reasonable time (should be very fast)
             conversion_time = end_time - start_time
             self.assertLess(conversion_time, 5.0, "Conversion took too long (>5 seconds)")
-            
+
             # Verify output exists and has content
             self.assertTrue(output_file.exists())
             self.assertGreater(output_file.stat().st_size, 100000)  # Should be substantial
+
+class TestErrorHandling(unittest.TestCase):
+    """Test comprehensive error handling scenarios"""
+
+    def setUp(self):
+        """Set up test environment"""
+        if not MODULES_AVAILABLE:
+            self.skipTest("Converter modules not available")
+
+        self.temp_dir = Path(tempfile.mkdtemp())
+        self.converter = UniversalConverter()
+
+    def tearDown(self):
+        """Clean up test files"""
+        if hasattr(self, 'temp_dir'):
+            shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    def test_invalid_input_format(self):
+        """Test handling of invalid input format specification"""
+        test_file = self.temp_dir / "test.txt"
+        test_file.write_text("content", encoding='utf-8')
+        output_file = self.temp_dir / "output.md"
+
+        with self.assertRaises(ValueError):
+            self.converter.convert_file(test_file, output_file, 'invalid_format', 'markdown')
+
+    def test_invalid_output_format(self):
+        """Test handling of invalid output format specification"""
+        test_file = self.temp_dir / "test.txt"
+        test_file.write_text("content", encoding='utf-8')
+        output_file = self.temp_dir / "output.invalid"
+
+        with self.assertRaises(ValueError):
+            self.converter.convert_file(test_file, output_file, 'txt', 'invalid_format')
+
+    def test_corrupted_file_handling(self):
+        """Test handling of corrupted or binary files as text"""
+        # Create a file with binary content
+        binary_file = self.temp_dir / "binary.txt"
+        with open(binary_file, 'wb') as f:
+            f.write(b'\x00\x01\x02\x03\xFF\xFE\xFD')
+
+        output_file = self.temp_dir / "binary_output.md"
+
+        # Should handle gracefully or raise appropriate exception
+        try:
+            self.converter.convert_file(binary_file, output_file, 'txt', 'markdown')
+            # If it succeeds, output should exist
+            self.assertTrue(output_file.exists())
+        except (UnicodeDecodeError, Exception):
+            # If it fails, that's also acceptable for binary content
+            pass
+
+    def test_permission_denied_output(self):
+        """Test handling of permission denied on output file"""
+        test_file = self.temp_dir / "test.txt"
+        test_file.write_text("content", encoding='utf-8')
+
+        # Try to write to a directory that doesn't exist (more reliable cross-platform)
+        nonexistent_dir = self.temp_dir / "nonexistent" / "deep" / "path"
+        output_file = nonexistent_dir / "output.md"
+
+        # This should raise an error because the directory doesn't exist
+        # and we're not creating it
+        with self.assertRaises((FileNotFoundError, OSError, PermissionError)):
+            self.converter.convert_file(test_file, output_file, 'txt', 'markdown')
+
+    def test_path_objects_vs_strings(self):
+        """Test that both Path objects and strings work as input"""
+        test_file = self.temp_dir / "test.txt"
+        test_file.write_text("content", encoding='utf-8')
+
+        # Test with Path objects
+        output_file1 = self.temp_dir / "output1.md"
+        self.converter.convert_file(test_file, output_file1, 'txt', 'markdown')
+        self.assertTrue(output_file1.exists())
+
+        # Test with strings
+        output_file2 = self.temp_dir / "output2.md"
+        self.converter.convert_file(str(test_file), str(output_file2), 'txt', 'markdown')
+        self.assertTrue(output_file2.exists())
+
+class TestFormatSpecificFeatures(unittest.TestCase):
+    """Test format-specific features and edge cases"""
+
+    def setUp(self):
+        """Set up test environment"""
+        if not MODULES_AVAILABLE:
+            self.skipTest("Converter modules not available")
+
+        self.temp_dir = Path(tempfile.mkdtemp())
+        self.converter = UniversalConverter()
+
+    def tearDown(self):
+        """Clean up test files"""
+        if hasattr(self, 'temp_dir'):
+            shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    def test_html_with_nested_elements(self):
+        """Test HTML with deeply nested elements"""
+        try:
+            nested_html = """
+            <html>
+            <body>
+                <div>
+                    <section>
+                        <article>
+                            <h1>Main Title</h1>
+                            <div>
+                                <p>Nested paragraph with <strong>bold</strong> and <em>italic</em> text.</p>
+                                <ul>
+                                    <li>List item 1</li>
+                                    <li>List item 2</li>
+                                </ul>
+                            </div>
+                        </article>
+                    </section>
+                </div>
+            </body>
+            </html>
+            """
+
+            html_file = self.temp_dir / "nested.html"
+            html_file.write_text(nested_html, encoding='utf-8')
+            output_file = self.temp_dir / "nested_output.md"
+
+            self.converter.convert_file(html_file, output_file, 'html', 'markdown')
+            self.assertTrue(output_file.exists())
+
+            content = output_file.read_text(encoding='utf-8')
+            self.assertIn("# Main Title", content)
+            self.assertIn("Nested paragraph", content)
+
+        except ImportError:
+            self.skipTest("BeautifulSoup4 not available")
+
+    def test_multiple_paragraph_formats(self):
+        """Test text with various paragraph separations"""
+        text_content = """First paragraph.
+
+Second paragraph after double newline.
+
+
+Third paragraph after triple newline.
+
+    Indented paragraph.
+
+Final paragraph."""
+
+        txt_file = self.temp_dir / "paragraphs.txt"
+        txt_file.write_text(text_content, encoding='utf-8')
+        output_file = self.temp_dir / "paragraphs_output.md"
+
+        self.converter.convert_file(txt_file, output_file, 'txt', 'markdown')
+        self.assertTrue(output_file.exists())
+
+        content = output_file.read_text(encoding='utf-8')
+        self.assertIn("First paragraph", content)
+        self.assertIn("Second paragraph", content)
+        self.assertIn("Indented paragraph", content)
+
+    def test_output_format_extensions(self):
+        """Test that output files get correct extensions"""
+        test_file = self.temp_dir / "test.txt"
+        test_file.write_text("content", encoding='utf-8')
+
+        format_extensions = {
+            'markdown': '.md',
+            'txt': '.txt',
+            'html': '.html',
+            'rtf': '.rtf'
+        }
+
+        for output_format, expected_ext in format_extensions.items():
+            with self.subTest(format=output_format):
+                output_file = self.temp_dir / f"test_output{expected_ext}"
+                self.converter.convert_file(test_file, output_file, 'txt', output_format)
+                self.assertTrue(output_file.exists())
+
+                # Verify content is appropriate for format
+                content = output_file.read_text(encoding='utf-8')
+                if output_format == 'html':
+                    self.assertIn('<!DOCTYPE html>', content)
+                elif output_format == 'rtf':
+                    self.assertIn('{\\rtf1', content)
 
 def run_dependency_check():
     """Check and report on dependency availability"""
@@ -330,7 +731,11 @@ def main():
         # Add test cases
         suite.addTest(loader.loadTestsFromTestCase(TestFormatDetector))
         suite.addTest(loader.loadTestsFromTestCase(TestConverters))
+        suite.addTest(loader.loadTestsFromTestCase(TestEdgeCases))
+        suite.addTest(loader.loadTestsFromTestCase(TestReaderWriterClasses))
         suite.addTest(loader.loadTestsFromTestCase(TestPerformance))
+        suite.addTest(loader.loadTestsFromTestCase(TestErrorHandling))
+        suite.addTest(loader.loadTestsFromTestCase(TestFormatSpecificFeatures))
         
         # Run tests
         runner = unittest.TextTestRunner(verbosity=2)
