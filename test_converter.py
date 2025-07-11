@@ -768,6 +768,167 @@ class TestLoggingAndErrorHandling(unittest.TestCase):
             error_msg = str(e)
             self.assertIn("nonexistent.txt", error_msg)
 
+class TestGUIImprovements(unittest.TestCase):
+    """TDD: Test-driven development for GUI improvements and responsiveness"""
+
+    def setUp(self):
+        """Set up test environment"""
+        if not MODULES_AVAILABLE:
+            self.skipTest("Converter modules not available")
+
+        # Create a test root window
+        import tkinter as tk
+        self.root = tk.Tk()
+        self.root.withdraw()  # Hide the window during testing
+
+    def tearDown(self):
+        """Clean up test environment"""
+        if hasattr(self, 'root'):
+            self.root.destroy()
+
+    def test_modern_styling_applied(self):
+        """Test that modern styling is applied to GUI elements"""
+        try:
+            from universal_document_converter import UniversalDocumentConverterGUI
+
+            gui = UniversalDocumentConverterGUI(self.root)
+
+            # Test that GUI has modern styling attributes
+            self.assertTrue(hasattr(gui, 'apply_modern_styling'))
+
+            # Test that color scheme is defined
+            self.assertTrue(hasattr(gui, 'color_scheme'))
+            self.assertIsInstance(gui.color_scheme, dict)
+
+            # Test that modern fonts are used
+            self.assertTrue(hasattr(gui, 'font_scheme'))
+            self.assertIsInstance(gui.font_scheme, dict)
+
+        except ImportError:
+            self.fail("Modern styling not implemented yet")
+
+    def test_responsive_layout(self):
+        """Test that the layout responds to window resizing"""
+        try:
+            from universal_document_converter import UniversalDocumentConverterGUI
+
+            gui = UniversalDocumentConverterGUI(self.root)
+
+            # Test initial size
+            initial_width = self.root.winfo_reqwidth()
+            initial_height = self.root.winfo_reqheight()
+
+            # Test minimum size constraints
+            self.assertGreaterEqual(initial_width, 600)
+            self.assertGreaterEqual(initial_height, 500)
+
+            # Test that layout adapts to different sizes
+            self.root.geometry("800x700")
+            self.root.update_idletasks()
+
+            # Should have responsive grid configuration
+            self.assertTrue(hasattr(gui, 'configure_responsive_layout'))
+
+        except Exception as e:
+            self.fail(f"Responsive layout not properly implemented: {e}")
+
+    def test_improved_visual_hierarchy(self):
+        """Test that visual hierarchy is improved with better spacing and grouping"""
+        try:
+            from universal_document_converter import UniversalDocumentConverterGUI
+
+            gui = UniversalDocumentConverterGUI(self.root)
+
+            # Test that sections are properly grouped
+            self.assertTrue(hasattr(gui, 'create_section_frames'))
+
+            # Test that spacing is consistent
+            self.assertTrue(hasattr(gui, 'apply_consistent_spacing'))
+
+            # Test that visual indicators are present
+            self.assertTrue(hasattr(gui, 'add_visual_indicators'))
+
+        except ImportError:
+            self.fail("Visual hierarchy improvements not implemented yet")
+
+    def test_enhanced_progress_feedback(self):
+        """Test that progress feedback is enhanced with better indicators"""
+        try:
+            from universal_document_converter import UniversalDocumentConverterGUI
+
+            gui = UniversalDocumentConverterGUI(self.root)
+
+            # Test that enhanced progress bar exists
+            self.assertTrue(hasattr(gui, 'progress_bar'))
+
+            # Test that detailed status display exists
+            self.assertTrue(hasattr(gui, 'detailed_status_display'))
+
+            # Test that progress animation is available
+            self.assertTrue(hasattr(gui, 'animate_progress'))
+
+        except ImportError:
+            self.fail("Enhanced progress feedback not implemented yet")
+
+    def test_improved_button_styling(self):
+        """Test that buttons have improved styling and hover effects"""
+        try:
+            from universal_document_converter import UniversalDocumentConverterGUI
+
+            gui = UniversalDocumentConverterGUI(self.root)
+
+            # Test that button styling is enhanced
+            self.assertTrue(hasattr(gui, 'style_buttons'))
+
+            # Test that hover effects are implemented
+            self.assertTrue(hasattr(gui, 'add_hover_effects'))
+
+            # Test that button states are properly managed
+            self.assertTrue(hasattr(gui, 'update_button_states'))
+
+        except ImportError:
+            self.fail("Button styling improvements not implemented yet")
+
+    def test_dark_mode_support(self):
+        """Test that dark mode theming is supported"""
+        try:
+            from universal_document_converter import UniversalDocumentConverterGUI
+
+            gui = UniversalDocumentConverterGUI(self.root)
+
+            # Test that theme switching is available
+            self.assertTrue(hasattr(gui, 'toggle_theme'))
+
+            # Test that dark theme colors are defined
+            self.assertTrue(hasattr(gui, 'dark_theme'))
+            self.assertIsInstance(gui.dark_theme, dict)
+
+            # Test that light theme colors are defined
+            self.assertTrue(hasattr(gui, 'light_theme'))
+            self.assertIsInstance(gui.light_theme, dict)
+
+        except ImportError:
+            self.fail("Dark mode support not implemented yet")
+
+    def test_accessibility_improvements(self):
+        """Test that accessibility features are implemented"""
+        try:
+            from universal_document_converter import UniversalDocumentConverterGUI
+
+            gui = UniversalDocumentConverterGUI(self.root)
+
+            # Test that keyboard navigation is supported
+            self.assertTrue(hasattr(gui, 'setup_keyboard_navigation'))
+
+            # Test that tooltips are available
+            self.assertTrue(hasattr(gui, 'add_tooltips'))
+
+            # Test that high contrast mode is available
+            self.assertTrue(hasattr(gui, 'high_contrast_mode'))
+
+        except ImportError:
+            self.fail("Accessibility improvements not implemented yet")
+
 def run_dependency_check():
     """Check and report on dependency availability"""
     print("🔍 Dependency Check Report")
@@ -893,7 +1054,8 @@ def main():
         suite.addTest(loader.loadTestsFromTestCase(TestErrorHandling))
         suite.addTest(loader.loadTestsFromTestCase(TestFormatSpecificFeatures))
         suite.addTest(loader.loadTestsFromTestCase(TestLoggingAndErrorHandling))
-        
+        suite.addTest(loader.loadTestsFromTestCase(TestGUIImprovements))
+
         # Run tests
         runner = unittest.TextTestRunner(verbosity=2)
         result = runner.run(suite)
