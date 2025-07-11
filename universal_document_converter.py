@@ -328,23 +328,23 @@ class UniversalConverter:
 
 class UniversalDocumentConverterGUI:
     """Enhanced GUI for the Universal Document Converter"""
-    
-    def __init__(self, root):
+
+    def __init__(self, root: tk.Tk) -> None:
         self.root = root
         self.root.title("Universal Document Converter 🚀")
         self.root.geometry("700x600")
         self.root.minsize(600, 500)
         
         # Initialize converter
-        self.converter = UniversalConverter()
-        
+        self.converter: UniversalConverter = UniversalConverter()
+
         # Variables
-        self.input_path = tk.StringVar()
-        self.output_path = tk.StringVar()
-        self.input_format = tk.StringVar(value='auto')
-        self.output_format = tk.StringVar(value='markdown')
-        self.progress_var = tk.DoubleVar()
-        self.status_var = tk.StringVar(value="Ready to convert documents")
+        self.input_path: tk.StringVar = tk.StringVar()
+        self.output_path: tk.StringVar = tk.StringVar()
+        self.input_format: tk.StringVar = tk.StringVar(value='auto')
+        self.output_format: tk.StringVar = tk.StringVar(value='markdown')
+        self.progress_var: tk.DoubleVar = tk.DoubleVar()
+        self.status_var: tk.StringVar = tk.StringVar(value="Ready to convert documents")
         
         # Set default output to Desktop/converted_documents
         desktop = Path.home() / "Desktop"
@@ -354,7 +354,7 @@ class UniversalDocumentConverterGUI:
         self.setup_ui()
         self.check_dependencies()
         
-    def setup_ui(self):
+    def setup_ui(self) -> None:
         """Set up the enhanced user interface"""
         # Main frame with padding
         main_frame = ttk.Frame(self.root, padding="15")
@@ -509,7 +509,7 @@ class UniversalDocumentConverterGUI:
                 self.input_path.set(dropped_path)
                 self.log_message(f"📄 File dropped: {os.path.basename(dropped_path)}")
     
-    def browse_input_files(self):
+    def browse_input_files(self) -> None:
         """Browse for input files"""
         filetypes = [
             ("All supported", "*.docx;*.pdf;*.txt;*.html;*.htm;*.rtf"),
@@ -582,7 +582,7 @@ class UniversalDocumentConverterGUI:
         
         return True
     
-    def start_conversion(self):
+    def start_conversion(self) -> None:
         """Start conversion in separate thread"""
         if not self.validate_inputs():
             return
@@ -594,7 +594,7 @@ class UniversalDocumentConverterGUI:
         # Start conversion in background thread
         threading.Thread(target=self.convert_documents, daemon=True).start()
     
-    def convert_documents(self):
+    def convert_documents(self) -> None:
         """Main conversion process"""
         try:
             self.update_status("Preparing conversion...")
@@ -712,27 +712,27 @@ class UniversalDocumentConverterGUI:
         
         self.root.after(0, _add_message)
 
-def main():
+def main() -> None:
     """Application entry point"""
     try:
         # Try enhanced drag-and-drop support
         from tkinterdnd2 import TkinterDnD
-        root = TkinterDnD.Tk()
+        root: tk.Tk = TkinterDnD.Tk()
     except ImportError:
         # Fallback to standard tkinter
         root = tk.Tk()
-    
+
     # Set application icon and properties
     root.option_add('*tearOff', False)  # Disable menu tearoff
-    
-    app = UniversalDocumentConverterGUI(root)
-    
+
+    app: UniversalDocumentConverterGUI = UniversalDocumentConverterGUI(root)
+
     # Center window on screen
     root.update_idletasks()
-    x = (root.winfo_screenwidth() // 2) - (root.winfo_width() // 2)
-    y = (root.winfo_screenheight() // 2) - (root.winfo_height() // 2)
+    x: int = (root.winfo_screenwidth() // 2) - (root.winfo_width() // 2)
+    y: int = (root.winfo_screenheight() // 2) - (root.winfo_height() // 2)
     root.geometry(f"+{x}+{y}")
-    
+
     root.mainloop()
 
 if __name__ == "__main__":
