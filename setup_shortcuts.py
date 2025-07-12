@@ -161,29 +161,73 @@ Categories=Office;Utility;
 
 def main():
     """Main setup function"""
-    print("🚀 Quick Document Convertor - Setup")
+    print("🚀 Quick Document Convertor - Enhanced Setup")
     print("=" * 50)
-    
+
     # Check Python version
     if sys.version_info < (3, 6):
         print("❌ Python 3.6 or higher is required")
         print(f"Current version: {sys.version}")
         input("Press Enter to exit...")
         sys.exit(1)
-    
+
     print(f"✅ Python {sys.version.split()[0]} detected")
-    
+
     # Check and install packages
     check_python_packages()
-    
-    # Create shortcuts based on OS
-    if os.name == 'nt':  # Windows
-        print("🖥️  Setting up Windows shortcuts...")
-        success = create_windows_shortcuts()
-    else:  # Unix/Linux/macOS
-        print("🐧 Setting up Unix shortcuts...")
-        success = create_unix_shortcuts()
-    
+
+    # Try to use enhanced cross-platform integration
+    try:
+        import cross_platform
+
+        platform = cross_platform.get_platform()
+        print(f"🌍 Platform detected: {platform}")
+
+        # Create platform directories
+        if cross_platform.create_platform_directories():
+            print("✅ Platform directories created")
+
+        # Get platform integration
+        integration = cross_platform.get_platform_integration()
+
+        if integration:
+            print(f"🔧 Using enhanced {platform} integration...")
+
+            app_path = Path(__file__).parent / "universal_document_converter.py"
+            icon_path = None
+
+            # Look for icon file
+            for icon_file in ["icon.ico", "icon.png", "app_icon.ico"]:
+                icon_candidate = Path(__file__).parent / icon_file
+                if icon_candidate.exists():
+                    icon_path = icon_candidate
+                    break
+
+            if platform == 'windows':
+                results = integration.setup_windows_integration(app_path, icon_path)
+                success = results.get('shortcuts', {}).get('desktop', False)
+            elif platform == 'linux':
+                results = integration.setup_linux_integration(app_path, icon_path)
+                success = results.get('desktop_file', False)
+            elif platform == 'macos':
+                # For macOS, we'll use the basic setup for now
+                success = create_unix_shortcuts()
+            else:
+                success = False
+
+            if success:
+                print("✅ Enhanced integration completed successfully!")
+            else:
+                print("⚠️  Enhanced integration had some issues, falling back to basic setup")
+                success = create_basic_shortcuts()
+        else:
+            print("⚠️  Enhanced integration not available, using basic setup")
+            success = create_basic_shortcuts()
+
+    except ImportError:
+        print("⚠️  Cross-platform modules not available, using basic setup")
+        success = create_basic_shortcuts()
+
     if success:
         print("\n🎉 Setup completed successfully!")
         print("\nYou can now:")
@@ -196,14 +240,24 @@ def main():
             print("  • Double-click the desktop icon")
             print("  • Find 'Quick Document Convertor' in applications menu")
             print("  • Run the Python script directly")
-        
+
         print(f"  • Or run: python universal_document_converter.py")
     else:
         print("\n⚠️  Setup completed with some issues")
         print("You can still run the application with:")
         print("  python universal_document_converter.py")
-    
+
     input("\nPress Enter to exit...")
+
+
+def create_basic_shortcuts():
+    """Create basic shortcuts using the original method"""
+    if os.name == 'nt':  # Windows
+        print("🖥️  Setting up Windows shortcuts...")
+        return create_windows_shortcuts()
+    else:  # Unix/Linux/macOS
+        print("🐧 Setting up Unix shortcuts...")
+        return create_unix_shortcuts()
 
 if __name__ == "__main__":
     main()

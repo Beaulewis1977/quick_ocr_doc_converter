@@ -19,6 +19,14 @@ tkinterdnd2>=0.3.0        # Enhanced drag-and-drop support
 # - mimetypes (file type detection)
 # - re (regular expressions)
 
+# Cross-platform packaging and integration
+pyinstaller>=5.0          # Cross-platform executable creation
+pillow>=9.0               # Image processing for icons
+
+# Platform-specific dependencies (installed conditionally)
+# py2app>=0.28            # macOS app bundle creation (macOS only)
+# python-dbus             # Linux desktop integration (Linux only)
+
 # Development and testing (optional)
 # pytest>=7.0.0           # Testing framework
-# pytest-cov>=4.0.0       # Coverage reporting 
+# pytest-cov>=4.0.0       # Coverage reporting
