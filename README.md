@@ -6,12 +6,12 @@
 ![Python](https://img.shields.io/badge/Python-3.6+-green?style=for-the-badge&logo=python)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-orange?style=for-the-badge)
-![Tests](https://img.shields.io/badge/Tests-48%2F48%20Passing-brightgreen?style=for-the-badge)
+![Tests](https://img.shields.io/badge/Tests-71%2F71%20Passing-brightgreen?style=for-the-badge)
 ![Version](https://img.shields.io/badge/Version-2.0%20Enterprise-purple?style=for-the-badge)
 
-**Enterprise-Grade • Configuration Management • Multi-Threading • Professional Logging**
+**Enterprise-Grade • Cross-Platform • Configuration Management • Multi-Threading • Professional Logging**
 
-A lightning-fast, enterprise-ready document conversion tool with advanced features, modern GUI, and comprehensive configuration management.
+A lightning-fast, enterprise-ready document conversion tool with native desktop integration for Windows, Linux, and macOS. Features advanced cross-platform packaging, file associations, and professional deployment options.
 
 [🚀 Quick Start](#-quick-start-new-users) • [✨ Features](#-features) • [📄 Formats](#-supported-formats) • [🛠️ Installation](#️-installation) • [📖 Usage](#-usage) • [🤝 Contributing](#-contributing)
 
@@ -78,11 +78,18 @@ python universal_document_converter.py
 - **📈 Real-time Progress**: Visual progress tracking with detailed conversion results
 - **🔍 Professional Logging**: Enterprise-grade logging system with file rotation
 
+### 🌍 **Cross-Platform Excellence**
+- **🖥️ Native Windows Integration**: Start Menu shortcuts, taskbar pinning, registry file associations
+- **🐧 Linux Desktop Integration**: .desktop files, MIME types, applications menu, file manager integration
+- **🍎 macOS App Bundle**: Native .app bundles, Dock integration, Finder associations, Spotlight search
+- **📦 Universal Packaging**: .deb, .rpm, AppImage, .dmg, .pkg, and .msi installers
+- **🔧 Platform Detection**: Automatic platform-specific paths and configurations
+
 ### 🎨 **User Experience**
 - **🖥️ Modern GUI**: Clean, responsive interface with tabbed settings
-- **📱 Cross-Platform**: Windows, macOS, and Linux support
-- **🔗 Desktop Integration**: Easy shortcuts, taskbar pinning, and file associations
+- **🔗 Desktop Integration**: Native shortcuts and file associations on all platforms
 - **📖 File Opening**: Built-in file opening with default applications
+- **🎯 Drag & Drop**: Enhanced file and folder drag-and-drop support
 - **🔒 Privacy First**: All processing happens locally on your machine
 
 ## 📄 Supported Formats
@@ -131,6 +138,42 @@ python universal_document_converter.py
 ```
 
 ## 🛠️ Installation
+
+### 📦 **Package Installation (New!)**
+
+#### Linux
+```bash
+# Ubuntu/Debian
+wget https://github.com/Beaulewis1977/quick_doc_convertor/releases/latest/download/quick-document-convertor_2.0.0_all.deb
+sudo dpkg -i quick-document-convertor_2.0.0_all.deb
+
+# CentOS/RHEL/Fedora
+wget https://github.com/Beaulewis1977/quick_doc_convertor/releases/latest/download/quick-document-convertor-2.0.0-1.noarch.rpm
+sudo rpm -ivh quick-document-convertor-2.0.0-1.noarch.rpm
+
+# Universal AppImage
+wget https://github.com/Beaulewis1977/quick_doc_convertor/releases/latest/download/QuickDocumentConvertor-2.0.0-x86_64.AppImage
+chmod +x QuickDocumentConvertor-2.0.0-x86_64.AppImage
+./QuickDocumentConvertor-2.0.0-x86_64.AppImage
+```
+
+#### macOS
+```bash
+# Download DMG installer
+curl -L -o QuickDocumentConvertor-2.0.0.dmg \
+  https://github.com/Beaulewis1977/quick_doc_convertor/releases/latest/download/QuickDocumentConvertor-2.0.0.dmg
+open QuickDocumentConvertor-2.0.0.dmg
+
+# Or via Homebrew (when available)
+brew install --cask quick-document-convertor
+```
+
+#### Windows
+```bash
+# Download MSI installer
+# https://github.com/Beaulewis1977/quick_doc_convertor/releases/latest/download/QuickDocumentConvertor-2.0.0.msi
+# Double-click to install with full desktop integration
+```
 
 ### 🎯 **Recommended: One-Click Setup**
 
@@ -387,6 +430,50 @@ pip install tkinterdnd2
 - ✨ Basic DOCX, PDF, TXT to Markdown conversion
 - ✨ Simple GUI interface
 - ✨ Batch processing support
+
+## 📦 Building & Packaging
+
+### 🔨 **Universal Build System**
+
+Build packages for all platforms using the new cross-platform build system:
+
+```bash
+# Build for current platform
+python build_all_platforms.py
+
+# Build for specific platform
+python build_all_platforms.py --platform linux
+python build_all_platforms.py --platform macos
+python build_all_platforms.py --platform windows
+
+# Build for all platforms with dependencies
+python build_all_platforms.py --platform all --install-deps --verbose
+```
+
+### 📋 **Package Formats Created**
+
+- **Linux**: .deb, .rpm, AppImage
+- **macOS**: .app bundle, .dmg installer, .pkg installer
+- **Windows**: .exe executable, .msi installer, NSIS installer
+
+### 🧪 **Testing Cross-Platform Features**
+
+```bash
+# Run cross-platform tests
+python test_cross_platform.py
+
+# Test with pytest for detailed output
+python -m pytest test_cross_platform.py -v
+
+# Test specific platform integration
+python -c "import cross_platform; print(cross_platform.get_platform_info())"
+```
+
+### 📚 **Documentation**
+
+- **[Cross-Platform Guide](docs/CROSS_PLATFORM_GUIDE.md)** - Comprehensive cross-platform features
+- **[Linux Installation](docs/INSTALLATION_LINUX.md)** - Linux-specific installation guide
+- **[macOS Installation](docs/INSTALLATION_MACOS.md)** - macOS-specific installation guide
 
 ## 🤝 Contributing
 
