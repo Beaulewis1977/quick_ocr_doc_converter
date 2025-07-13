@@ -23,7 +23,7 @@ def check_dependencies():
         'python-docx': 'docx',
         'PyPDF2': 'PyPDF2', 
         'beautifulsoup4': 'bs4',
-        'striprtf': 'striprtf.striprtf',
+        'striprtf': 'striprtf',
         'ebooklib': 'ebooklib'
     }
     

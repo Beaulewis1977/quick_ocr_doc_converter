@@ -78,6 +78,13 @@ pip install -r requirements.txt
 python universal_document_converter.py
 ```
 
+### Option 4: Create Windows Installer (Professional)
+
+```bash
+# Create a professional Windows installer
+setup_windows_installer.bat
+```
+
 ---
 
 ## 📱 Platform-Specific Instructions

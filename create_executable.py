@@ -50,12 +50,15 @@ def create_executable():
     # PyInstaller command
     cmd = [
         sys.executable, '-m', 'PyInstaller',
-        '--onefile',  # Create single executable
-        '--windowed',  # No console window (GUI app)
+        '--onefile',
+        '--windowed',
         '--name', 'Quick Document Convertor',
         '--distpath', str(app_dir / 'dist'),
         '--workpath', str(app_dir / 'build'),
         '--specpath', str(app_dir),
+        '--add-data', f'{app_dir / "icon.ico"};.',
+        '--hidden-import', 'tkinterdnd2',
+        '--hidden-import', 'pywin32',
         str(main_script)
     ]
     
@@ -63,6 +66,8 @@ def create_executable():
     icon_file = app_dir / "icon.ico"
     if icon_file.exists():
         cmd.extend(['--icon', str(icon_file)])
+    else:
+        print("⚠️  Icon file not found - using default icon")
     
     print("Creating executable...")
     print(f"Command: {' '.join(cmd)}")

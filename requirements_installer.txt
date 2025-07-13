@@ -1,0 +1,22 @@
+# Windows Installer Requirements
+# Additional dependencies for Windows installer with system tray support
+
+# System tray integration
+pystray>=0.19.4           # System tray icon and menu
+pillow>=9.0.0             # Image processing for tray icons
+
+# Windows-specific dependencies
+pywin32>=304              # Windows COM objects for shortcuts
+pyinstaller>=5.0          # Executable creation
+psutil>=5.9.0             # System process monitoring
+
+# NSIS installer (optional - install separately)
+# Download from: https://nsis.sourceforge.io/
+
+# Core application dependencies (from main requirements.txt)
+python-docx>=0.8.11       # Microsoft Word document processing
+PyPDF2>=3.0.1             # PDF file reading and text extraction
+beautifulsoup4>=4.12.0    # HTML parsing and processing
+striprtf>=0.0.26          # RTF (Rich Text Format) processing
+ebooklib>=0.18            # EPUB eBook reading and writing
+tkinterdnd2>=0.3.0        # Enhanced drag-and-drop support 

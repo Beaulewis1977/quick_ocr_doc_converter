@@ -15,7 +15,9 @@ def install_packages():
     packages = [
         'python-docx',
         'PyPDF2',
-        'tkinterdnd2'  # For drag and drop functionality
+        'tkinterdnd2',
+        'winshell',
+        'pywin32'
     ]
     
     print("📦 Installing required packages...")
@@ -36,7 +38,7 @@ def create_desktop_shortcut():
         
         desktop = winshell.desktop()
         path = os.path.join(desktop, "Document Converter.lnk")
-        target = os.path.join(os.getcwd(), "document_converter_gui.py")
+        target = os.path.abspath(os.path.join(os.path.dirname(__file__), "run_converter.bat"))
         wDir = os.getcwd()
         icon = target
         
@@ -120,4 +122,4 @@ def main():
     input("\nPress Enter to exit...")
 
 if __name__ == "__main__":
-    main() 
+    main()
