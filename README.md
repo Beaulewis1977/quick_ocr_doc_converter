@@ -9,6 +9,10 @@
 ![Tests](https://img.shields.io/badge/Tests-Comprehensive-brightgreen?style=for-the-badge)
 ![Version](https://img.shields.io/badge/Version-1.0.0-purple?style=for-the-badge)
 
+> **Transform any document into searchable, editable text with enterprise-grade OCR technology**
+> 
+> **Designed and Built by Beau Lewis**
+
 **Enterprise-Grade OCR • Multi-Language • AI-Powered • Cross-Platform • Professional GUI**
 
 A powerful, enterprise-ready OCR (Optical Character Recognition) document converter with advanced image processing, multi-language support, and intelligent text extraction. Features Tesseract and EasyOCR engines, batch processing, and professional deployment options.
@@ -44,8 +48,8 @@ OCR Document Converter is a **professional-grade, enterprise-ready OCR applicati
 
 1. **Clone** this repository:
    ```bash
-   git clone https://github.com/Beaulewis1977/quick_ocr_doc_convertor.git
-   cd quick_ocr_doc_convertor
+   git clone https://github.com/Beaulewis1977/quick_ocr_doc_converter.git
+   cd quick_ocr_doc_converter
    ```
 
 2. **Run the automated setup**:
@@ -458,8 +462,8 @@ python test_ocr_integration.py --category performance
 
 ```bash
 # Clone and setup in one command
-git clone https://github.com/Beaulewis1977/quick_ocr_doc_convertor.git
-cd quick_ocr_doc_convertor
+git clone https://github.com/Beaulewis1977/quick_ocr_document_converter.git
+cd quick_ocr_document_converter
 python setup_ocr_environment.py
 ```
 
@@ -615,7 +619,7 @@ tail -f logs/ocr_debug.log
 1. **Check the logs**: `logs/ocr_application.log`
 2. **Run validation**: `python validate_ocr_integration.py`
 3. **Test with sample files**: Use files in `tests/test_data/`
-4. **Create an issue**: [GitHub Issues](https://github.com/Beaulewis1977/quick_ocr_doc_convertor/issues)
+4. **Create an issue**: [GitHub Issues](https://github.com/Beaulewis1977/quick_ocr_document_converter/issues)
 
 ---
 
@@ -645,8 +649,8 @@ tail -f logs/ocr_debug.log
 
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/quick_ocr_doc_convertor.git
-cd quick_ocr_doc_convertor
+git clone https://github.com/YOUR_USERNAME/quick_ocr_document_converter.git
+cd quick_ocr_document_converter
 
 # Create development environment
 python -m venv dev_env
@@ -693,9 +697,9 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ## 📞 **Support**
 
 - **Documentation**: [OCR_README.md](OCR_README.md)
-- **Issues**: [GitHub Issues](https://github.com/Beaulewis1977/quick_ocr_doc_convertor/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Beaulewis1977/quick_ocr_doc_convertor/discussions)
-- **Email**: [Create an issue for support](https://github.com/Beaulewis1977/quick_ocr_doc_convertor/issues/new)
+- **Issues**: [GitHub Issues](https://github.com/Beaulewis1977/quick_ocr_document_converter/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Beaulewis1977/quick_ocr_document_converter/discussions)
+- **Email**: [Create an issue for support](https://github.com/Beaulewis1977/quick_ocr_document_converter/issues/new)
 
 ---
 
