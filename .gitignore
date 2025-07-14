@@ -212,3 +212,6 @@ temp/
 ehthumbs.db
 Icon?
 Thumbs.db
+
+.kilocode/
+.kilocode/mcp.json
