@@ -17,11 +17,11 @@ import hashlib
 import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
+import numpy as np
 
 try:
     import pytesseract
     import cv2
-    import numpy as np
     from PIL import Image, ImageEnhance, ImageFilter
     TESSERACT_AVAILABLE = True
 except ImportError:
@@ -60,15 +60,16 @@ class OCREngine:
     - Configurable quality settings
     """
     
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[Dict[str, Any]] = None, logger: Optional[logging.Logger] = None):
         """
         Initialize OCR engine
         
         Args:
             config: Configuration dictionary for OCR settings
+            logger: Optional logger instance
         """
         self.config = config or {}
-        self.logger = logging.getLogger("OCREngine")
+        self.logger = logger or logging.getLogger("OCREngine")
         self.image_processor = ImageProcessor(self.logger)
         self.format_detector = OCRFormatDetector()
         
@@ -100,7 +101,7 @@ class OCREngine:
         
         # Merge user config with defaults
         self.config = {**self.default_config, **self.config}
-    
+
     def _initialize_backends(self):
         """Initialize available OCR backends"""
         self.backends = {}
@@ -141,19 +142,19 @@ class OCREngine:
                     'priority': 2,
                     'available': False
                 }
-    
+
     def is_tesseract_available(self) -> bool:
         """Check if Tesseract OCR is available"""
         return 'tesseract' in self.backends and self.backends['tesseract']['available']
-    
+
     def is_easyocr_available(self) -> bool:
         """Check if EasyOCR is available"""
         return 'easyocr' in self.backends and self.backends['easyocr']['available']
-    
+
     def get_available_backends(self) -> List[str]:
         """Get list of available OCR backends"""
         return [name for name, info in self.backends.items() if info['available']]
-    
+
     def get_preferred_backend(self) -> str:
         """Get the preferred OCR backend based on availability and priority"""
         available = [(name, info['priority']) for name, info in self.backends.items() 
@@ -164,7 +165,7 @@ class OCREngine:
         # Sort by priority (lower is better)
         available.sort(key=lambda x: x[1])
         return available[0][0]
-    
+
     def _get_easyocr_reader(self, languages: List[str] = None):
         """Get thread-local EasyOCR reader"""
         if not hasattr(self._thread_local, 'easyocr_reader'):
@@ -176,7 +177,7 @@ class OCREngine:
                 verbose=False
             )
         return self._thread_local.easyocr_reader
-    
+
     def _get_cache_key(self, image_path: Path, options: Dict[str, Any]) -> str:
         """Generate cache key for OCR result"""
         # Create hash from file content and options
@@ -192,7 +193,7 @@ class OCREngine:
         hasher.update(options_str.encode())
         
         return hasher.hexdigest()
-    
+
     def _load_from_cache(self, cache_key: str) -> Optional[str]:
         """Load OCR result from cache"""
         cache_file = self.cache_dir / f"{cache_key}.txt"
@@ -203,7 +204,7 @@ class OCREngine:
             except Exception as e:
                 self.logger.warning(f"Failed to load from cache: {e}")
         return None
-    
+
     def _save_to_cache(self, cache_key: str, text: str) -> None:
         """Save OCR result to cache"""
         cache_file = self.cache_dir / f"{cache_key}.txt"
@@ -212,7 +213,7 @@ class OCREngine:
                 f.write(text)
         except Exception as e:
             self.logger.warning(f"Failed to save to cache: {e}")
-    
+
     def extract_text(self, image_path: str, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Extract text from an image using OCR
@@ -288,7 +289,7 @@ class OCREngine:
             self._save_to_cache(cache_key, result['text'])
         
         return result
-    
+
     def _extract_with_tesseract(self, image: np.ndarray, options: Dict[str, Any]) -> Dict[str, Any]:
         """Extract text using Tesseract OCR"""
         try:
@@ -325,7 +326,7 @@ class OCREngine:
             
         except Exception as e:
             raise OCRBackendError(f"Tesseract OCR failed: {e}")
-    
+
     def _extract_with_easyocr(self, image: np.ndarray, options: Dict[str, Any]) -> Dict[str, Any]:
         """Extract text using EasyOCR"""
         try:
@@ -360,7 +361,7 @@ class OCREngine:
             
         except Exception as e:
             raise OCRBackendError(f"EasyOCR failed: {e}")
-    
+
     def extract_text_from_multiple_images(
         self, 
         image_paths: List[str], 
@@ -410,14 +411,14 @@ class OCREngine:
                     })
         
         return results
-    
+
     def get_image_info(self, image_path: str) -> Dict[str, Any]:
         """Get information about an image file"""
         try:
             return self.image_processor.get_image_info(image_path)
         except Exception as e:
             return {'error': str(e)}
-    
+
     def clear_cache(self) -> bool:
         """Clear the OCR cache"""
         try:
@@ -427,14 +428,14 @@ class OCREngine:
         except Exception as e:
             self.logger.error(f"Failed to clear cache: {e}")
             return False
-    
+
     def get_cache_size(self) -> int:
         """Get the total size of the cache in bytes"""
         try:
             return sum(f.stat().st_size for f in self.cache_dir.glob("*.txt") if f.is_file())
         except:
             return 0
-    
+
     def get_cache_stats(self) -> Dict[str, Any]:
         """Get cache statistics"""
         try:
@@ -448,7 +449,7 @@ class OCREngine:
             }
         except Exception as e:
             return {'error': str(e)}
-    
+
     def save_result(self, result: Dict[str, Any], output_path: str, output_format: str = 'txt') -> bool:
         """
         Save OCR result to file

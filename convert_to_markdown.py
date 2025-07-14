@@ -208,3 +208,32 @@ def main():
 
 if __name__ == '__main__':
     main() 
+def convert_to_markdown(input_path, output_path=None):
+    """Main conversion function for CLI compatibility"""
+    input_path = Path(input_path)
+    
+    if output_path is None:
+        output_path = input_path.with_suffix('.md')
+    else:
+        output_path = Path(output_path)
+    
+    file_ext = input_path.suffix.lower()
+    
+    try:
+        if file_ext == '.docx':
+            content = convert_docx_to_markdown(str(input_path))
+        elif file_ext == '.pdf':
+            content = convert_pdf_to_markdown(str(input_path))
+        elif file_ext == '.txt':
+            content = convert_txt_to_markdown(str(input_path))
+        else:
+            raise ValueError(f"Unsupported format: {file_ext}")
+        
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        
+        return str(output_path)
+        
+    except Exception as e:
+        print(f"Error converting {input_path}: {e}")
+        return None
