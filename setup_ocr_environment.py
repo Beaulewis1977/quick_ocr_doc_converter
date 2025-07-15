@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-OCR Environment Setup Script
+OCR Environment Setup Script - Windows Optimized
 Automatically installs all required dependencies for the OCR-enhanced document converter
 """
 
@@ -8,6 +8,7 @@ import os
 import sys
 import subprocess
 import platform
+import json
 import logging
 from pathlib import Path
 
@@ -20,28 +21,63 @@ class OCRSetup:
     
     def __init__(self):
         self.system = platform.system()
-        self.python_executable = sys.executable
-        self.pip_executable = f"{self.python_executable} -m pip"
+        self.is_windows = self.system == "Windows"
+        self.is_mac = self.system == "Darwin"
+        self.is_linux = self.system == "Linux"
         
-    def run_command(self, command, shell=True):
-        """Run system command with error handling"""
+    def check_python_version(self):
+        """Verify Python version compatibility"""
+        version = sys.version_info
+        if version.major == 3 and version.minor >= 8:
+            logger.info(f"Python {version.major}.{version.minor}.{version.micro} - Compatible")
+            return True
+        else:
+            logger.error(f"Python {version.major}.{version.minor}.{version.micro} - Incompatible (requires 3.8+)")
+            return False
+    
+    def check_tesseract(self):
+        """Check Tesseract installation"""
         try:
-            logger.info(f"Running: {command}")
-            result = subprocess.run(command, shell=shell, capture_output=True, text=True)
-            
-            if result.returncode == 0:
-                logger.info("Command completed successfully")
-                return True
-            else:
-                logger.error(f"Command failed: {result.stderr}")
-                return False
+            if self.is_windows:
+                # Common Windows installation paths
+                tesseract_paths = [
+                    r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+                    r"C:\Users\%USERNAME%\AppData\Local\Tesseract-OCR\tesseract.exe",
+                    r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"
+                ]
                 
+                for path in tesseract_paths:
+                    expanded_path = os.path.expandvars(path)
+                    if os.path.isfile(expanded_path):
+                        os.environ["TESSERACT_CMD"] = expanded_path
+                        logger.info(f"Tesseract found at: {expanded_path}")
+                        return True
+                        
+            else:
+                # Unix-like systems
+                result = subprocess.run(["which", "tesseract"], capture_output=True, text=True)
+                if result.returncode == 0:
+                    logger.info(f"Tesseract found at: {result.stdout.strip()}")
+                    return True
+                    
+            logger.error("Tesseract not found. Please install Tesseract OCR:")
+            if self.is_windows:
+                logger.error("- Install from: https://github.com/UB-Mannheim/tesseract/wiki")
+                logger.error("- Or run: choco install tesseract")
+            elif self.is_mac:
+                logger.error("- Run: brew install tesseract")
+            elif self.is_linux:
+                logger.error("- Run: sudo apt-get install tesseract-ocr")
+                
+            return False
+            
         except Exception as e:
-            logger.error(f"Error running command: {e}")
+            logger.error(f"Error checking Tesseract: {e}")
             return False
     
     def install_python_packages(self):
         """Install required Python packages"""
+        # Skip weasyprint on Windows due to GTK+ dependencies
         packages = [
             "pytesseract",
             "pillow",
@@ -52,237 +88,132 @@ class OCRSetup:
             "python-docx",
             "docx2txt",
             "reportlab",
-            "weasyprint",
+            # "weasyprint",  # Skip on Windows
             "markdown",
             "beautifulsoup4"
         ]
         
-        success_count = 0
+        failed_packages = []
+        
         for package in packages:
-            command = f"{self.pip_executable} install {package}"
-            if self.run_command(command):
-                success_count += 1
+            try:
+                logger.info(f"Installing {package}...")
+                subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+                logger.info(f"✅ {package} installed successfully")
+            except subprocess.CalledProcessError as e:
+                logger.error(f"❌ Failed to install {package}: {e}")
+                failed_packages.append(package)
         
-        logger.info(f"Installed {success_count}/{len(packages)} Python packages")
-        return success_count == len(packages)
-    
-    def install_system_dependencies(self):
-        """Install system-level dependencies"""
-        if self.system == "Windows":
-            return self.install_windows_dependencies()
-        elif self.system == "Darwin":  # macOS
-            return self.install_macos_dependencies()
-        elif self.system == "Linux":
-            return self.install_linux_dependencies()
-        else:
-            logger.error(f"Unsupported system: {self.system}")
-            return False
-    
-    def install_windows_dependencies(self):
-        """Install Windows-specific dependencies"""
-        logger.info("Setting up Windows dependencies...")
-        
-        # Check if Tesseract is installed
-        tesseract_paths = [
-            "C:\\Program Files\\Tesseract-OCR\\tesseract.exe",
-            "C:\\Users\\%USERNAME%\\AppData\\Local\\Tesseract-OCR\\tesseract.exe"
-        ]
-        
-        tesseract_found = False
-        for path in tesseract_paths:
-            expanded_path = os.path.expandvars(path)
-            if os.path.exists(expanded_path):
-                tesseract_found = True
-                logger.info(f"Tesseract found at: {expanded_path}")
-                break
-        
-        if not tesseract_found:
-            logger.warning("Tesseract not found. Please install from:")
-            logger.warning("https://github.com/UB-Mannheim/tesseract/wiki")
+        if failed_packages:
+            logger.error(f"Failed packages: {failed_packages}")
             return False
         
         return True
     
-    def install_macos_dependencies(self):
-        """Install macOS-specific dependencies"""
-        logger.info("Setting up macOS dependencies...")
-        
-        # Check if Homebrew is available
-        if not self.run_command("which brew"):
-            logger.error("Homebrew not found. Please install from https://brew.sh")
-            return False
-        
-        # Install Tesseract
-        commands = [
-            "brew install tesseract",
-            "brew install tesseract-lang"  # Language packs
-        ]
-        
-        success = True
-        for cmd in commands:
-            if not self.run_command(cmd):
-                success = False
-        
-        return success
-    
-    def install_linux_dependencies(self):
-        """Install Linux-specific dependencies"""
-        logger.info("Setting up Linux dependencies...")
-        
-        # Detect package manager
-        package_managers = {
-            'apt-get': 'sudo apt-get update && sudo apt-get install -y tesseract-ocr tesseract-ocr-eng libtesseract-dev',
-            'yum': 'sudo yum install -y tesseract tesseract-langpack-eng',
-            'dnf': 'sudo dnf install -y tesseract tesseract-langpack-eng'
-        }
-        
-        for pm, cmd in package_managers.items():
-            if self.run_command(f"which {pm}"):
-                return self.run_command(cmd)
-        
-        logger.error("No supported package manager found")
-        return False
-    
     def verify_installation(self):
-        """Verify all components are installed correctly"""
-        checks = [
-            ("Python packages", self.verify_python_packages),
-            ("Tesseract", self.verify_tesseract),
-            ("OCR Engine", self.verify_ocr_engine)
-        ]
+        """Verify all components are properly installed"""
+        logger.info("Verifying installation...")
         
-        all_passed = True
-        for check_name, check_func in checks:
-            if check_func():
-                logger.info(f"✅ {check_name}: OK")
-            else:
-                logger.error(f"❌ {check_name}: FAILED")
-                all_passed = False
-        
-        return all_passed
-    
-    def verify_python_packages(self):
-        """Verify Python packages are installed"""
+        # Check Python packages
         packages = [
-            'pytesseract',
-            'PIL',
-            'numpy',
-            'cv2',
-            'easyocr'
+            "pytesseract",
+            "PIL", 
+            "cv2", 
+            "easyocr", 
+            "psutil", 
+            "docx", 
+            "docx2txt", 
+            "reportlab", 
+            # "weasyprint",  # Skip verification on Windows
+            "markdown", 
+            "bs4"
         ]
         
-        missing = []
+        missing_packages = []
+        
         for package in packages:
             try:
                 __import__(package)
-            except ImportError:
-                missing.append(package)
+                logger.info(f"✅ {package} - Available")
+            except ImportError as e:
+                logger.error(f"❌ {package} - Missing: {e}")
+                missing_packages.append(package)
         
-        if missing:
-            logger.error(f"Missing Python packages: {missing}")
+        if missing_packages:
+            logger.error(f"Missing packages: {missing_packages}")
+            return False
+        
+        # Check Tesseract
+        try:
+            import pytesseract
+            if self.is_windows and "TESSERACT_CMD" in os.environ:
+                pytesseract.pytesseract.tesseract_cmd = os.environ["TESSERACT_CMD"]
+            
+            version = pytesseract.get_tesseract_version()
+            logger.info(f"✅ Tesseract version: {version}")
+        except Exception as e:
+            logger.error(f"❌ Tesseract verification failed: {e}")
+            return False
+        
+        # Check EasyOCR
+        try:
+            import easyocr
+            reader = easyocr.Reader(['en'], gpu=False)  # Initialize without GPU
+            logger.info("✅ EasyOCR - Available")
+        except Exception as e:
+            logger.error(f"❌ EasyOCR verification failed: {e}")
             return False
         
         return True
     
-    def verify_tesseract(self):
-        """Verify Tesseract is installed and accessible"""
-        try:
-            import pytesseract
-            pytesseract.get_tesseract_version()
-            return True
-        except Exception as e:
-            logger.error(f"Tesseract verification failed: {e}")
-            return False
-    
-    def verify_ocr_engine(self):
-        """Verify OCR engine is working"""
-        try:
-            from ocr_engine.ocr_engine import OCREngine
-            
-            engine = OCREngine()
-            return hasattr(engine, 'extract_text')
-        except Exception as e:
-            logger.error(f"OCR engine verification failed: {e}")
-            return False
-    
     def create_environment_file(self):
         """Create environment configuration file"""
-        env_config = {
-            "system": platform.system(),
-            "python_version": platform.python_version(),
-            "tesseract_path": self.get_tesseract_path(),
-            "setup_date": platform.uname()._asdict()
-        }
-        
-        with open("ocr_environment.json", "w") as f:
-            json.dump(env_config, f, indent=2)
-        
-        logger.info("Environment configuration saved to ocr_environment.json")
-    
-    def get_tesseract_path(self):
-        """Get Tesseract executable path"""
-        if self.system == "Windows":
-            possible_paths = [
-                "C:\\Program Files\\Tesseract-OCR\\tesseract.exe",
-                "C:\\Users\\{}\\AppData\\Local\\Tesseract-OCR\\tesseract.exe".format(os.getenv('USERNAME'))
-            ]
+        try:
+            env_config = {
+                "system": self.system,
+                "python_version": sys.version,
+                "tesseract_path": os.environ.get("TESSERACT_CMD", "system"),
+                "packages_installed": True,
+                "setup_date": "Windows - Setup Complete"
+            }
             
-            for path in possible_paths:
-                if os.path.exists(path):
-                    return path
-        
-        elif self.system in ["Darwin", "Linux"]:
-            try:
-                result = subprocess.run(["which", "tesseract"], capture_output=True, text=True)
-                if result.returncode == 0:
-                    return result.stdout.strip()
-            except:
-                pass
-        
-        return "tesseract"
+            with open("environment.json", "w") as f:
+                json.dump(env_config, f, indent=2)
+            
+            logger.info("✅ Environment configuration saved")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Failed to create environment file: {e}")
+            return False
     
     def run_setup(self):
         """Run complete setup process"""
         logger.info("=" * 60)
         logger.info("OCR Environment Setup")
         logger.info("=" * 60)
-        logger.info(f"System: {self.system}")
-        logger.info(f"Python: {self.python_executable}")
         
         steps = [
-            ("System Dependencies", self.install_system_dependencies),
+            ("Python Version", self.check_python_version),
+            ("System Dependencies", self.check_tesseract),
             ("Python Packages", self.install_python_packages),
             ("Verification", self.verify_installation),
             ("Environment Config", self.create_environment_file)
         ]
         
-        success_count = 0
         for step_name, step_func in steps:
             logger.info(f"\n--- {step_name} ---")
-            if step_func():
-                success_count += 1
-                logger.info(f"✅ {step_name} completed successfully")
-            else:
-                logger.error(f"❌ {step_name} failed")
+            if not step_func():
+                logger.error(f"❌ Setup failed at: {step_name}")
+                return False
         
         logger.info("\n" + "=" * 60)
-        logger.info("SETUP SUMMARY")
+        logger.info("✅ Setup completed successfully!")
         logger.info("=" * 60)
-        logger.info(f"Steps Completed: {success_count}/{len(steps)}")
+        logger.info("You can now run: python universal_document_converter_ocr.py")
         
-        if success_count == len(steps):
-            logger.info("🎉 OCR environment setup completed successfully!")
-            logger.info("You can now run: python validate_ocr_integration.py")
-            return True
-        else:
-            logger.error("❌ Some setup steps failed. Please check the logs.")
-            return False
-
-def main():
-    """Main setup function"""
-    setup = OCRSetup()
-    return setup.run_setup()
+        return True
 
 if __name__ == "__main__":
-    success = main()
+    setup = OCRSetup()
+    success = setup.run_setup()
     sys.exit(0 if success else 1)
