@@ -1,8 +1,8 @@
-# Universal Document Converter Complete
+# Universal Document Converter Complete - Bidirectional Edition
 
-A powerful, feature-rich document and image conversion tool with OCR support, multi-threading, and an intuitive GUI.
+A powerful, feature-rich document and image conversion tool with bidirectional support, OCR capabilities, multi-threading, and an intuitive GUI.
 
-![Version](https://img.shields.io/badge/version-3.0-blue)
+![Version](https://img.shields.io/badge/version-3.1-blue)
 ![Python](https://img.shields.io/badge/python-3.7+-green)
 ![License](https://img.shields.io/badge/license-MIT-purple)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
@@ -10,8 +10,10 @@ A powerful, feature-rich document and image conversion tool with OCR support, mu
 ## 🌟 Features
 
 ### Core Features
-- **Universal Format Support**: Convert DOCX, PDF, TXT, RTF, ODT, HTML, EPUB, XML, JSON, CSV to Markdown
-- **OCR Integration**: Extract text from images (JPG, PNG, TIFF, BMP, GIF, WebP) and scanned PDFs
+- **Bidirectional Conversion**: Convert between any supported formats, including FROM Markdown
+- **Multiple Output Formats**: Convert to Markdown, Plain Text, Word, PDF, HTML, or RTF
+- **Universal Input Support**: DOCX, PDF, TXT, RTF, ODT, HTML, EPUB, XML, JSON, CSV, and **Markdown**
+- **OCR Integration**: Extract text from images and output to any supported format
 - **Multi-threaded Processing**: Concurrent file conversion with configurable thread count
 - **Batch Processing**: Convert entire folders while preserving directory structure
 - **Drag & Drop**: Simply drag folders onto the application window
@@ -28,11 +30,12 @@ A powerful, feature-rich document and image conversion tool with OCR support, mu
 
 ### GUI Features
 - **Modern Interface**: Clean, intuitive design with tabbed settings
+- **Output Format Selector**: Choose your desired output format from dropdown menu
 - **File Preview**: Tree view of files to be converted with status indicators
 - **Real-time Statistics**: Live conversion statistics and time tracking
 - **Context Menus**: Right-click options for file management
 - **Responsive Design**: Adapts to different screen sizes
-- **Dark Mode Support**: Easy on the eyes during extended use (coming soon)
+- **Format Dependencies**: Visual indicators for required libraries
 
 ## 📋 Requirements
 
@@ -67,6 +70,13 @@ striprtf>=0.0.22       # RTF support
 html2text>=2020.1.16   # Better HTML conversion
 ebooklib>=0.18         # EPUB support
 odfpy>=1.4.1          # ODT support
+```
+
+#### Output Format Dependencies (Optional)
+```
+reportlab>=3.6.0       # PDF output support
+python-docx>=0.8.11    # DOCX output (also used for input)
+markdown2>=2.4.0       # Enhanced HTML conversion
 ```
 
 ## 🚀 Installation
@@ -153,27 +163,55 @@ odfpy>=1.4.1          # ODT support
 
 1. **Launch the application**
    - Windows: Double-click the desktop shortcut or .exe file
-   - Command line: `python universal_document_converter_complete.py`
+   - Command line: `python universal_document_converter_bidirectional_complete.py`
 
 2. **Select input folder**
    - Click "Browse" next to Input Folder
    - Or drag and drop a folder onto the window
    - Or use Ctrl+O
+   - **NEW**: Markdown (.md) files are now supported as input
 
 3. **Select output folder**
    - Click "Browse" next to Output Folder
    - Or use Ctrl+S
 
-4. **Configure settings**
+4. **Choose output format** ⭐ NEW
+   - Select from dropdown: Markdown, Plain Text, Word, PDF, HTML, or RTF
+   - Check dependency status (green ✅ = ready, yellow ⚠️ = library needed)
+
+5. **Configure settings**
    - Enable/disable OCR mode for image processing
    - Set thread count for parallel processing
    - Choose whether to preserve folder structure
    - Select overwrite behavior
 
-5. **Start conversion**
+6. **Start conversion**
    - Click "Convert" button
    - Or press Ctrl+R
    - Monitor progress in real-time
+
+### Bidirectional Conversion ⭐ NEW
+
+1. **Convert FROM Markdown**
+   - Input: README.md → Output: README.pdf (or any format)
+   - Preserves formatting when converting to other formats
+   - Supports all Markdown features (headers, lists, tables, code blocks)
+
+2. **Convert TO Multiple Formats**
+   - **Plain Text (.txt)**: Strips all formatting, keeps content
+   - **Word Document (.docx)**: Maintains structure with proper styles
+   - **PDF (.pdf)**: Professional layout with formatted text
+   - **HTML (.html)**: Web-ready with embedded CSS styling
+   - **RTF (.rtf)**: Compatible with most word processors
+   - **Markdown (.md)**: Original or converted from other formats
+
+3. **Example Conversions**
+   ```
+   report.docx → report.pdf
+   README.md → README.html
+   scanned.jpg → scanned.txt (OCR to plain text)
+   data.csv → data.md → data.pdf
+   ```
 
 ### OCR Mode
 
@@ -184,7 +222,7 @@ odfpy>=1.4.1          # ODT support
 2. **Configure OCR settings**
    - Select language (Tools → OCR Settings)
    - Adjust confidence threshold
-   - Choose processing options
+   - Choose output format for OCR results ⭐ NEW
 
 3. **Supported image formats**
    - JPG/JPEG
@@ -250,6 +288,14 @@ odfpy>=1.4.1          # ODT support
   "cache_size_mb": 100
 }
 ```
+
+### Output Format Options ⭐ NEW
+- `"markdown"` - Standard Markdown format (.md)
+- `"text"` - Plain text without formatting (.txt)
+- `"docx"` - Microsoft Word document (.docx)
+- `"pdf"` - Portable Document Format (.pdf)
+- `"html"` - HTML with embedded styling (.html)
+- `"rtf"` - Rich Text Format (.rtf)
 
 ### OCR Languages
 
@@ -353,7 +399,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔄 Version History
 
-### Version 3.0 (Current)
+### Version 3.1 (Current) ⭐ NEW
+- Bidirectional conversion support
+- Multiple output formats (TXT, DOCX, PDF, HTML, RTF)
+- Markdown as input format
+- OCR output to any format
+- Enhanced GUI with format selector
+- Fixed all linting issues
+
+### Version 3.0
 - Complete rewrite with enhanced GUI
 - OCR integration for image processing
 - Multi-threading support

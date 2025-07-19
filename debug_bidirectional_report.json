@@ -1,0 +1,132 @@
+{
+  "timestamp": "2025-07-19T22:30:52.734712",
+  "tests": [
+    {
+      "name": "Import Structure",
+      "status": "failed",
+      "error": "ModuleNotFoundError: No module named 'tkinter'"
+    },
+    {
+      "name": "Format Definitions",
+      "status": "failed",
+      "error": "ModuleNotFoundError: No module named 'tkinter'"
+    },
+    {
+      "name": "Conversion Methods",
+      "status": "failed",
+      "error": "ModuleNotFoundError: No module named 'tkinter'"
+    },
+    {
+      "name": "Markdown to Text",
+      "status": "failed",
+      "error": "ModuleNotFoundError: No module named 'tkinter'"
+    },
+    {
+      "name": "Markdown to HTML",
+      "status": "failed",
+      "error": "ModuleNotFoundError: No module named 'tkinter'"
+    },
+    {
+      "name": "Output Format Selector",
+      "status": "failed",
+      "error": "ModuleNotFoundError: No module named 'tkinter'"
+    },
+    {
+      "name": "Save Output File",
+      "status": "failed",
+      "error": "ModuleNotFoundError: No module named 'tkinter'"
+    },
+    {
+      "name": "Scan Includes Markdown",
+      "status": "failed",
+      "error": "ModuleNotFoundError: No module named 'tkinter'"
+    },
+    {
+      "name": "GUI Integration",
+      "status": "failed",
+      "error": "ModuleNotFoundError: No module named 'tkinter'"
+    },
+    {
+      "name": "Error Handling",
+      "status": "failed",
+      "error": "ModuleNotFoundError: No module named 'tkinter'"
+    },
+    {
+      "name": "Create Fixed Version",
+      "status": "passed",
+      "result": "Created fixed version with proper GUI integration"
+    }
+  ],
+  "issues_found": [
+    {
+      "test": "Import Structure",
+      "issue": "ModuleNotFoundError: No module named 'tkinter'",
+      "severity": "high"
+    },
+    {
+      "test": "Format Definitions",
+      "issue": "ModuleNotFoundError: No module named 'tkinter'",
+      "severity": "high"
+    },
+    {
+      "test": "Conversion Methods",
+      "issue": "ModuleNotFoundError: No module named 'tkinter'",
+      "severity": "high"
+    },
+    {
+      "test": "Markdown to Text",
+      "issue": "ModuleNotFoundError: No module named 'tkinter'",
+      "severity": "high"
+    },
+    {
+      "test": "Markdown to HTML",
+      "issue": "ModuleNotFoundError: No module named 'tkinter'",
+      "severity": "high"
+    },
+    {
+      "test": "Output Format Selector",
+      "issue": "ModuleNotFoundError: No module named 'tkinter'",
+      "severity": "high"
+    },
+    {
+      "test": "Save Output File",
+      "issue": "ModuleNotFoundError: No module named 'tkinter'",
+      "severity": "high"
+    },
+    {
+      "test": "Scan Includes Markdown",
+      "issue": "ModuleNotFoundError: No module named 'tkinter'",
+      "severity": "high"
+    },
+    {
+      "test": "GUI Integration",
+      "issue": "ModuleNotFoundError: No module named 'tkinter'",
+      "severity": "high"
+    },
+    {
+      "test": "Error Handling",
+      "issue": "ModuleNotFoundError: No module named 'tkinter'",
+      "severity": "high"
+    },
+    {
+      "issue": "GUI format selector integration incomplete",
+      "severity": "medium",
+      "fix": "The add_output_format_selector method has pass statement"
+    },
+    {
+      "issue": "PDF and DOCX conversion returns None (placeholder)",
+      "severity": "high",
+      "fix": "Need actual implementation for PDF/DOCX generation"
+    },
+    {
+      "issue": "Some conversion methods may fail if libraries not installed",
+      "severity": "medium",
+      "fix": "Add try/except for optional library imports"
+    },
+    {
+      "issue": "Images not embedded in output documents",
+      "severity": "low",
+      "fix": "Future enhancement to embed images"
+    }
+  ]
+}
