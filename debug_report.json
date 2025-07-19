@@ -1,0 +1,84 @@
+{
+  "timestamp": "2025-07-19T22:12:08.830604",
+  "python_version": "3.12.3 (main, Jun 18 2025, 17:59:45) [GCC 13.3.0]",
+  "platform": "linux",
+  "tests": [
+    {
+      "name": "Python Version",
+      "status": "passed",
+      "result": "Python 3.12.3 meets requirement (>= 3.7)"
+    },
+    {
+      "name": "Core Imports",
+      "status": "failed",
+      "error": "ModuleNotFoundError: No module named 'tkinter'",
+      "traceback": "Traceback (most recent call last):\n  File \"/root/repo/debug_converter.py\", line 34, in test\n    result = func()\n             ^^^^^^\n  File \"/root/repo/debug_converter.py\", line 73, in test_core_imports\n    __import__(module)\nModuleNotFoundError: No module named 'tkinter'\n"
+    },
+    {
+      "name": "Document Dependencies",
+      "status": "failed",
+      "error": "Exception: python-docx not installed (required)",
+      "traceback": "Traceback (most recent call last):\n  File \"/root/repo/debug_converter.py\", line 83, in test_document_dependencies\n    import docx\nModuleNotFoundError: No module named 'docx'\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/root/repo/debug_converter.py\", line 34, in test\n    result = func()\n             ^^^^^^\n  File \"/root/repo/debug_converter.py\", line 86, in test_document_dependencies\n    raise Exception(\"python-docx not installed (required)\")\nException: python-docx not installed (required)\n"
+    },
+    {
+      "name": "OCR Dependencies",
+      "status": "passed",
+      "result": "OCR available: . Missing: pytesseract, Pillow, opencv-python, numpy"
+    },
+    {
+      "name": "OCR Engine",
+      "status": "failed",
+      "error": "ModuleNotFoundError: No module named 'cv2'",
+      "traceback": "Traceback (most recent call last):\n  File \"/root/repo/debug_converter.py\", line 34, in test\n    result = func()\n             ^^^^^^\n  File \"/root/repo/debug_converter.py\", line 151, in test_ocr_engine\n    from ocr_engine.ocr_integration import OCRIntegration\n  File \"/root/repo/ocr_engine/__init__.py\", line 11, in <module>\n    from .ocr_engine import OCREngine\n  File \"/root/repo/ocr_engine/ocr_engine.py\", line 36, in <module>\n    from .image_processor import ImageProcessor\n  File \"/root/repo/ocr_engine/image_processor.py\", line 5, in <module>\n    import cv2\nModuleNotFoundError: No module named 'cv2'\n"
+    },
+    {
+      "name": "GUI Initialization",
+      "status": "failed",
+      "error": "ModuleNotFoundError: No module named 'tkinter'",
+      "traceback": "Traceback (most recent call last):\n  File \"/root/repo/debug_converter.py\", line 34, in test\n    result = func()\n             ^^^^^^\n  File \"/root/repo/debug_converter.py\", line 168, in test_gui_initialization\n    import tkinter as tk\nModuleNotFoundError: No module named 'tkinter'\n"
+    },
+    {
+      "name": "Configuration Manager",
+      "status": "failed",
+      "error": "ModuleNotFoundError: No module named 'tkinter'",
+      "traceback": "Traceback (most recent call last):\n  File \"/root/repo/debug_converter.py\", line 34, in test\n    result = func()\n             ^^^^^^\n  File \"/root/repo/debug_converter.py\", line 193, in test_configuration_manager\n    from universal_document_converter_complete import ConfigurationManager\n  File \"/root/repo/universal_document_converter_complete.py\", line 17, in <module>\n    import tkinter as tk\nModuleNotFoundError: No module named 'tkinter'\n"
+    },
+    {
+      "name": "File Conversions",
+      "status": "failed",
+      "error": "ModuleNotFoundError: No module named 'tkinter'",
+      "traceback": "Traceback (most recent call last):\n  File \"/root/repo/debug_converter.py\", line 34, in test\n    result = func()\n             ^^^^^^\n  File \"/root/repo/debug_converter.py\", line 214, in test_file_conversions\n    from universal_document_converter_complete import DocumentConverterApp\n  File \"/root/repo/universal_document_converter_complete.py\", line 17, in <module>\n    import tkinter as tk\nModuleNotFoundError: No module named 'tkinter'\n"
+    },
+    {
+      "name": "Threading Support",
+      "status": "passed",
+      "result": "Threading and concurrent processing working correctly"
+    },
+    {
+      "name": "Memory Monitoring",
+      "status": "passed",
+      "result": "psutil not installed - memory monitoring disabled"
+    },
+    {
+      "name": "Drag & Drop Support",
+      "status": "passed",
+      "result": "tkinterdnd2 not installed - drag and drop disabled"
+    },
+    {
+      "name": "File System Operations",
+      "status": "passed",
+      "result": "File system operations working correctly"
+    },
+    {
+      "name": "Logging System",
+      "status": "passed",
+      "result": "Logging system configured and working"
+    },
+    {
+      "name": "Error Handling",
+      "status": "failed",
+      "error": "ModuleNotFoundError: No module named 'tkinter'",
+      "traceback": "Traceback (most recent call last):\n  File \"/root/repo/debug_converter.py\", line 34, in test\n    result = func()\n             ^^^^^^\n  File \"/root/repo/debug_converter.py\", line 334, in test_error_handling\n    from universal_document_converter_complete import (\n  File \"/root/repo/universal_document_converter_complete.py\", line 17, in <module>\n    import tkinter as tk\nModuleNotFoundError: No module named 'tkinter'\n"
+    }
+  ]
+}
