@@ -166,7 +166,7 @@ For support, visit: https://github.com/Beaulewis1977/quick_doc_convertor
                 if result.returncode == 0:
                     actual_size = int(result.stdout.split()[0])
                     size_mb = max(size_mb, actual_size + 50)  # Add 50MB buffer
-            except:
+            except (subprocess.SubprocessError, ValueError):
                 pass
             
             # Create temporary DMG
@@ -250,7 +250,7 @@ end tell
                 try:
                     subprocess.run(['hdiutil', 'detach', mount_point], 
                                  capture_output=True)
-                except:
+                except subprocess.SubprocessError:
                     pass
                 raise e
         

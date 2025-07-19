@@ -109,7 +109,7 @@ set -e
 
 # Remove desktop entries
 rm -f ~/.local/share/applications/quick-document-convertor.desktop
-rm -f ~/Desktop/Quick\ Document\ Convertor.desktop
+rm -f ~/Desktop/Quick\\ Document\\ Convertor.desktop
 
 exit 0
 """

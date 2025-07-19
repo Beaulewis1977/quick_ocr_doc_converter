@@ -314,7 +314,7 @@ class OCREngine:
                 )
                 confidences = [int(conf) for conf in data['conf'] if int(conf) > 0]
                 avg_confidence = sum(confidences) / len(confidences) if confidences else 0
-            except:
+            except (ValueError, ZeroDivisionError, KeyError):
                 avg_confidence = None
             
             return {
@@ -432,7 +432,7 @@ class OCREngine:
         """Get the total size of the cache in bytes"""
         try:
             return sum(f.stat().st_size for f in self.cache_dir.glob("*.txt") if f.is_file())
-        except:
+        except (OSError, IOError):
             return 0
     
     def get_cache_stats(self) -> Dict[str, Any]:

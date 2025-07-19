@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Document to Markdown Converter - Desktop GUI
-A simple desktop application for converting documents to Markdown format
+Document to Markdown Converter with OCR - Desktop GUI
+A simple desktop application for converting documents and images to Markdown format
+Includes OCR functionality for image-to-text conversion
 """
 
 import tkinter as tk
@@ -10,19 +11,33 @@ import threading
 import os
 from pathlib import Path
 import sys
+from typing import List, Dict, Any, Optional
+
+# Import OCR components
+try:
+    from ocr_engine.ocr_integration import OCRIntegration
+    from ocr_engine.format_detector import OCRFormatDetector
+    OCR_AVAILABLE = True
+except ImportError:
+    OCR_AVAILABLE = False
 
 class DocumentConverterGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("Document to Markdown Converter")
-        self.root.geometry("600x500")
-        self.root.minsize(500, 400)
+        self.root.title("Document to Markdown Converter with OCR")
+        self.root.geometry("700x600")
+        self.root.minsize(600, 500)
+        
+        # Initialize OCR if available
+        self.ocr_integration = OCRIntegration() if OCR_AVAILABLE else None
+        self.format_detector = OCRFormatDetector() if OCR_AVAILABLE else None
         
         # Variables
         self.input_path = tk.StringVar()
         self.output_path = tk.StringVar()
         self.progress_var = tk.DoubleVar()
         self.status_var = tk.StringVar(value="Ready to convert documents")
+        self.ocr_mode_var = tk.BooleanVar(value=False)
         
         # Set default output to Desktop/markdown_output
         desktop = Path.home() / "Desktop"
@@ -89,35 +104,52 @@ class DocumentConverterGUI:
         ttk.Checkbutton(options_frame, text="Overwrite existing files", 
                        variable=self.overwrite_existing).grid(row=1, column=0, sticky=tk.W)
         
+        # OCR Mode section
+        if OCR_AVAILABLE:
+            ocr_frame = ttk.LabelFrame(main_frame, text="🔍 OCR Mode", padding="10")
+            ocr_frame.grid(row=6, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 15))
+            
+            # OCR Mode Toggle
+            ttk.Checkbutton(ocr_frame, text="Enable OCR Mode (Process images to text)",
+                           variable=self.ocr_mode_var,
+                           command=self.toggle_ocr_mode).grid(row=0, column=0, sticky=tk.W)
+            
+            # OCR Status
+            self.ocr_status_label = ttk.Label(ocr_frame, text="", foreground='green')
+            self.ocr_status_label.grid(row=1, column=0, sticky=tk.W, pady=(5, 0))
+            
+            # Check OCR availability
+            self.check_ocr_status()
+        
         # Convert button
         self.convert_button = ttk.Button(main_frame, text="Convert Documents", 
                                         command=self.start_conversion,
                                         style='Accent.TButton')
-        self.convert_button.grid(row=6, column=0, columnspan=3, pady=(0, 15))
+        self.convert_button.grid(row=7, column=0, columnspan=3, pady=(0, 15))
         
         # Progress bar
         ttk.Label(main_frame, text="Progress:", font=('Arial', 10, 'bold')).grid(
-            row=7, column=0, sticky=tk.W)
+            row=8, column=0, sticky=tk.W)
         
         self.progress_bar = ttk.Progressbar(main_frame, variable=self.progress_var, 
                                            maximum=100)
-        self.progress_bar.grid(row=8, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 10))
+        self.progress_bar.grid(row=9, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 10))
         
         # Status label
         self.status_label = ttk.Label(main_frame, textvariable=self.status_var, 
                                      font=('Arial', 9), foreground='blue')
-        self.status_label.grid(row=9, column=0, columnspan=3, sticky=tk.W)
+        self.status_label.grid(row=10, column=0, columnspan=3, sticky=tk.W)
         
         # Results text area
         ttk.Label(main_frame, text="Results:", font=('Arial', 10, 'bold')).grid(
-            row=10, column=0, sticky=tk.W, pady=(15, 5))
+            row=11, column=0, sticky=tk.W, pady=(15, 5))
         
         # Create text widget with scrollbar
         text_frame = ttk.Frame(main_frame)
-        text_frame.grid(row=11, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
+        text_frame.grid(row=12, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
         text_frame.columnconfigure(0, weight=1)
         text_frame.rowconfigure(0, weight=1)
-        main_frame.rowconfigure(11, weight=1)
+        main_frame.rowconfigure(12, weight=1)
         
         self.results_text = tk.Text(text_frame, height=8, wrap=tk.WORD, font=('Consolas', 9))
         scrollbar = ttk.Scrollbar(text_frame, orient=tk.VERTICAL, command=self.results_text.yview)
@@ -222,6 +254,13 @@ class DocumentConverterGUI:
             
             # Find all files to convert
             file_patterns = ['*.docx', '*.pdf', '*.txt']
+            
+            # Add image patterns if OCR mode is enabled
+            if self.ocr_mode_var.get() and OCR_AVAILABLE:
+                image_patterns = ['*.jpg', '*.jpeg', '*.png', '*.tiff', '*.tif', '*.bmp', '*.gif', '*.webp']
+                file_patterns.extend(image_patterns)
+                self.log_message(f"🔍 OCR Mode: Including image formats: {', '.join(image_patterns)}")
+            
             files_to_convert = []
             
             for pattern in file_patterns:
@@ -233,7 +272,8 @@ class DocumentConverterGUI:
             total_files = len(files_to_convert)
             
             if total_files == 0:
-                self.log_message("❌ No convertible files found (looking for .docx, .pdf, .txt)")
+                pattern_msg = ', '.join(file_patterns)
+                self.log_message(f"❌ No convertible files found (looking for {pattern_msg})")
                 self.update_status("No files to convert")
                 self.convert_button.config(state='normal')
                 return
@@ -265,11 +305,22 @@ class DocumentConverterGUI:
                         continue
                     
                     # Convert based on file type
-                    if file_path.suffix.lower() == '.docx':
+                    file_ext = file_path.suffix.lower()
+                    
+                    # Check if it's an image file for OCR
+                    image_extensions = ['.jpg', '.jpeg', '.png', '.tiff', '.tif', '.bmp', '.gif', '.webp']
+                    
+                    if file_ext in image_extensions and self.ocr_mode_var.get() and OCR_AVAILABLE:
+                        content = self.convert_image_to_markdown(file_path)
+                    elif file_ext == '.docx':
                         content = self.convert_docx_to_markdown(file_path)
-                    elif file_path.suffix.lower() == '.pdf':
-                        content = self.convert_pdf_to_markdown(file_path)
-                    elif file_path.suffix.lower() == '.txt':
+                    elif file_ext == '.pdf':
+                        # PDF can be processed with OCR if enabled
+                        if self.ocr_mode_var.get() and OCR_AVAILABLE and self.is_pdf_image_based(file_path):
+                            content = self.convert_image_to_markdown(file_path)
+                        else:
+                            content = self.convert_pdf_to_markdown(file_path)
+                    elif file_ext == '.txt':
                         content = self.convert_txt_to_markdown(file_path)
                     else:
                         continue
@@ -279,7 +330,9 @@ class DocumentConverterGUI:
                         f.write(content)
                     
                     successful += 1
-                    self.log_message(f"✅ {file_path.name}")
+                    # Add OCR indicator if it was an image
+                    ocr_indicator = " (OCR)" if file_ext in image_extensions and self.ocr_mode_var.get() else ""
+                    self.log_message(f"✅ {file_path.name}{ocr_indicator}")
                     
                 except Exception as e:
                     failed += 1
@@ -293,13 +346,16 @@ class DocumentConverterGUI:
             self.log_message(f"\n🎉 Conversion complete!")
             self.log_message(f"✅ Successful: {successful}")
             self.log_message(f"❌ Failed: {failed}")
+            if self.ocr_mode_var.get():
+                self.log_message(f"🔍 OCR Mode: Enabled")
             self.log_message(f"📁 Output saved to: {output_dir}")
             
             self.update_status(f"Complete! {successful} files converted")
             
             # Show completion message
+            ocr_msg = " (OCR Mode enabled)" if self.ocr_mode_var.get() else ""
             messagebox.showinfo("Conversion Complete", 
-                              f"Successfully converted {successful} files!\n"
+                              f"Successfully converted {successful} files!{ocr_msg}\n"
                               f"Failed: {failed}\n"
                               f"Output saved to: {output_dir}")
             
@@ -315,6 +371,11 @@ class DocumentConverterGUI:
     def install_requirements(self):
         """Install required packages"""
         required_packages = ['python-docx', 'PyPDF2']
+        
+        # Add OCR packages if OCR mode is enabled
+        if self.ocr_mode_var.get() and OCR_AVAILABLE:
+            ocr_packages = ['pytesseract', 'Pillow', 'opencv-python', 'numpy']
+            required_packages.extend(ocr_packages)
         
         for package in required_packages:
             try:
@@ -374,6 +435,54 @@ class DocumentConverterGUI:
         
         raise Exception(f"Could not decode file with any of the attempted encodings: {encodings}")
     
+    def convert_image_to_markdown(self, file_path):
+        """Convert image to markdown using OCR"""
+        try:
+            self.log_message(f"🔍 Processing image with OCR: {file_path.name}")
+            
+            # Use OCR integration to process the image
+            result = self.ocr_integration.process_file(str(file_path))
+            
+            if result['success']:
+                content = f"# {file_path.stem}\n\n"
+                content += f"*Source: {file_path.name}*\n\n"
+                content += result['text']
+                
+                if result.get('confidence'):
+                    self.log_message(f"   ✓ OCR confidence: {result['confidence']:.1f}%")
+                
+                return content
+            else:
+                raise Exception(result.get('error', 'Unknown OCR error'))
+                
+        except Exception as e:
+            self.log_message(f"   ❌ OCR Error: {str(e)}")
+            return f"# {file_path.stem}\n\n*Error processing image: {str(e)}*"
+    
+    def is_pdf_image_based(self, file_path):
+        """Check if a PDF is image-based (scanned) and needs OCR"""
+        try:
+            import PyPDF2
+            
+            with open(file_path, 'rb') as file:
+                pdf_reader = PyPDF2.PdfReader(file)
+                
+                # Check first few pages for text content
+                pages_to_check = min(3, len(pdf_reader.pages))
+                total_text_length = 0
+                
+                for i in range(pages_to_check):
+                    page = pdf_reader.pages[i]
+                    text = page.extract_text()
+                    total_text_length += len(text.strip())
+                
+                # If very little text extracted, likely image-based
+                return total_text_length < 100
+                
+        except Exception:
+            # If we can't determine, assume it's not image-based
+            return False
+    
     def update_status(self, message):
         """Update status label thread-safely"""
         self.root.after(0, lambda: self.status_var.set(message))
@@ -385,6 +494,34 @@ class DocumentConverterGUI:
             self.results_text.see(tk.END)
         
         self.root.after(0, _add_message)
+    
+    def toggle_ocr_mode(self):
+        """Toggle OCR mode on/off"""
+        if self.ocr_mode_var.get():
+            self.log_message("🔍 OCR Mode enabled - will process images to text")
+            self.update_status("OCR Mode enabled")
+        else:
+            self.log_message("📄 OCR Mode disabled - standard document conversion")
+            self.update_status("Standard conversion mode")
+    
+    def check_ocr_status(self):
+        """Check OCR availability and update status"""
+        if not OCR_AVAILABLE:
+            self.ocr_status_label.config(text="OCR not available - install OCR dependencies", 
+                                       foreground='red')
+            return
+        
+        try:
+            availability = self.ocr_integration.check_availability()
+            if availability['available']:
+                self.ocr_status_label.config(text=f"✓ {availability['message']}", 
+                                           foreground='green')
+            else:
+                self.ocr_status_label.config(text=f"⚠ {availability['message']}", 
+                                           foreground='orange')
+        except Exception as e:
+            self.ocr_status_label.config(text=f"Error checking OCR: {str(e)}", 
+                                       foreground='red')
 
 def main():
     """Main application entry point"""

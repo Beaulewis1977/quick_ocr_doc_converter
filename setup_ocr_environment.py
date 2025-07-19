@@ -236,7 +236,7 @@ class OCRSetup:
                 result = subprocess.run(["which", "tesseract"], capture_output=True, text=True)
                 if result.returncode == 0:
                     return result.stdout.strip()
-            except:
+            except (subprocess.SubprocessError, FileNotFoundError):
                 pass
         
         return "tesseract"
