@@ -16,7 +16,8 @@ class OCRIntegration:
     
     def __init__(self, logger: Optional[logging.Logger] = None):
         self.logger = logger or logging.getLogger(__name__)
-        self.ocr_engine = OCREngine(logger)
+        config = {'logger': self.logger} if self.logger else {}
+        self.ocr_engine = OCREngine(config)
         self.is_available = len(self.ocr_engine.get_available_backends()) > 0
         
     def check_availability(self) -> Dict[str, Any]:
@@ -160,6 +161,80 @@ class OCRIntegration:
             'markdown': '.md'
         }
         return extensions.get(format_type, '.txt')
+    
+    def process_file(self, file_path: str, output_dir: str = None, output_format: str = 'txt') -> Dict[str, Any]:
+        """
+        Process a single file with OCR
+        
+        Args:
+            file_path: Path to the image file
+            output_dir: Output directory (optional)
+            output_format: Output format (txt, json, markdown)
+            
+        Returns:
+            Dictionary with processing result
+        """
+        if not self.is_available:
+            raise RuntimeError("OCR functionality is not available")
+        
+        if output_dir:
+            output_dir = Path(output_dir)
+            output_dir.mkdir(parents=True, exist_ok=True)
+            return self._process_single_file(file_path, str(output_dir), output_format)
+        else:
+            # Just extract text without saving
+            result = self.ocr_engine.extract_text(file_path)
+            return {
+                'file': file_path,
+                'success': True,
+                'text': result.get('text', ''),
+                'word_count': result.get('word_count', 0),
+                'character_count': result.get('character_count', 0)
+            }
+    
+    def process_batch(self, file_paths: List[str], output_dir: str = None, 
+                     output_format: str = 'txt', max_workers: int = 2,
+                     progress_callback=None) -> Dict[str, Any]:
+        """
+        Alias for process_files for backward compatibility
+        
+        Args:
+            file_paths: List of image file paths
+            output_dir: Output directory for results
+            output_format: Output format (txt, json, markdown)
+            max_workers: Maximum number of concurrent workers
+            progress_callback: Optional callback for progress updates
+            
+        Returns:
+            Dictionary with processing results
+        """
+        if output_dir is None:
+            # Just extract text from all files without saving
+            results = []
+            for file_path in file_paths:
+                try:
+                    result = self.process_file(file_path)
+                    results.append(result)
+                except Exception as e:
+                    results.append({
+                        'file': file_path,
+                        'success': False,
+                        'error': str(e)
+                    })
+            
+            successful = sum(1 for r in results if r.get('success', False))
+            failed = len(results) - successful
+            
+            return {
+                'successful': successful,
+                'failed': failed,
+                'skipped': 0,
+                'results': results,
+                'duration': 0,
+                'message': f"Processed {successful} files successfully"
+            }
+        else:
+            return self.process_files(file_paths, output_dir, output_format, max_workers, progress_callback)
     
     def get_supported_formats_info(self) -> List[Dict[str, str]]:
         """Get information about supported formats"""

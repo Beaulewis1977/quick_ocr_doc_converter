@@ -115,6 +115,19 @@ class OCRFormatDetector:
         ]
     
     @classmethod
+    def is_ocr_format(cls, file_path: str) -> bool:
+        """
+        Alias for is_ocr_supported for backward compatibility
+        
+        Args:
+            file_path: Path to the file
+            
+        Returns:
+            True if format is supported for OCR
+        """
+        return cls.is_ocr_supported(file_path)
+    
+    @classmethod
     def filter_supported_files(cls, file_paths: List[str]) -> List[str]:
         """
         Filter a list of files to only include OCR-supported formats

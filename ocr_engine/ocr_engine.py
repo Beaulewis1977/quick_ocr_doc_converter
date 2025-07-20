@@ -289,7 +289,7 @@ class OCREngine:
         
         return result
     
-    def _extract_with_tesseract(self, image: np.ndarray, options: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_with_tesseract(self, image, options: Dict[str, Any]) -> Dict[str, Any]:
         """Extract text using Tesseract OCR"""
         try:
             # Convert numpy array to PIL Image
@@ -326,7 +326,7 @@ class OCREngine:
         except Exception as e:
             raise OCRBackendError(f"Tesseract OCR failed: {e}")
     
-    def _extract_with_easyocr(self, image: np.ndarray, options: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_with_easyocr(self, image, options: Dict[str, Any]) -> Dict[str, Any]:
         """Extract text using EasyOCR"""
         try:
             reader = self._get_easyocr_reader(options.get('languages', ['en']))

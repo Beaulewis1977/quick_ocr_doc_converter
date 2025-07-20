@@ -207,8 +207,15 @@ class DocumentConverterApp:
         
     def setup_drag_drop(self):
         """Setup drag and drop functionality"""
-        self.root.drop_target_register(tk.DND_FILES)
-        self.root.dnd_bind('<<Drop>>', self.on_drop)
+        try:
+            from tkinterdnd2 import TkinterDnD, DND_FILES
+            # Only setup if tkinterdnd2 is available and root supports it
+            if hasattr(self.root, 'drop_target_register'):
+                self.root.drop_target_register(DND_FILES)
+                self.root.dnd_bind('<<Drop>>', self.on_drop)
+        except (ImportError, AttributeError):
+            # Drag and drop not available, continue without it
+            pass
         
     def on_drop(self, event):
         """Handle file drop events"""
