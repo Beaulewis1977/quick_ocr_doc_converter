@@ -50,9 +50,13 @@
 **For developers or advanced users**
 
 1. **Install Python 3.6+** from [python.org](https://python.org)
-2. **Install dependencies**:
+2. **Install ALL dependencies (includes all features)**:
    ```bash
-   pip install python-docx PyPDF2 beautifulsoup4 striprtf ebooklib tkinterdnd2
+   pip install -r requirements.txt
+   ```
+   Or manually install all features:
+   ```bash
+   pip install python-docx PyPDF2 beautifulsoup4 striprtf ebooklib tkinterdnd2 flask flask-cors waitress pytesseract opencv-python
    ```
 3. **Run the application**:
    ```bash

@@ -18,7 +18,15 @@ def check_python_packages():
         'beautifulsoup4',
         'striprtf',
         'ebooklib',
-        'tkinterdnd2'
+        'tkinterdnd2',
+        'flask',
+        'flask-cors',
+        'waitress',
+        'pytesseract',
+        'opencv-python',
+        'numpy',
+        'pillow',
+        'psutil'
     ]
     
     missing_packages = []
@@ -37,6 +45,22 @@ def check_python_packages():
                 import ebooklib
             elif package == 'tkinterdnd2':
                 import tkinterdnd2
+            elif package == 'flask':
+                import flask
+            elif package == 'flask-cors':
+                import flask_cors
+            elif package == 'waitress':
+                import waitress
+            elif package == 'pytesseract':
+                import pytesseract
+            elif package == 'opencv-python':
+                import cv2
+            elif package == 'numpy':
+                import numpy
+            elif package == 'pillow':
+                import PIL
+            elif package == 'psutil':
+                import psutil
         except ImportError:
             missing_packages.append(package)
     

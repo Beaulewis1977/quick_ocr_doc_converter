@@ -20,3 +20,8 @@ beautifulsoup4>=4.12.0    # HTML parsing and processing
 striprtf>=0.0.26          # RTF (Rich Text Format) processing
 ebooklib>=0.18            # EPUB eBook reading and writing
 tkinterdnd2>=0.3.0        # Enhanced drag-and-drop support 
+
+# API server functionality (for complete feature set)
+flask>=3.0.0              # Web framework for REST API
+flask-cors>=3.0.0         # Cross-Origin Resource Sharing support
+waitress>=2.1.0           # Production WSGI server
