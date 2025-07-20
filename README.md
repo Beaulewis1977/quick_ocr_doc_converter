@@ -4,6 +4,22 @@ A powerful Python application that converts multiple document formats (PDF, DOCX
 
 Designed and built by Beau Lewis.
 
+## 🎯 Download Windows Installer
+
+### **[Download QuickDocumentConverter_Setup.exe](https://github.com/yourusername/releases)**
+
+**Windows users get a complete installation package with:**
+- ✅ Professional GUI installer wizard
+- ✅ Desktop & Start Menu shortcuts automatically created
+- ✅ System tray integration with quick convert menu
+- ✅ Taskbar pinning support
+- ✅ Right-click context menu "Convert with Quick Document Converter"
+- ✅ File associations for all supported formats
+- ✅ Auto-start with Windows option
+- ✅ Full uninstaller in Control Panel
+
+**No Python installation required!** Just download and run the installer.
+
 ## 🎉 Test Status - All Tests Passing!
 
 ### Automated Test Results
@@ -24,29 +40,70 @@ python3 test_conversion.py    # ✅ 3/3 tests passed
 python3 test_ultimate_features.py  # ✅ All features verified
 ```
 
-## Universal Document Converter Ultimate
+## 🌟 Universal Document Converter Ultimate - Full Feature Set
 
-The most feature-rich version with comprehensive functionality:
+The most comprehensive document conversion tool with professional GUI:
 
-### ✅ Verified Features (All Working)
+### ✅ Main GUI Features (All Verified Working)
+
+#### 📑 **Document Conversion Tab**
 - **Multi-Format Support**: Convert between DOCX, PDF, TXT, HTML, RTF, EPUB
-- **OCR Integration**: Process images (JPG, PNG, TIFF, BMP, GIF, WebP) with Tesseract
-- **Thread Selection**: GUI control for 1-32 worker threads
-- **Drag & Drop**: Direct file/folder dropping support
-- **API Server**: REST API for remote processing (optional)
-- **Advanced Settings**: Tabbed interface with comprehensive options
-- **Statistics Tracking**: Monitor conversions and export metrics
-- **Performance Monitoring**: Real-time memory and CPU usage display
-- **Configuration Persistence**: Save all settings in JSON format
+- **Batch Processing**: Add multiple files or entire folders at once
+- **Drag & Drop**: Direct file/folder dropping onto the window
+- **Real-time Progress**: Monitor conversion with progress bar and status
+- **Quick Settings Panel**:
+  - Output format selection dropdown
+  - OCR toggle checkbox
+  - **Thread Count Selector (1-32)**: Spinbox control to adjust worker threads
+  - Shows available CPU cores for optimal selection
+- **File Management**: Add, remove, clear file lists easily
 
-### Quick Start
-```bash
-# Launch the Ultimate GUI
-python3 universal_document_converter_ultimate.py
+#### ⚙️ **Advanced Settings Tab**
+- **OCR Configuration**:
+  - Backend selection (Pytesseract, EasyOCR, Auto)
+  - Language selection (7+ languages)
+  - Preprocessing options (deskew, denoise, contrast)
+  - Multi-backend support toggle
+- **Performance Settings**:
+  - Cache enable/disable with TTL configuration
+  - Memory threshold adjustment (100-4096 MB)
+  - Queue size configuration
+- **File Handling**:
+  - Preserve folder structure option
+  - Overwrite existing files toggle
+  - Auto-open output folder after conversion
+- **Format-Specific Settings**:
+  - PDF: Extract images option
+  - DOCX: Extract styles option
 
-# Or use the launcher
-python3 launch_ultimate.py
+#### 🌐 **API Server Tab**
+- **Server Control**: Start/stop REST API server
+- **Configuration**: Host and port settings
+- **Live Examples**: Copy-paste ready API usage examples
+- **Test Button**: Verify API connectivity
+- **Status Display**: Real-time server status and URL
+
+#### 📊 **Statistics Tab**
+- **Overall Metrics**: Total processed, success rate, uptime
+- **Format Statistics**: Per-format conversion tracking
+- **Export Options**: Save stats as CSV or JSON
+- **Visual Display**: Tree view of conversion history
+
+### 🚀 Windows Quick Launch Options
+```batch
+# Multiple ways to start:
+"🚀 Launch Quick Document Convertor.bat"     # Standard launch
+"⚡ Quick Launch.bat"                         # Fast start
+"🖥️ FORCE GUI TO APPEAR.bat"                # Troubleshooting launch
+"Quick Document Convertor.bat"               # Classic launch
 ```
+
+### 💻 System Tray Features
+- **Quick Convert**: Right-click tray icon → Quick Convert File
+- **Settings Access**: Configure default format and behaviors
+- **Auto-start Option**: Start with Windows checkbox
+- **Notifications**: Conversion complete alerts
+- **Professional Icon**: Blue document icon in system tray
 
 ## Features
 
@@ -118,16 +175,56 @@ python3 launch_ultimate.py
 - Cost tracking dashboard
 - API credential configuration
 
-## Installation
+## 💿 Installation Options
 
-### System Requirements
+### 🎯 Option 1: Windows Installer (Easiest)
+**No Python required!** Download and run the installer:
+1. Download `QuickDocumentConverter_Setup.exe` from releases
+2. Run as Administrator
+3. Follow the installation wizard
+4. Find shortcuts on Desktop, Start Menu, and System Tray
+
+**What the installer does:**
+- ✅ Installs all dependencies automatically
+- ✅ Creates Desktop & Start Menu shortcuts
+- ✅ Sets up system tray with auto-start option
+- ✅ Registers file associations
+- ✅ Adds right-click context menu
+- ✅ Creates uninstaller in Control Panel
+
+### 🔧 Option 2: Quick Setup Scripts (Windows)
+```batch
+# Run the automated setup
+setup_windows_installer.bat
+
+# Or create shortcuts manually
+python setup_shortcuts.py
+```
+
+### 💻 Option 3: Manual Installation (All Platforms)
+
+#### System Requirements
 - Python 3.6+ (tested with 3.12)
 - Tkinter (GUI framework)
 - Tesseract OCR (for OCR functionality)
 
-### Quick Install
+#### Windows Setup
+```bash
+# Install Python from python.org (includes tkinter)
+# Install Tesseract from: https://github.com/UB-Mannheim/tesseract/wiki
 
-#### Step 1: Install System Dependencies
+# Clone repository
+git clone https://github.com/yourusername/universal-document-converter.git
+cd universal-document-converter
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Launch
+python universal_document_converter_ultimate.py
+```
+
+#### Linux/macOS Setup
 ```bash
 # Ubuntu/Debian
 sudo apt update
@@ -136,28 +233,23 @@ sudo apt install -y python3-tk tesseract-ocr libxcursor1
 # macOS
 brew install python-tk tesseract
 
-# Windows
-# Install Python from python.org (includes tkinter)
-# Install Tesseract from: https://github.com/UB-Mannheim/tesseract/wiki
-```
-
-#### Step 2: Install Python Dependencies
-```bash
+# Install Python dependencies
 pip install -r requirements.txt
-```
 
-#### Step 3: Launch the Application
-```bash
+# Launch
 python3 universal_document_converter_ultimate.py
 ```
 
-### Optional Features
+### 🎨 Optional Enhancements
 ```bash
-# For API server functionality
+# API server functionality
 pip install flask flask-cors waitress
 
-# For enhanced OCR (multiple backends)
+# Enhanced OCR backends
 pip install easyocr
+
+# System tray support
+pip install pystray pillow
 ```
 
 ## Usage
@@ -166,17 +258,19 @@ pip install easyocr
 
 1. **Launch the application:**
    ```bash
+   # Windows with installer: Click desktop shortcut or Start Menu
+   # Manual installation: 
    python3 universal_document_converter_ultimate.py
    ```
 
 2. **Add files:**
    - Click "Add Files" or "Add Folder" buttons
    - Or drag and drop files/folders directly onto the window
+   - System tray: Right-click → Quick Convert File
 
 3. **Configure settings:**
    - Select output format (TXT, DOCX, PDF, HTML, RTF, EPUB)
    - Enable OCR for image files
-   - Adjust thread count (1-32) for performance
    - Choose output directory
 
 4. **Convert:**
@@ -184,12 +278,39 @@ pip install easyocr
    - Monitor progress in real-time
    - View results when complete
 
+### ⚡ Thread Selection System
+
+The GUI includes a powerful thread selection system for optimal performance:
+
+#### **Location**: Main tab → Quick Settings panel → "Threads:" spinbox
+
+#### **Features**:
+- **Range**: 1-32 worker threads
+- **Visual Aid**: Shows your CPU core count (e.g., "CPU cores: 8")
+- **Real-time Adjustment**: Change threads without restarting
+- **Smart Default**: Automatically set to your CPU core count
+
+#### **Performance Guidelines**:
+- **Light tasks (TXT)**: 1-4 threads
+- **Medium tasks (DOCX/HTML)**: 4-8 threads  
+- **Heavy tasks (PDF/OCR)**: 8-16 threads
+- **Batch processing**: Match CPU cores
+- **System responsiveness**: Use cores - 1
+
+#### **Example Settings**:
+```
+4-core CPU: Set 4 threads for batch, 3 for background work
+8-core CPU: Set 8 threads for speed, 6 for multitasking
+16-core CPU: Set 12-16 threads for maximum performance
+```
+
 ### Advanced Features
 
 - **API Server**: Enable in the API tab for REST API access
 - **OCR Settings**: Configure language, preprocessing, and backends
 - **Statistics**: Track conversions and export metrics
 - **Performance**: Adjust cache, memory, and queue settings
+- **System Tray**: Quick access to conversion without opening full GUI
 
 ## API Key Configuration
 

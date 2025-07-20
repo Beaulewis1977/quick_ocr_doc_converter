@@ -56,8 +56,8 @@ def create_windows_shortcuts():
     try:
         # Get current directory
         app_dir = Path(__file__).parent.absolute()
-        app_file = app_dir / "universal_document_converter.py"
-        batch_file = app_dir / "Quick Document Convertor.bat"
+        app_file = app_dir / "universal_document_converter_ultimate.py"
+        batch_file = app_dir / "Launch_Ultimate.bat"
         
         if not app_file.exists():
             print("❌ Application file not found!")
@@ -113,7 +113,7 @@ def create_unix_shortcuts():
     """Create Unix/Linux desktop entries"""
     try:
         app_dir = Path(__file__).parent.absolute()
-        app_file = app_dir / "universal_document_converter.py"
+        app_file = app_dir / "universal_document_converter_ultimate.py"
         
         if not app_file.exists():
             print("❌ Application file not found!")
