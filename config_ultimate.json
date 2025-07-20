@@ -1,0 +1,50 @@
+{
+  "output_format": "txt",
+  "output_directory": "/root/Documents/Converted",
+  "ocr_enabled": true,
+  "ocr_language": "eng",
+  "ocr_backend": "pytesseract",
+  "batch_size": 5,
+  "max_workers": 2,
+  "enable_caching": true,
+  "cache_ttl": 3600,
+  "memory_threshold": 500,
+  "preserve_structure": true,
+  "overwrite_existing": false,
+  "auto_open_output": true,
+  "theme": "light",
+  "window_geometry": "1200x800",
+  "api_enabled": false,
+  "api_port": 5000,
+  "api_host": "127.0.0.1",
+  "log_level": "INFO",
+  "log_retention_days": 7,
+  "format_preferences": {
+    "pdf": {
+      "extract_images": true,
+      "preserve_formatting": true
+    },
+    "docx": {
+      "extract_styles": true,
+      "extract_comments": false
+    },
+    "html": {
+      "include_css": false,
+      "extract_scripts": false
+    }
+  },
+  "advanced_ocr": {
+    "preprocessing": true,
+    "deskew": true,
+    "denoise": true,
+    "contrast_enhance": true,
+    "multi_backend": false,
+    "confidence_threshold": 60
+  },
+  "performance": {
+    "chunk_size": 1024,
+    "queue_size": 100,
+    "timeout": 300
+  },
+  "test_key": "test_value"
+}

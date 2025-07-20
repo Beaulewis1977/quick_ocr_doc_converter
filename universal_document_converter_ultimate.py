@@ -1418,8 +1418,8 @@ def main():
     try:
         if platform.system() == 'Windows':
             root.iconbitmap('icon.ico')
-    except:
-        pass
+    except Exception:
+        pass  # Icon file is optional
     
     # Create and run application
     app = DocumentConverterUltimate(root)
