@@ -151,7 +151,7 @@ class OCRBackendManager:
                             'type': 'cloud',
                             'priority': backend_config['google_vision'].get('priority', 2),
                             'available': True,
-                            'cost_per_request': google_backend.get_cost_estimate('dummy')
+                            'cost_per_request': 0.0015  # $1.50 per 1000 requests
                         }
                         self.logger.info("Google Vision backend initialized")
             except Exception as e:
@@ -169,7 +169,7 @@ class OCRBackendManager:
                             'type': 'cloud',
                             'priority': backend_config['aws_textract'].get('priority', 3),
                             'available': True,
-                            'cost_per_request': aws_backend.get_cost_estimate('dummy')
+                            'cost_per_request': 0.0015  # $1.50 per 1000 pages
                         }
                         self.logger.info("AWS Textract backend initialized")
             except Exception as e:
@@ -187,7 +187,7 @@ class OCRBackendManager:
                             'type': 'cloud',
                             'priority': backend_config['azure_vision'].get('priority', 4),
                             'available': True,
-                            'cost_per_request': azure_backend.get_cost_estimate('dummy')
+                            'cost_per_request': 0.001  # $1.00 per 1000 transactions
                         }
                         self.logger.info("Azure Vision backend initialized")
             except Exception as e:
