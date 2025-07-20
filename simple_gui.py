@@ -20,7 +20,7 @@ except ImportError:
 class SimpleConverterGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("Quick Document Convertor")
+        self.root.title("Quick Document Converter")
         self.root.geometry("600x500")
         
         # Variables
