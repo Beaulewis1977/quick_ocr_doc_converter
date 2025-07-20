@@ -4,11 +4,23 @@ A powerful Python application that converts multiple document formats (PDF, DOCX
 
 Designed and built by Beau Lewis.
 
-## 🎯 Download Windows Installer
+## 🎯 Quick Download (No Installation Required!)
 
-### **[Download QuickDocumentConverter_Setup.exe](https://github.com/yourusername/releases)**
+### 📦 **[Download Windows ZIP → Extract → Click EXE](https://github.com/yourusername/universal-document-converter/releases/latest/download/UniversalDocumentConverter_Windows_2.0.0_Installer.zip)**
 
-**Windows users get a complete installation package with:**
+**Just 3 steps:**
+1. Download the ZIP file
+2. Extract it anywhere
+3. Double-click `UniversalDocumentConverter.exe`
+
+**That's it! No installation needed. All features included!**
+
+---
+
+### 🖥️ **Alternative: Full Windows Installer**
+**[Download QuickDocumentConverter_Setup.exe](https://github.com/yourusername/universal-document-converter/releases/latest/download/QuickDocumentConverter_Setup.exe)**
+
+**Professional installer with:**
 - ✅ Professional GUI installer wizard
 - ✅ Desktop & Start Menu shortcuts automatically created
 - ✅ System tray integration with quick convert menu
@@ -19,6 +31,17 @@ Designed and built by Beau Lewis.
 - ✅ Full uninstaller in Control Panel
 
 **No Python installation required!** Just download and run the installer.
+
+---
+
+### 🍎 **macOS & 🐧 Linux Users**
+**[Download Source ZIP](https://github.com/yourusername/universal-document-converter/releases/latest/download/UniversalDocumentConverter_Source_2.0.0.zip)**
+
+Extract and run:
+- **macOS**: `./INSTALL_AND_RUN_MACOS.sh`
+- **Linux**: `./INSTALL_AND_RUN_LINUX.sh`
+
+---
 
 ## 🎉 Test Status - All Tests Passing!
 
