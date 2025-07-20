@@ -187,8 +187,10 @@ class OCREngine:
             with open(image_path, 'rb') as f:
                 hasher.update(f.read(1024))  # First 1KB for speed
         
-        # Add options hash
-        options_str = json.dumps(options, sort_keys=True)
+        # Add options hash (filter out non-serializable objects)
+        serializable_options = {k: v for k, v in options.items() 
+                                if not hasattr(v, '__call__') and not isinstance(v, type)}
+        options_str = json.dumps(serializable_options, sort_keys=True, default=str)
         hasher.update(options_str.encode())
         
         return hasher.hexdigest()
@@ -301,7 +303,7 @@ class OCREngine:
             # Extract text
             text = pytesseract.image_to_string(
                 pil_image,
-                lang='+'.join(options.get('languages', ['en'])),
+                lang='+'.join(options.get('languages', ['eng'])),
                 config=options.get('tesseract_config', '--oem 3 --psm 6')
             )
             
@@ -309,7 +311,7 @@ class OCREngine:
             try:
                 data = pytesseract.image_to_data(
                     pil_image,
-                    lang='+'.join(options.get('languages', ['en'])),
+                    lang='+'.join(options.get('languages', ['eng'])),
                     output_type=pytesseract.Output.DICT
                 )
                 confidences = [int(conf) for conf in data['conf'] if int(conf) > 0]

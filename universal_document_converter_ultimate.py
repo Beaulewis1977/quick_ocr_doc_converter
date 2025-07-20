@@ -43,7 +43,7 @@ try:
     import ebooklib
     from ebooklib import epub
 except ImportError as e:
-    print(f"Warning: Some document processing libraries not available: {e}")
+    logging.warning(f"Some document processing libraries not available: {e}")
 
 # OCR imports
 try:
@@ -52,7 +52,7 @@ try:
     OCR_AVAILABLE = True
 except ImportError:
     OCR_AVAILABLE = False
-    print("Warning: OCR functionality not available")
+    logging.warning("OCR functionality not available")
 
 # API server imports
 try:
@@ -62,7 +62,7 @@ try:
     API_AVAILABLE = True
 except ImportError:
     API_AVAILABLE = False
-    print("Warning: API server functionality not available (install flask, flask-cors, waitress)")
+    logging.warning("API server functionality not available (install flask, flask-cors, waitress)")
 
 
 class ConfigManager:
@@ -124,7 +124,7 @@ class ConfigManager:
                             loaded_config[key] = value
                     return loaded_config
             except Exception as e:
-                print(f"Error loading config: {e}")
+                logging.error(f"Error loading config: {e}")
         return self.default_config.copy()
     
     def save_config(self):
@@ -133,7 +133,7 @@ class ConfigManager:
             with open(self.config_path, 'w') as f:
                 json.dump(self.config, f, indent=2)
         except Exception as e:
-            print(f"Error saving config: {e}")
+            logging.error(f"Error saving config: {e}")
     
     def get(self, key: str, default=None):
         """Get configuration value"""

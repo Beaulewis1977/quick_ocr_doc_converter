@@ -12,6 +12,7 @@ from pathlib import Path
 import json
 from PIL import Image
 import numpy as np
+import cv2
 
 # Add the project root to the path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -59,8 +60,8 @@ class TestOCREngine(unittest.TestCase):
         with open(invalid_file, 'w') as f:
             f.write('not an image')
             
-        result = self.ocr_engine.extract_text(invalid_file)
-        self.assertEqual(result, "")
+        with self.assertRaises(ValueError):
+            self.ocr_engine.extract_text(invalid_file)
 
 class TestOCRIntegration(unittest.TestCase):
     """Test the OCR integration layer"""
@@ -171,7 +172,9 @@ class TestImageProcessor(unittest.TestCase):
         img.save(test_image)
         
         # Test enhancement
-        enhanced = self.processor.enhance_image(test_image)
+        # Read image first
+        img_array = cv2.imread(test_image)
+        enhanced = self.processor.enhance_contrast(img_array)
         self.assertIsNotNone(enhanced)
 
 class TestConfiguration(unittest.TestCase):
@@ -251,7 +254,7 @@ class TestErrorHandling(unittest.TestCase):
             
     def test_empty_file_handling(self):
         """Test handling of empty files"""
-        with tempfile.NamedTemporaryFile(suffix='.txt', delete=False) as f:
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:
             empty_file = f.name
             
         try:

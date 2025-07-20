@@ -1,0 +1,33 @@
+# Universal Document Converter with OCR - Requirements
+# Core OCR dependencies
+pytesseract>=0.3.10
+Pillow>=9.0.0
+numpy>=1.21.0
+opencv-python>=4.5.0
+easyocr>=1.6.0
+
+# Document processing
+python-docx>=0.8.11
+docx2txt>=0.8
+reportlab>=3.6.0
+weasyprint>=56.0
+markdown>=3.4.0
+beautifulsoup4>=4.11.0
+PyPDF2>=3.0.0
+striprtf>=0.0.26
+ebooklib>=0.18
+
+# GUI and utilities
+psutil>=5.9.0
+
+# Development and testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+black>=22.0.0
+flake8>=5.0.0
+
+# Optional dependencies for enhanced functionality
+lxml>=4.9.0
+requests>=2.28.0
+tqdm>=4.64.0
+colorama>=0.4.5
