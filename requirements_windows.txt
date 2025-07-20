@@ -1,0 +1,40 @@
+# Universal Document Converter with OCR - Windows Requirements
+# Windows-specific dependency versions tested and verified
+
+# Core OCR dependencies
+pytesseract==0.3.13
+Pillow==10.4.0
+numpy==1.26.4  # IMPORTANT: Must be <2.0 for OpenCV compatibility
+opencv-python==4.8.1.78  # Full version for Windows (includes GUI support)
+packaging==25.0  # Required for pytesseract
+
+# Document processing
+python-docx==1.2.0
+docx2txt==0.8
+reportlab==4.4.2
+markdown==3.8.2
+beautifulsoup4==4.13.4
+
+# Windows-specific GUI support
+pywin32==306  # Windows API support
+psutil==6.2.0
+
+# Security and encryption
+cryptography==43.0.3
+
+# Optional but recommended
+lxml==6.0.0
+requests==2.32.4
+tqdm==4.67.2
+colorama==0.4.6  # Better console colors on Windows
+
+# For building executables
+pyinstaller==6.12.0
+pillow==10.4.0  # Ensure same version for freezing
+
+# Development and testing (optional)
+pytest==8.4.1
+pytest-cov==6.0.0
+
+# Note: Tesseract OCR must be installed separately on Windows
+# Download from: https://github.com/UB-Mannheim/tesseract/wiki

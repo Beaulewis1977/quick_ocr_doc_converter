@@ -1,10 +1,13 @@
 # Universal Document Converter with OCR - Requirements
+# Updated dependencies with fixes for compatibility issues
+
 # Core OCR dependencies
 pytesseract>=0.3.10
 Pillow>=9.0.0
-numpy>=1.21.0
-opencv-python>=4.5.0
+numpy<2.0,>=1.21.0  # Fixed to <2.0 for OpenCV compatibility
+opencv-python-headless==4.8.1.78  # Use headless version for server/GUI environments
 easyocr>=1.6.0
+packaging>=21.3  # Required for pytesseract
 
 # Document processing
 python-docx>=0.8.11
@@ -15,7 +18,7 @@ markdown>=3.4.0
 beautifulsoup4>=4.11.0
 
 # GUI and utilities
-tkinter-dnd2>=0.3.0
+# Note: tkinter comes with Python, install python3-tk on Linux
 psutil>=5.9.0
 
 # Development and testing
@@ -29,3 +32,4 @@ lxml>=4.9.0
 requests>=2.28.0
 tqdm>=4.64.0
 colorama>=0.4.5
+cryptography>=41.0.0  # For secure credential storage

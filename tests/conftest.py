@@ -136,7 +136,7 @@ def security_validator(temp_dir: Path) -> SecurityValidator:
 @pytest.fixture(scope="function")
 def credential_manager(temp_dir: Path) -> CredentialManager:
     """Fixture providing CredentialManager instance with temp storage"""
-    return CredentialManager(storage_path=str(temp_dir / "credentials.enc"))
+    return CredentialManager(config_dir=str(temp_dir))
 
 
 @pytest.fixture(scope="function")

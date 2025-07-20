@@ -222,7 +222,7 @@ class TestCredentialManager:
         credential_manager.store_credentials(service, credentials)
         
         # Check that the stored file is encrypted (not plain JSON)
-        storage_path = Path(credential_manager.storage_path)
+        storage_path = Path(credential_manager.config_dir)
         if storage_path.exists():
             raw_content = storage_path.read_bytes()
             # Should not contain plain text credentials
@@ -301,7 +301,7 @@ class TestCredentialManager:
         credential_manager.store_credentials(service, credentials)
         
         # Check file permissions (Unix systems)
-        storage_path = Path(credential_manager.storage_path)
+        storage_path = Path(credential_manager.config_dir)
         if storage_path.exists() and hasattr(os, 'stat'):
             stat_info = storage_path.stat()
             # Should be readable/writable by owner only (600 or 700)
@@ -366,7 +366,7 @@ class TestSecurityIntegration:
         assert retrieved == sensitive_creds
         
         # Verify storage is encrypted
-        storage_path = Path(credential_manager.storage_path)
+        storage_path = Path(credential_manager.config_dir)
         if storage_path.exists():
             raw_content = storage_path.read_text()
             assert "super_secret_key_12345" not in raw_content

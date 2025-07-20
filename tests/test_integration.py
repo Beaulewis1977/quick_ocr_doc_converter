@@ -28,7 +28,7 @@ class TestSecurityIntegration:
         """Test complete security validation workflow"""
         # Initialize security components
         validator = SecurityValidator()
-        cred_manager = CredentialManager(storage_path=str(temp_dir / "creds.enc"))
+        cred_manager = CredentialManager(config_dir=str(temp_dir))
         
         # Store credentials securely
         test_credentials = {
@@ -72,7 +72,7 @@ class TestSecurityIntegration:
     
     def test_credential_security_audit(self, temp_dir):
         """Test credential security audit trail"""
-        cred_manager = CredentialManager(storage_path=str(temp_dir / "audit_creds.enc"))
+        cred_manager = CredentialManager(config_dir=str(temp_dir))
         
         # Perform various operations
         operations = [
@@ -328,7 +328,7 @@ class TestFullSystemIntegration:
         """Test complete OCR processing pipeline"""
         # Initialize all components
         security_validator = SecurityValidator()
-        cred_manager = CredentialManager(storage_path=str(temp_dir / "pipeline_creds.enc"))
+        cred_manager = CredentialManager(config_dir=str(temp_dir))
         cost_tracker = CostTracker(db_path=str(temp_dir / "pipeline_costs.db"))
         
         with patch('backends.manager.LocalOCREngine') as mock_local:
