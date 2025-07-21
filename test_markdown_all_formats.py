@@ -80,16 +80,28 @@ try:
             
             # Check output file
             if os.path.exists(output_path):
-                with open(output_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                
-                results[output_format] = {
-                    'success': True,
-                    'size': len(content),
-                    'path': output_path,
-                    'preview': content[:200].replace('\n', ' ')
-                }
-                print(f"  ✅ Success! Size: {len(content)} chars")
+                if output_format == 'epub':
+                    # EPUB files are binary (ZIP format)
+                    file_size = os.path.getsize(output_path)
+                    results[output_format] = {
+                        'success': True,
+                        'size': file_size,
+                        'path': output_path,
+                        'preview': 'EPUB binary file (ZIP archive)'
+                    }
+                    print(f"  ✅ Success! Size: {file_size} bytes")
+                else:
+                    # Text files
+                    with open(output_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    
+                    results[output_format] = {
+                        'success': True,
+                        'size': len(content),
+                        'path': output_path,
+                        'preview': content[:200].replace('\n', ' ')
+                    }
+                    print(f"  ✅ Success! Size: {len(content)} chars")
                 
             else:
                 results[output_format] = {'success': False, 'error': 'File not created'}
@@ -113,7 +125,8 @@ try:
     for output_format, format_name in formats:
         result = results.get(output_format, {'success': False})
         if result['success']:
-            print(f"✅ {format_name:20} | {result['size']:6} chars | {result['path']}")
+            size_unit = "bytes" if output_format == 'epub' else "chars"
+            print(f"✅ {format_name:20} | {result['size']:6} {size_unit} | {result['path']}")
             print(f"   Preview: {result['preview'][:80]}...")
         else:
             print(f"❌ {format_name:20} | Error: {result.get('error', 'Unknown')}")
