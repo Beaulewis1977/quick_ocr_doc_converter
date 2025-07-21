@@ -17,30 +17,61 @@ class DistributionPackageCreator:
     
     def __init__(self):
         self.app_name = "UniversalDocumentConverter"
-        self.version = "2.0.0"
+        self.version = "2.1.0"
         self.dist_dir = Path("dist")
         self.dist_dir.mkdir(exist_ok=True)
         
         # Common files for all platforms
         self.common_files = [
+            # Core applications
             "universal_document_converter_ultimate.py",
             "universal_document_converter.py",
+            "universal_document_converter_ocr.py",
+            # NEW: CLI and integration tools
+            "cli.py",                                    # Command-line interface
+            "com_server.py",                            # COM Server for VFP9/VB6
+            "dll_wrapper.py",                           # DLL Wrapper for VFP9/VB6
+            "pipe_server.py",                          # Named Pipes server
+            # Configuration and docs
             "requirements.txt",
             "README.md",
-            "LICENSE",
+            "LICENSE", 
             "QUICK_START.md",
             "INSTALLATION_GUIDE.md",
             "TROUBLESHOOTING.md",
+            # NEW: Complete integration guide
+            "VFP9_VB6_INTEGRATION_GUIDE.md",
             "config_ultimate.json",
             "icon.ico",
-            # Include all Python modules
+            # OCR engine modules
             "ocr_engine/__init__.py",
             "ocr_engine/ocr_engine.py",
             "ocr_engine/ocr_integration.py",
             "ocr_engine/format_detector.py",
             "ocr_engine/image_processor.py",
-            # Documentation
+            # Cross-platform integration
+            "cross_platform/__init__.py",
+            "cross_platform/windows_integration.py",
+            "cross_platform/macos_integration.py",
+            "cross_platform/linux_integration.py",
+            # Additional documentation
             "docs/CROSS_PLATFORM_GUIDE.md",
+            "docs/INSTALLATION_LINUX.md",
+            "docs/INSTALLATION_MACOS.md",
+            # NEW: VFP9/VB6 example files
+            "VFP9_PipeClient.prg",
+            "VB6_PipeClient.bas",
+            "VB6_UniversalConverter.bas",
+            "VB6_ConverterForm.frm", 
+            "UniversalConverter_VFP9.prg",
+            "build_dll.py",
+            # Additional tools
+            "convert_to_markdown.py",
+            "convert_recursive.py",
+            "simple_gui.py",
+            # Sample files
+            "sample.md",
+            "sample.rtf",
         ]
         
         # Platform-specific files

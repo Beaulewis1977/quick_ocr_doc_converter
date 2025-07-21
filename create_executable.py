@@ -88,6 +88,26 @@ def create_executable():
         '--hidden-import', 'concurrent.futures',
         # Additional data files
         '--add-data', f'{app_dir / "ocr_engine"};ocr_engine',
+        '--add-data', f'{app_dir / "cross_platform"};cross_platform',
+        # NEW: VFP9/VB6 integration files
+        '--add-data', f'{app_dir / "cli.py"};.',
+        '--add-data', f'{app_dir / "com_server.py"};.',
+        '--add-data', f'{app_dir / "dll_wrapper.py"};.',
+        '--add-data', f'{app_dir / "pipe_server.py"};.',
+        '--add-data', f'{app_dir / "VFP9_VB6_INTEGRATION_GUIDE.md"};.',
+        # VFP9/VB6 example files
+        '--add-data', f'{app_dir / "VFP9_PipeClient.prg"};.',
+        '--add-data', f'{app_dir / "VB6_PipeClient.bas"};.',
+        '--add-data', f'{app_dir / "VB6_UniversalConverter.bas"};.',
+        '--add-data', f'{app_dir / "VB6_ConverterForm.frm"};.',
+        '--add-data', f'{app_dir / "UniversalConverter_VFP9.prg"};.',
+        '--add-data', f'{app_dir / "build_dll.py"};.',
+        # Additional tools
+        '--add-data', f'{app_dir / "convert_to_markdown.py"};.',
+        '--add-data', f'{app_dir / "convert_recursive.py"};.',
+        # Sample files
+        '--add-data', f'{app_dir / "sample.md"};.',
+        '--add-data', f'{app_dir / "sample.rtf"};.',
         str(main_script)
     ]
     

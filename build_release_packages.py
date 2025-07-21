@@ -19,7 +19,7 @@ class ReleaseBuilder:
     
     def __init__(self):
         self.app_name = "UniversalDocumentConverter"
-        self.version = "2.0.0"
+        self.version = "2.1.0"
         self.release_dir = Path("releases")
         self.release_dir.mkdir(exist_ok=True)
         
