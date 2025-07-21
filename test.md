@@ -1,1 +1,2 @@
-# Test Markdown\nThis is **bold** text
+# Test Markdown
+This is **bold text**

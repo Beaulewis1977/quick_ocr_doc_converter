@@ -646,15 +646,22 @@ class MarkdownReader(DocumentReader):
     
     def read(self, file_path):
         try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                md_text = f.read()
+            return self.parse_content(md_text)
+            
+        except Exception as e:
+            raise FileProcessingError(f"Error reading Markdown file {file_path}: {str(e)}")
+    
+    def parse_content(self, md_text):
+        """Parse markdown content from a string"""
+        try:
             import markdown
             from bs4 import BeautifulSoup
         except ImportError:
             raise DependencyError("markdown and beautifulsoup4 are required for Markdown support. Install with: pip install markdown beautifulsoup4")
         
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                md_text = f.read()
-            
             # Convert Markdown to HTML using python-markdown
             html = markdown.markdown(md_text, extensions=['extra', 'toc'])
             
@@ -676,7 +683,7 @@ class MarkdownReader(DocumentReader):
             return content
             
         except Exception as e:
-            raise FileProcessingError(f"Error reading Markdown file {file_path}: {str(e)}")
+            raise FileProcessingError(f"Error parsing Markdown content: {str(e)}")
 
 
 class DocumentWriter:
@@ -790,10 +797,13 @@ class RtfWriter(DocumentWriter):
             r"\f0\fs24"
         ]
         
-        for item in content:
+        for i, item in enumerate(content):
             if item[0] == 'heading':
                 level, text = item[1], item[2]
                 size = max(32 - (level * 4), 20)  # Larger size for higher level headings
+                # Add spacing before headings (except the first element)
+                if i > 0:
+                    rtf_lines.append("\\par")
                 rtf_lines.append(f"\\par\\fs{size}\\b {self._escape_rtf(text)}\\b0\\fs24")
             elif item[0] == 'paragraph':
                 rtf_lines.append(f"\\par {self._escape_rtf(item[1])}")
@@ -806,6 +816,10 @@ class RtfWriter(DocumentWriter):
         
         with open(output_path, 'w', encoding='utf-8') as file:
             file.write(''.join(rtf_lines))
+    
+    def write_file(self, output_path, content):
+        """Alternative method name for compatibility"""
+        self.write(content, output_path)
     
     def _escape_rtf(self, text):
         """Escape RTF special characters"""
