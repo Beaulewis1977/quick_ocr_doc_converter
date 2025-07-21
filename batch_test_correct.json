@@ -1,0 +1,10 @@
+{
+  "conversions": [
+    {
+      "input": ["test.md"],
+      "output": "test_output.rtf",
+      "from_format": "markdown", 
+      "to_format": "rtf"
+    }
+  ]
+}

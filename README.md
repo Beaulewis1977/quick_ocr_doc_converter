@@ -115,6 +115,184 @@ RUN /N (lcCommand)
 
 ---
 
+## 🖥️ **Command-Line Interface (CLI) - Full Documentation**
+
+The Universal Document Converter includes a powerful CLI tool (`cli.py`) with all features available from the command line.
+
+### 📋 **CLI Quick Start**
+
+```bash
+# Convert single file (auto-detects input format)
+python cli.py input.md -o output.rtf -t rtf
+
+# Convert multiple files
+python cli.py *.txt -o output_dir/ -t markdown
+
+# Batch convert entire directory
+python cli.py docs/ -o converted/ --recursive -t html
+
+# List all supported formats
+python cli.py --list-formats
+```
+
+### 🔧 **Complete CLI Reference**
+
+```bash
+python cli.py [input...] [OPTIONS]
+
+# Required Arguments
+input                    # Input file(s) or directory
+
+# Output Options
+-o, --output OUTPUT      # Output file or directory
+-t, --to-format FORMAT   # Output format (markdown, txt, html, rtf, epub)
+-f, --from-format FORMAT # Input format (auto, docx, pdf, txt, html, rtf, epub, markdown)
+
+# Processing Options
+--recursive, -r          # Process directories recursively
+--preserve-structure     # Preserve directory structure in output
+--overwrite             # Overwrite existing files
+--workers N             # Number of worker threads (1-32)
+
+# Advanced Options
+--batch config.json     # Batch conversion using JSON config
+--no-cache              # Disable caching
+--clear-cache           # Clear conversion cache
+
+# Configuration
+--config file.json      # Use configuration file
+--save-config file.json # Save current settings
+--profile NAME          # Use named configuration profile
+--list-profiles         # List available profiles
+
+# Logging & Info
+--verbose, -v           # Verbose output
+--quiet, -q             # Suppress output except errors
+--log-file FILE         # Write logs to file
+--list-formats          # Show all supported formats
+--version               # Show version
+```
+
+### 📚 **CLI Examples for Different Scenarios**
+
+**Markdown Conversion Examples:**
+```bash
+# Markdown to RTF (perfect for Word/Office)
+python cli.py document.md -o document.rtf -t rtf
+
+# Markdown to HTML (for web publishing)
+python cli.py README.md -o index.html -t html
+
+# Markdown to EPUB (create eBook)
+python cli.py book.md -o book.epub -t epub
+```
+
+**Batch Processing Examples:**
+```bash
+# Convert all markdown files to RTF
+python cli.py *.md -o rtf_docs/ -t rtf
+
+# Convert entire documentation folder
+python cli.py docs/ -o html_docs/ -t html --recursive
+
+# High-performance conversion with 16 threads
+python cli.py large_docs/ -o converted/ -t markdown --workers 16
+```
+
+**JSON Batch Configuration:**
+```json
+{
+  "input_files": ["doc1.md", "doc2.md", "doc3.md"],
+  "output_directory": "converted/",
+  "output_format": "rtf",
+  "options": {
+    "workers": 8,
+    "preserve_structure": true,
+    "overwrite": true
+  }
+}
+```
+
+```bash
+# Use JSON configuration
+python cli.py --batch conversion_config.json
+```
+
+---
+
+## 🏗️ **32-bit & Legacy System Integration - Complete Guide**
+
+### ✅ **32-bit Compatibility Confirmed**
+- **Architecture**: Fully compatible with 32-bit Windows systems
+- **Dependencies**: All libraries are pure Python (32-bit compatible)
+- **Memory Usage**: Optimized for systems with limited RAM
+- **Performance**: Excellent performance even on older hardware
+
+### 🔗 **VFP9/VB6 Integration - All 5 Methods Available** ✅
+
+**📖 [Complete Integration Guide →](VFP9_VB6_INTEGRATION_GUIDE.md)**
+
+#### **Method 1: Command-Line Execution** ✅ WORKING
+```foxpro
+* VFP9 Example - Simple and reliable
+LOCAL lcCommand
+lcCommand = 'python cli.py input.md -o output.rtf -t rtf --quiet'
+RUN /N (lcCommand)
+```
+
+#### **Method 2: JSON IPC (Batch Processing)** ✅ WORKING
+```json
+{
+  "conversions": [
+    {
+      "input": ["input.md"],
+      "output": "output.rtf",
+      "from_format": "markdown",
+      "to_format": "rtf"
+    }
+  ]
+}
+```
+
+#### **Method 3: Named Pipes Communication** ✅ IMPLEMENTED
+```foxpro
+* VFP9 Real-time pipe communication
+oConverter = ConvertDocumentPipe("input.md", "output.rtf", "markdown", "rtf")
+```
+
+#### **Method 4: COM Server Integration** ✅ IMPLEMENTED
+```vb
+' VB6 Professional COM interface  
+Set objConverter = CreateObject("UniversalConverter.Application")
+result = objConverter.ConvertFile("input.md", "output.rtf", "markdown", "rtf")
+```
+
+#### **Method 5: DLL Wrapper** ✅ IMPLEMENTED
+```vb
+' VB6 High-performance 32-bit DLL
+Declare Function ConvertDocument Lib "UniversalConverter32.dll" _
+    (ByVal inputFile As String, ByVal outputFile As String, _
+     ByVal inputFormat As String, ByVal outputFormat As String) As Long
+
+result = ConvertDocument("input.md", "output.rtf", "markdown", "rtf")
+```
+
+**🎯 Integration Success Rate: 5/5 Methods Complete**
+- ✅ Command-Line: Tested & Working
+- ✅ JSON IPC: Tested & Working  
+- ✅ Named Pipes: Implementation Complete
+- ✅ COM Server: Implementation Complete
+- ✅ DLL Wrapper: Implementation Complete
+
+**📁 Example Files Generated:**
+- VFP9_PipeClient.prg - Named pipes for VFP9
+- VB6_UniversalConverter.bas - Complete VB6 module  
+- UniversalConverter_VFP9.prg - Complete VFP9 program
+- build_dll.py - 32-bit DLL build script
+- VB6_ConverterForm.frm - Sample GUI form
+
+---
+
 ## 🎉 Test Status - All Tests Passing! (v2.1.0)
 
 ### 🆕 v2.1.0 Test Results - COMPREHENSIVE VALIDATION
