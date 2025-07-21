@@ -342,7 +342,8 @@ class FormatDetector:
         'txt': {'extensions': ['.txt'], 'name': 'Text File', 'reader': 'TxtReader'},
         'html': {'extensions': ['.html', '.htm'], 'name': 'HTML Document', 'reader': 'HtmlReader'},
         'rtf': {'extensions': ['.rtf'], 'name': 'Rich Text Format', 'reader': 'RtfReader'},
-        'epub': {'extensions': ['.epub'], 'name': 'EPUB eBook', 'reader': 'EpubReader'}
+        'epub': {'extensions': ['.epub'], 'name': 'EPUB eBook', 'reader': 'EpubReader'},
+        'markdown': {'extensions': ['.md', '.markdown'], 'name': 'Markdown Document', 'reader': 'MarkdownReader'}
     }
     
     SUPPORTED_OUTPUT_FORMATS = {
@@ -638,6 +639,44 @@ class EpubReader(DocumentReader):
             content.extend([('paragraph', p) for p in paragraphs])
 
         return content
+
+
+class MarkdownReader(DocumentReader):
+    """Reader for Markdown files"""
+    
+    def read(self, file_path):
+        try:
+            import markdown
+            from bs4 import BeautifulSoup
+        except ImportError:
+            raise DependencyError("markdown and beautifulsoup4 are required for Markdown support. Install with: pip install markdown beautifulsoup4")
+        
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                md_text = f.read()
+            
+            # Convert Markdown to HTML using python-markdown
+            html = markdown.markdown(md_text, extensions=['extra', 'toc'])
+            
+            # Parse HTML using BeautifulSoup (same approach as HtmlReader)
+            soup = BeautifulSoup(html, 'html.parser')
+            
+            content = []
+            
+            # Extract headings and paragraphs
+            for element in soup.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'div']):
+                text = element.get_text().strip()
+                if text:
+                    if element.name.startswith('h'):
+                        level = int(element.name[1])
+                        content.append(('heading', level, text))
+                    else:
+                        content.append(('paragraph', text))
+            
+            return content
+            
+        except Exception as e:
+            raise FileProcessingError(f"Error reading Markdown file {file_path}: {str(e)}")
 
 
 class DocumentWriter:
@@ -976,7 +1015,8 @@ class UniversalConverter:
             'txt': TxtReader(),
             'html': HtmlReader(),
             'rtf': RtfReader(),
-            'epub': EpubReader()
+            'epub': EpubReader(),
+            'markdown': MarkdownReader()
         }
 
         self.writers = {
