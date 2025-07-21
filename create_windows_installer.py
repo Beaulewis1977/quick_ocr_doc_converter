@@ -19,19 +19,40 @@ class WindowsInstallerCreator:
     
     def __init__(self):
         self.app_name = "Quick Document Convertor"
-        self.app_version = "2.0.0"
+        self.app_version = "2.1.0"  # Updated version with Markdown support
         self.publisher = "Beau Lewis"
         self.app_dir = Path(__file__).parent
         self.build_dir = self.app_dir / "build_installer"
         self.dist_dir = self.app_dir / "dist_installer"
+        self.features = [
+            "✅ OCR (Optical Character Recognition)",
+            "✅ Document Conversion (DOCX, PDF, HTML, RTF, TXT, EPUB)",
+            "✅ NEW: Bidirectional Markdown ↔ RTF Conversion", 
+            "✅ NEW: 32-bit Legacy System Support (VFP9, VB6)",
+            "✅ NEW: Multi-threading & Performance Optimization",
+            "✅ Batch Processing",
+            "✅ GUI & Command Line Interface",
+            "✅ API Server Mode",
+            "✅ Cross-platform Support"
+        ]
         
     def check_dependencies(self) -> Dict[str, bool]:
         """Check if required dependencies are available"""
         deps = {
             'pyinstaller': False,
-            'pywin32': False,
+            'pywin32': False, 
             'nsis': False,
-            'pillow': False
+            'pillow': False,
+            # NEW: Markdown processing dependencies
+            'markdown': False,
+            'beautifulsoup4': False,
+            'striprtf': False,
+            'ebooklib': False,
+            # Core document processing
+            'docx': False,
+            'PyPDF2': False,
+            'flask': False,
+            'psutil': False
         }
         
         # Check PyInstaller
@@ -57,12 +78,25 @@ class WindowsInstallerCreator:
         except FileNotFoundError:
             pass
             
-        # Check Pillow (for icon processing)
-        try:
-            import PIL
-            deps['pillow'] = True
-        except ImportError:
-            pass
+        # Check core dependencies
+        dep_modules = {
+            'pillow': 'PIL',
+            'markdown': 'markdown', 
+            'beautifulsoup4': 'bs4',
+            'striprtf': 'striprtf',
+            'ebooklib': 'ebooklib',
+            'docx': 'docx',
+            'PyPDF2': 'PyPDF2',
+            'flask': 'flask',
+            'psutil': 'psutil'
+        }
+        
+        for dep_name, module_name in dep_modules.items():
+            try:
+                __import__(module_name)
+                deps[dep_name] = True
+            except ImportError:
+                pass
             
         return deps
     

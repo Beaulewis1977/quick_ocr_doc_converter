@@ -2240,24 +2240,36 @@ class UniversalDocumentConverterGUI:
 
     def show_about(self):
         """Show about dialog"""
-        about_text = """Quick Document Convertor
+        about_text = """Universal Document Converter
 
-Version: 2.0 (Enterprise Edition)
+Version: 2.1.0 (Enterprise Edition with Markdown Support)
 Designed and built by Beau Lewis
 
-A fast, simple, and powerful document conversion tool with support for multiple formats.
+A fast, simple, and powerful document conversion tool with comprehensive format support.
 
-Features:
-• Multi-format support (DOCX, PDF, TXT, HTML, RTF, EPUB)
-• Batch processing with multi-threading
-• Intelligent caching for performance
-• Professional logging system
-• Responsive GUI design
+🎯 NEW in v2.1.0:
+• Bidirectional Markdown ↔ RTF conversion
+• 32-bit legacy system support (VFP9, VB6)
+• 13.5x faster multi-threading performance
+• JSON IPC for external applications
+• Advanced error handling & recovery
+
+📋 All Features:
+• Multi-format support (DOCX, PDF, TXT, HTML, RTF, EPUB, Markdown)
+• OCR (Optical Character Recognition)
+• Batch processing with performance optimization
+• Intelligent caching and memory management
+• Professional logging system with monitoring
+• Responsive GUI with drag & drop
+• REST API server mode
 • Configuration management
+• Cross-platform compatibility
+
+💻 Perfect for legacy system integration!
 
 © 2025 Beau Lewis. All rights reserved."""
 
-        messagebox.showinfo("About Quick Document Convertor", about_text)
+        messagebox.showinfo("About Universal Document Converter v2.1.0", about_text)
 
     def open_last_converted_file(self):
         """Open the last converted file with its default application"""

@@ -47,18 +47,47 @@ def create_executable():
         print("❌ Main application script not found!")
         return False
     
-    # PyInstaller command
+    # PyInstaller command with all dependencies
     cmd = [
         sys.executable, '-m', 'PyInstaller',
         '--onefile',
         '--windowed',
-        '--name', 'Quick Document Convertor',
+        '--name', 'Quick Document Convertor v2.1',
         '--distpath', str(app_dir / 'dist'),
         '--workpath', str(app_dir / 'build'),
         '--specpath', str(app_dir),
         '--add-data', f'{app_dir / "icon.ico"};.',
+        # Core GUI dependencies
         '--hidden-import', 'tkinterdnd2',
         '--hidden-import', 'pywin32',
+        # NEW: Markdown processing dependencies
+        '--hidden-import', 'markdown',
+        '--hidden-import', 'markdown.extensions',
+        '--hidden-import', 'markdown.extensions.extra',
+        '--hidden-import', 'markdown.extensions.toc',
+        '--hidden-import', 'bs4',
+        '--hidden-import', 'beautifulsoup4',
+        '--hidden-import', 'striprtf',
+        '--hidden-import', 'ebooklib',
+        # Document processing dependencies
+        '--hidden-import', 'docx',
+        '--hidden-import', 'PyPDF2',
+        '--hidden-import', 'reportlab',
+        # OCR dependencies
+        '--hidden-import', 'pytesseract',
+        '--hidden-import', 'PIL',
+        '--hidden-import', 'cv2',
+        '--hidden-import', 'easyocr',
+        '--hidden-import', 'numpy',
+        # Server dependencies
+        '--hidden-import', 'flask',
+        '--hidden-import', 'flask_cors',
+        '--hidden-import', 'waitress',
+        # Performance monitoring
+        '--hidden-import', 'psutil',
+        '--hidden-import', 'concurrent.futures',
+        # Additional data files
+        '--add-data', f'{app_dir / "ocr_engine"};ocr_engine',
         str(main_script)
     ]
     
