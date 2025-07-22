@@ -33,6 +33,12 @@ try:
 except ImportError:
     EASYOCR_AVAILABLE = False
 
+try:
+    from .google_vision_backend import GoogleVisionBackend
+    GOOGLE_VISION_AVAILABLE = True
+except ImportError:
+    GOOGLE_VISION_AVAILABLE = False
+
 from .image_processor import ImageProcessor
 from .format_detector import OCRFormatDetector
 
@@ -143,6 +149,33 @@ class OCREngine:
                     'priority': 2,
                     'available': False
                 }
+        
+        # Google Vision API
+        if GOOGLE_VISION_AVAILABLE:
+            try:
+                # Initialize Google Vision backend with config
+                google_config = self.config.get('google_vision', {})
+                self.google_vision_backend = GoogleVisionBackend(google_config, self.logger)
+                
+                self.backends['google_vision'] = {
+                    'name': 'Google Vision API',
+                    'priority': 0,  # Highest priority when available
+                    'available': self.google_vision_backend.is_available(),
+                    'backend_instance': self.google_vision_backend
+                }
+                
+                if self.google_vision_backend.is_available():
+                    self.logger.info("Google Vision API backend initialized successfully")
+                else:
+                    self.logger.warning("Google Vision API backend not available (credentials missing)")
+                    
+            except Exception as e:
+                self.logger.warning(f"Google Vision API initialization failed: {e}")
+                self.backends['google_vision'] = {
+                    'name': 'Google Vision API',
+                    'priority': 0,
+                    'available': False
+                }
 
     def is_tesseract_available(self) -> bool:
         """Check if Tesseract OCR is available"""
@@ -151,6 +184,10 @@ class OCREngine:
     def is_easyocr_available(self) -> bool:
         """Check if EasyOCR is available"""
         return 'easyocr' in self.backends and self.backends['easyocr']['available']
+    
+    def is_google_vision_available(self) -> bool:
+        """Check if Google Vision API is available"""
+        return 'google_vision' in self.backends and self.backends['google_vision']['available']
 
     def is_available(self) -> bool:
         """Check if any OCR backend is available"""
@@ -270,7 +307,9 @@ class OCREngine:
         # Extract text based on backend
         start_time = time.time()
         
-        if backend == 'tesseract' and self.is_tesseract_available():
+        if backend == 'google_vision' and self.is_google_vision_available():
+            result = self._extract_with_google_vision(str(image_path), ocr_options)
+        elif backend == 'tesseract' and self.is_tesseract_available():
             result = self._extract_with_tesseract(processed_image, ocr_options)
         elif backend == 'easyocr' and self.is_easyocr_available():
             result = self._extract_with_easyocr(processed_image, ocr_options)
@@ -366,6 +405,19 @@ class OCREngine:
             
         except Exception as e:
             raise OCRBackendError(f"EasyOCR failed: {e}")
+
+    def _extract_with_google_vision(self, image_path: str, options: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract text using Google Vision API"""
+        try:
+            if not hasattr(self, 'google_vision_backend'):
+                raise OCRBackendError("Google Vision backend not initialized")
+            
+            # Use the Google Vision backend to extract text
+            result = self.google_vision_backend.extract_text(image_path, options)
+            return result
+            
+        except Exception as e:
+            raise OCRBackendError(f"Google Vision API failed: {e}")
 
     def extract_text_from_multiple_images(
         self, 

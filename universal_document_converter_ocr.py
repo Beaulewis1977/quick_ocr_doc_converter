@@ -33,6 +33,14 @@ from threading import Lock
 # Import OCR components
 from ocr_engine.ocr_integration import OCRIntegration
 from ocr_engine.format_detector import OCRFormatDetector
+from ocr_engine.config_manager import ConfigManager
+
+# Import OCR Settings GUI
+try:
+    from ocr_settings_gui import OCRSettingsGUI
+    OCR_SETTINGS_GUI_AVAILABLE = True
+except ImportError:
+    OCR_SETTINGS_GUI_AVAILABLE = False
 
 class DocumentConverterApp:
     """Main application class for the Universal Document Converter with OCR"""
@@ -43,8 +51,11 @@ class DocumentConverterApp:
         self.root.geometry("1000x700")
         self.root.minsize(800, 600)
         
-        # Initialize OCR integration
-        self.ocr_integration = OCRIntegration()
+        # Initialize OCR configuration manager
+        self.ocr_config_manager = ConfigManager()
+        
+        # Initialize OCR integration with config
+        self.ocr_integration = OCRIntegration(logger=None, config_manager=self.ocr_config_manager)
         self.format_detector = OCRFormatDetector()
         
         # Configuration
@@ -59,6 +70,7 @@ class DocumentConverterApp:
         self.total_files = 0
         
         # Create GUI
+        self.create_menu()
         self.create_widgets()
         self.setup_drag_drop()
         
@@ -113,6 +125,63 @@ class DocumentConverterApp:
         )
         
         self.logger = logging.getLogger(__name__)
+    
+    def create_menu(self):
+        """Create the menu bar"""
+        menubar = tk.Menu(self.root)
+        self.root.config(menu=menubar)
+        
+        # File menu
+        file_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="File", menu=file_menu)
+        file_menu.add_command(label="Add Files...", command=self.add_files, accelerator="Ctrl+O")
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=self.on_closing, accelerator="Ctrl+Q")
+        
+        # OCR menu
+        ocr_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="OCR", menu=ocr_menu)
+        ocr_menu.add_command(label="OCR Settings...", command=self.open_ocr_settings)
+        ocr_menu.add_command(label="Check OCR Status", command=self.check_ocr_status)
+        ocr_menu.add_separator()
+        
+        # Backend submenu
+        backend_menu = tk.Menu(ocr_menu, tearoff=0)
+        ocr_menu.add_cascade(label="Select Backend", menu=backend_menu)
+        
+        self.backend_var = tk.StringVar(value=self.ocr_config_manager.get_default_backend())
+        
+        # Add backend options
+        backends = [
+            ("auto", "Auto (Best Available)"),
+            ("tesseract", "Tesseract OCR"),
+            ("easyocr", "EasyOCR"),
+            ("google_vision", "Google Vision API")
+        ]
+        
+        for value, label in backends:
+            backend_menu.add_radiobutton(
+                label=label,
+                variable=self.backend_var,
+                value=value,
+                command=lambda v=value: self.set_backend(v)
+            )
+        
+        # Tools menu
+        tools_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Tools", menu=tools_menu)
+        tools_menu.add_command(label="Clear OCR Cache", command=self.clear_ocr_cache)
+        tools_menu.add_command(label="Export OCR Config...", command=self.export_ocr_config)
+        tools_menu.add_command(label="Import OCR Config...", command=self.import_ocr_config)
+        
+        # Help menu
+        help_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Help", menu=help_menu)
+        help_menu.add_command(label="About", command=self.show_about)
+        
+        # Bind keyboard shortcuts
+        self.root.bind('<Control-o>', lambda e: self.add_files())
+        self.root.bind('<Control-q>', lambda e: self.on_closing())
     
     def create_widgets(self):
         """Create and arrange GUI widgets"""
@@ -441,6 +510,137 @@ class DocumentConverterApp:
                 self.root.destroy()
         else:
             self.root.destroy()
+
+    def open_ocr_settings(self):
+        """Open the OCR settings dialog"""
+        if not OCR_SETTINGS_GUI_AVAILABLE:
+            messagebox.showerror("Error", 
+                               "OCR Settings GUI is not available. Please check installation.")
+            return
+        
+        try:
+            settings_window = OCRSettingsGUI(self.root, self.ocr_config_manager)
+            # Reinitialize OCR integration after settings change
+            self.root.after(100, self.refresh_ocr_integration)
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to open OCR settings: {str(e)}")
+    
+    def refresh_ocr_integration(self):
+        """Refresh OCR integration after settings change"""
+        try:
+            # Reinitialize OCR integration with updated config
+            self.ocr_integration = OCRIntegration(logger=self.logger, config_manager=self.ocr_config_manager)
+            self.backend_var.set(self.ocr_config_manager.get_default_backend())
+        except Exception as e:
+            self.logger.error(f"Failed to refresh OCR integration: {e}")
+    
+    def check_ocr_status(self):
+        """Check and display OCR backend status"""
+        try:
+            status = self.ocr_integration.check_availability()
+            
+            status_msg = f"OCR Status Report\n{'='*40}\n\n"
+            status_msg += f"OCR Available: {'✅ Yes' if status['available'] else '❌ No'}\n"
+            status_msg += f"Tesseract: {'✅' if status['tesseract_available'] else '❌'}\n"
+            status_msg += f"EasyOCR: {'✅' if status['easyocr_available'] else '❌'}\n"
+            
+            # Check Google Vision
+            if hasattr(self.ocr_integration.ocr_engine, 'is_google_vision_available'):
+                google_available = self.ocr_integration.ocr_engine.is_google_vision_available()
+                status_msg += f"Google Vision API: {'✅' if google_available else '❌'}\n"
+            
+            status_msg += f"\nAvailable Backends: {', '.join(status['backends'])}\n"
+            status_msg += f"Supported Formats: {', '.join(status['supported_formats'])}\n"
+            status_msg += f"\nMessage: {status['message']}"
+            
+            messagebox.showinfo("OCR Status", status_msg)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to check OCR status: {str(e)}")
+    
+    def set_backend(self, backend_name: str):
+        """Set the default OCR backend"""
+        try:
+            if self.ocr_config_manager.set_default_backend(backend_name):
+                self.refresh_ocr_integration()
+                self.status_label.config(text=f"OCR backend set to: {backend_name}")
+            else:
+                messagebox.showerror("Error", "Failed to set OCR backend")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to set backend: {str(e)}")
+    
+    def clear_ocr_cache(self):
+        """Clear the OCR cache"""
+        try:
+            if hasattr(self.ocr_integration.ocr_engine, 'clear_cache'):
+                if self.ocr_integration.ocr_engine.clear_cache():
+                    messagebox.showinfo("Success", "OCR cache cleared successfully")
+                else:
+                    messagebox.showerror("Error", "Failed to clear OCR cache")
+            else:
+                messagebox.showinfo("Info", "OCR cache functionality not available")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to clear cache: {str(e)}")
+    
+    def export_ocr_config(self):
+        """Export OCR configuration"""
+        filename = filedialog.asksaveasfilename(
+            title="Export OCR Configuration",
+            defaultextension=".json",
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
+        )
+        if filename:
+            try:
+                include_keys = messagebox.askyesno(
+                    "Include API Keys",
+                    "Include API keys in the exported configuration?\n\n"
+                    "Choose 'No' if sharing the configuration file."
+                )
+                if self.ocr_config_manager.export_config(Path(filename), include_keys):
+                    messagebox.showinfo("Success", "OCR configuration exported successfully!")
+                else:
+                    messagebox.showerror("Error", "Failed to export OCR configuration.")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to export config: {str(e)}")
+    
+    def import_ocr_config(self):
+        """Import OCR configuration"""
+        filename = filedialog.askopenfilename(
+            title="Import OCR Configuration",
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
+        )
+        if filename:
+            try:
+                if self.ocr_config_manager.import_config(Path(filename)):
+                    messagebox.showinfo("Success", "OCR configuration imported successfully!")
+                    self.refresh_ocr_integration()
+                else:
+                    messagebox.showerror("Error", "Failed to import OCR configuration.")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to import config: {str(e)}")
+    
+    def show_about(self):
+        """Show about dialog"""
+        about_text = """Universal Document Converter with OCR v3.1.0
+        
+A powerful document conversion tool with integrated OCR support.
+
+Features:
+• Document conversion (DOCX, PDF, TXT, HTML, RTF, EPUB)
+• OCR functionality with multiple backends
+• Google Vision API integration
+• Multi-threaded processing
+• Professional GUI with drag-and-drop support
+
+Supported OCR Backends:
+• Tesseract OCR (free, local processing)
+• EasyOCR (free, local processing)
+• Google Vision API (cloud-based, requires API key)
+
+Created by Beau Lewis (blewisxx@gmail.com)
+Enhanced by Terragon Labs"""
+        
+        messagebox.showinfo("About", about_text)
 
 def main():
     """Main application entry point"""

@@ -342,6 +342,9 @@ sectionEnd
         print("🔨 Creating executable files...")
         
         # Main application executable
+        icon_exists = (self.build_dir / 'icon.ico').exists()
+        version_exists = (self.build_dir / 'version_info.txt').exists()
+        
         main_spec = f'''
 # -*- mode: python ; coding: utf-8 -*-
 
@@ -396,8 +399,8 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='icon.ico' if Path('icon.ico').exists() else None,
-    version='version_info.txt' if Path('version_info.txt').exists() else None,
+    icon='icon.ico' if {icon_exists} else None,
+    version='version_info.txt' if {version_exists} else None,
 )
 '''
         
@@ -449,7 +452,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='icon.ico' if Path('icon.ico').exists() else None,
+    icon='icon.ico' if {icon_exists} else None,
 )
 '''
         
