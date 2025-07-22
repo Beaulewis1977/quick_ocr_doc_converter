@@ -333,7 +333,8 @@ class EnhancedDocumentConverterApp:
         ttk.Button(toolbar, text="🧹 Clear All", command=self.clear_all).pack(side="left", padx=(0, 10))
         
         # File count label
-        self.file_count_label = ttk.Label(toolbar, text="Files: 0")\n        self.file_count_label.pack(side="right")
+        self.file_count_label = ttk.Label(toolbar, text="Files: 0")
+        self.file_count_label.pack(side="right")
         
         # File list with tree view
         list_frame = ttk.Frame(file_frame)
@@ -401,8 +402,21 @@ class EnhancedDocumentConverterApp:
         output_frame = ttk.LabelFrame(parent, text="Output Settings", padding="10")
         output_frame.pack(fill="x", pady=(0, 10))
         
+        # Input format
+        ttk.Label(output_frame, text="Input Format:").grid(row=0, column=0, sticky="w", padx=(0, 10))
+        self.input_format_var = tk.StringVar(value=self.config.get("input_format", "auto"))
+        input_format_combo = ttk.Combobox(
+            output_frame,
+            textvariable=self.input_format_var,
+            values=["auto", "docx", "pdf", "txt", "html", "rtf", "markdown", "epub"],
+            state="readonly",
+            width=15
+        )
+        input_format_combo.grid(row=0, column=1, sticky="w")
+        input_format_combo.bind("<<ComboboxSelected>>", self.on_input_format_change)
+        
         # Output format
-        ttk.Label(output_frame, text="Output Format:").grid(row=0, column=0, sticky="w", padx=(0, 10))
+        ttk.Label(output_frame, text="Output Format:").grid(row=1, column=0, sticky="w", padx=(0, 10))
         self.format_var = tk.StringVar(value=self.config.get("output_format", "markdown"))
         format_combo = ttk.Combobox(
             output_frame,
@@ -411,13 +425,13 @@ class EnhancedDocumentConverterApp:
             state="readonly",
             width=15
         )
-        format_combo.grid(row=0, column=1, sticky="w")
+        format_combo.grid(row=1, column=1, sticky="w")
         format_combo.bind("<<ComboboxSelected>>", self.on_format_change)
         
         # Output directory
-        ttk.Label(output_frame, text="Output Directory:").grid(row=1, column=0, sticky="w", padx=(0, 10), pady=(10, 0))
+        ttk.Label(output_frame, text="Output Directory:").grid(row=2, column=0, sticky="w", padx=(0, 10), pady=(10, 0))
         dir_frame = ttk.Frame(output_frame)
-        dir_frame.grid(row=1, column=1, columnspan=2, sticky="ew", pady=(10, 0))
+        dir_frame.grid(row=2, column=1, columnspan=2, sticky="ew", pady=(10, 0))
         
         self.output_dir_var = tk.StringVar(value=self.config.get("output_directory", ""))
         output_entry = ttk.Entry(dir_frame, textvariable=self.output_dir_var, width=40)
@@ -438,6 +452,34 @@ class EnhancedDocumentConverterApp:
             command=self.toggle_ocr
         )
         ocr_check.pack(anchor="w")
+        
+        # OCR Mode Selection (Free vs API)
+        mode_frame = ttk.LabelFrame(ocr_frame, text="OCR Mode", padding="5")
+        mode_frame.pack(fill="x", pady=(10, 0))
+        
+        self.ocr_mode_var = tk.StringVar(value="free")
+        
+        free_radio = ttk.Radiobutton(
+            mode_frame,
+            text="🆓 Free OCR (Tesseract + EasyOCR)",
+            variable=self.ocr_mode_var,
+            value="free",
+            command=self.on_ocr_mode_change
+        )
+        free_radio.pack(anchor="w", pady=(0, 5))
+        
+        api_radio = ttk.Radiobutton(
+            mode_frame,
+            text="🚀 Google Vision API (Premium - Requires API Key)",
+            variable=self.ocr_mode_var,
+            value="google_vision",
+            command=self.on_ocr_mode_change
+        )
+        api_radio.pack(anchor="w")
+        
+        # API status indicator
+        self.api_status_label = ttk.Label(mode_frame, text="", foreground="gray")
+        self.api_status_label.pack(anchor="w", pady=(5, 0))
         
         # OCR backend selection
         backend_frame = ttk.Frame(ocr_frame)
@@ -461,7 +503,8 @@ class EnhancedDocumentConverterApp:
         lang_frame.pack(fill="x", pady=(10, 0))
         
         ttk.Label(lang_frame, text="Languages:").pack(side="left")
-        self.language_var = tk.StringVar(value=self.config.get("ocr_language", "eng"))\n        lang_combo = ttk.Combobox(
+        self.language_var = tk.StringVar(value=self.config.get("ocr_language", "eng"))
+        lang_combo = ttk.Combobox(
             lang_frame,
             textvariable=self.language_var,
             values=["eng", "fra", "deu", "spa", "ita", "por", "rus", "jpn", "kor", "chi_sim", "chi_tra", "ara"],
@@ -949,6 +992,344 @@ class EnhancedDocumentConverterApp:
             self.log_text.insert(tk.END, formatted_message, level)
             self.log_text.see(tk.END)
 
+    def on_input_format_change(self, event=None):
+        """Handle input format selection change"""
+        input_format = self.input_format_var.get()
+        self.log_to_gui(f"Input format changed to: {input_format}")
+        
+        # Save to config
+        self.config['input_format'] = input_format
+        if self.config.get('auto_save', True):
+            self.save_config()
+    
+    def on_format_change(self, event=None):
+        """Handle output format selection change"""
+        output_format = self.format_var.get()
+        self.log_to_gui(f"Output format changed to: {output_format}")
+        
+        # Save to config
+        self.config['output_format'] = output_format
+        if self.config.get('auto_save', True):
+            self.save_config()
+
+    # Placeholder methods for UI functionality
+    def add_files(self):
+        """Add files to the conversion list"""
+        files = filedialog.askopenfilenames(
+            title="Select files to convert",
+            filetypes=[
+                ("All supported", "*.docx;*.pdf;*.txt;*.html;*.htm;*.rtf;*.md;*.markdown;*.epub"),
+                ("Word documents", "*.docx"),
+                ("PDF files", "*.pdf"),
+                ("Text files", "*.txt"),
+                ("HTML files", "*.html;*.htm"),
+                ("RTF files", "*.rtf"),
+                ("Markdown files", "*.md;*.markdown"),
+                ("EPUB files", "*.epub"),
+                ("All files", "*.*")
+            ]
+        )
+        
+        for file_path in files:
+            self.current_files.append(file_path)
+            # Add to tree view (implementation needed)
+        
+        self.update_file_count()
+        self.log_to_gui(f"Added {len(files)} files")
+    
+    def add_folder(self):
+        """Add folder to the conversion list"""
+        folder = filedialog.askdirectory(title="Select folder to convert")
+        if folder:
+            # Implementation needed to scan folder for supported files
+            self.log_to_gui(f"Added folder: {folder}")
+    
+    def remove_selected(self):
+        """Remove selected files from the list"""
+        # Implementation needed
+        self.log_to_gui("Remove selected files")
+    
+    def clear_all(self):
+        """Clear all files from the list"""
+        self.current_files.clear()
+        # Clear tree view (implementation needed)
+        self.update_file_count()
+        self.log_to_gui("Cleared all files")
+    
+    def update_file_count(self):
+        """Update file count label"""
+        if hasattr(self, 'file_count_label'):
+            self.file_count_label.config(text=f"Files: {len(self.current_files)}")
+    
+    def browse_output_dir(self):
+        """Browse for output directory"""
+        directory = filedialog.askdirectory(title="Select output directory")
+        if directory:
+            self.output_dir_var.set(directory)
+            self.config['output_directory'] = directory
+            if self.config.get('auto_save', True):
+                self.save_config()
+    
+    def start_conversion(self):
+        """Start the conversion process"""
+        if not self.current_files:
+            messagebox.showwarning("No Files", "Please add files to convert first.")
+            return
+        
+        # Implementation needed for actual conversion
+        self.log_to_gui("Starting conversion process...")
+    
+    def pause_processing(self):
+        """Pause the processing"""
+        self.log_to_gui("Processing paused")
+    
+    def cancel_conversion(self):
+        """Cancel the conversion process"""
+        self.cancel_processing = True
+        self.log_to_gui("Conversion cancelled")
+    
+    def open_ocr_settings(self):
+        """Open OCR settings dialog"""
+        if OCR_SETTINGS_GUI_AVAILABLE:
+            try:
+                settings_window = tk.Toplevel(self.root)
+                settings_window.title("OCR Settings - API Keys & Configuration")
+                settings_window.geometry("800x600")
+                settings_window.transient(self.root)
+                settings_window.grab_set()
+                
+                # Create OCR settings GUI
+                ocr_settings_gui = OCRSettingsGUI(settings_window, self.ocr_config_manager)
+                
+                self.log_to_gui("OCR settings dialog opened")
+                
+                # Center the window
+                settings_window.geometry("+%d+%d" % (
+                    self.root.winfo_rootx() + 100,
+                    self.root.winfo_rooty() + 50
+                ))
+                
+            except Exception as e:
+                self.log_error(f"Failed to open OCR settings: {e}")
+                messagebox.showerror("Error", f"Failed to open OCR settings: {e}")
+        else:
+            messagebox.showinfo("OCR Settings", "OCR settings GUI not available")
+    
+    def set_backend(self, backend):
+        """Set OCR backend"""
+        self.backend_var.set(backend)
+        self.log_to_gui(f"OCR backend set to: {backend}")
+    
+    def on_ocr_mode_change(self):
+        """Handle OCR mode change (free vs Google Vision API)"""
+        mode = self.ocr_mode_var.get()
+        
+        if mode == "free":
+            self.backend_var.set("auto")  # Set to auto for free mode
+            self.log_to_gui("Switched to free OCR mode (Tesseract + EasyOCR)")
+            
+        elif mode == "google_vision":
+            self.backend_var.set("google_vision")  # Set to Google Vision
+            self.log_to_gui("Switched to Google Vision API mode")
+        
+        # Update status after mode change
+        self.update_ocr_status()
+        
+        # Save mode to config
+        self.config['ocr_mode'] = mode
+        if self.config.get('auto_save', True):
+            self.save_config()
+    
+    def update_ocr_status(self):
+        """Update OCR engine status indicator"""
+        try:
+            # Get current mode and backend
+            mode = self.ocr_mode_var.get()
+            backend = self.backend_var.get()
+            
+            if not self.ocr_var.get():
+                self.api_status_label.config(text="OCR disabled", foreground="gray")
+                return
+            
+            # Initialize OCR engine to check status
+            from ocr_engine.ocr_engine import OCREngine
+            ocr_engine = OCREngine(self.config, self.logger)
+            
+            if mode == "free":
+                # Check available free backends
+                available_backends = ocr_engine.get_available_backends()
+                free_backends = [b for b in available_backends if b in ['tesseract', 'easyocr']]
+                
+                if free_backends:
+                    backend_names = []
+                    for b in free_backends:
+                        if b == 'tesseract':
+                            backend_names.append('Tesseract')
+                        elif b == 'easyocr':
+                            backend_names.append('EasyOCR')
+                    
+                    status_text = f"🆓 Using: {' + '.join(backend_names)}"
+                    self.api_status_label.config(text=status_text, foreground="green")
+                else:
+                    self.api_status_label.config(text="❌ No free OCR engines available", foreground="red")
+                    
+            elif mode == "google_vision":
+                # Check Google Vision status
+                if ocr_engine.is_google_vision_available():
+                    # Test if API key actually works
+                    try:
+                        backend_info = ocr_engine.get_active_backend_info("google_vision")
+                        if backend_info['status'] == 'Ready':
+                            self.api_status_label.config(text="🚀 Google Vision API Ready", foreground="green")
+                        else:
+                            self.api_status_label.config(text="⚠️ API key required - Check OCR Settings", foreground="orange")
+                    except Exception as e:
+                        self.api_status_label.config(text="❌ Google Vision configuration error", foreground="red")
+                        self.log_error(f"Google Vision status check failed: {e}")
+                else:
+                    # Check if fallback is available
+                    fallback_available = ocr_engine.is_tesseract_available() or ocr_engine.is_easyocr_available()
+                    if fallback_available:
+                        fallback_name = "Tesseract" if ocr_engine.is_tesseract_available() else "EasyOCR"
+                        self.api_status_label.config(
+                            text=f"⚠️ Google Vision unavailable - Will use {fallback_name}",
+                            foreground="orange"
+                        )
+                    else:
+                        self.api_status_label.config(text="❌ No OCR engines available", foreground="red")
+                        
+        except Exception as e:
+            self.api_status_label.config(text="❌ Status check failed", foreground="red")
+            self.log_error(f"OCR status update failed: {e}")
+    
+    def show_fallback_notification(self, fallback_info):
+        """Show notification when OCR fallback occurs"""
+        if not fallback_info.get('fallback', False):
+            return
+            
+        fallback_reason = fallback_info.get('fallback_reason', 'Unknown reason')
+        backend_used = fallback_info.get('backend', 'Unknown')
+        
+        # Update status label with fallback info
+        self.api_status_label.config(
+            text=f"⚠️ Fallback activated: Using {backend_used}",
+            foreground="orange"
+        )
+        
+        # Log the fallback event
+        self.log_to_gui(f"⚠️ OCR Fallback: {fallback_reason}")
+        self.log_to_gui(f"   → Switched to: {backend_used.title()}")
+        
+        # Store fallback info for user reference
+        if not hasattr(self, 'fallback_events'):
+            self.fallback_events = []
+        
+        self.fallback_events.append({
+            'timestamp': time.strftime("%Y-%m-%d %H:%M:%S"),
+            'reason': fallback_reason,
+            'backend_used': backend_used,
+            'original_backend': 'google_vision'
+        })
+        
+        # Limit stored events to last 10
+        self.fallback_events = self.fallback_events[-10:]
+    
+    def show_fallback_history(self):
+        """Show dialog with fallback event history"""
+        if not hasattr(self, 'fallback_events') or not self.fallback_events:
+            messagebox.showinfo("Fallback History", "No fallback events recorded in this session.")
+            return
+        
+        # Create fallback history window
+        history_window = tk.Toplevel(self.root)
+        history_window.title("OCR Fallback History")
+        history_window.geometry("600x400")
+        history_window.transient(self.root)
+        
+        # Create text widget with scrollbar
+        text_frame = ttk.Frame(history_window)
+        text_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        history_text = scrolledtext.ScrolledText(
+            text_frame,
+            wrap=tk.WORD,
+            font=("Courier", 10)
+        )
+        history_text.pack(fill="both", expand=True)
+        
+        # Populate with fallback events
+        content = "OCR Fallback Event History\n"
+        content += "=" * 40 + "\n\n"
+        
+        for i, event in enumerate(reversed(self.fallback_events), 1):
+            content += f"{i}. {event['timestamp']}\n"
+            content += f"   Original: {event['original_backend']}\n"
+            content += f"   Used: {event['backend_used']}\n"
+            content += f"   Reason: {event['reason']}\n\n"
+        
+        history_text.insert(1.0, content)
+        history_text.config(state='disabled')
+        
+        # Add close button
+        ttk.Button(
+            history_window,
+            text="Close",
+            command=history_window.destroy
+        ).pack(pady=(0, 10))
+    
+    def toggle_ocr(self):
+        """Handle OCR enable/disable toggle"""
+        enabled = self.ocr_var.get()
+        self.log_to_gui(f"OCR {'enabled' if enabled else 'disabled'}")
+        
+        # Update status indicator
+        self.update_ocr_status()
+        
+        # Save to config
+        self.config['ocr_enabled'] = enabled
+        if self.config.get('auto_save', True):
+            self.save_config()
+
+    # Additional placeholder methods for other UI functionality
+    def update_worker_label(self, value):
+        """Update worker count label"""
+        if hasattr(self, 'worker_label'):
+            self.worker_label.config(text=str(int(float(value))))
+    
+    def update_batch_label(self, value):
+        """Update batch size label"""
+        if hasattr(self, 'batch_label'):
+            self.batch_label.config(text=str(int(float(value))))
+
+    def on_closing(self):
+        """Handle application closing"""
+        if self.config.get('auto_save', True):
+            self.save_config()
+        self.root.destroy()
+
+    # Additional methods would be implemented here for full functionality
+    def show_about(self):
+        """Show about dialog"""
+        messagebox.showinfo("About", "Universal Document Converter with OCR\nProfessional Edition")
+
+    def update_status(self):
+        """Update status periodically"""
+        # Update status information
+        if hasattr(self, 'status_label'):
+            if self.is_processing:
+                self.status_label.config(text=f"Processing... {self.processed_count}/{self.total_files}")
+            else:
+                self.status_label.config(text="Ready")
+        
+        # Update OCR status indicator (only if widgets exist and not processing)
+        if hasattr(self, 'api_status_label') and not self.is_processing:
+            try:
+                self.update_ocr_status()
+            except Exception as e:
+                pass  # Silently ignore errors in periodic updates
+        
+        # Schedule next update
+        self.root.after(5000, self.update_status)  # Reduced frequency to 5 seconds
 
 # Additional implementation methods would be added here to complete all functionality...
 
