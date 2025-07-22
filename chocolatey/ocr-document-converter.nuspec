@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>ocr-document-converter</id>
+    <version>3.1.0</version>
+    <title>OCR Document Converter</title>
+    <authors>Beau Lewis</authors>
+    <owners>Beaulewis1977</owners>
+    <licenseUrl>https://github.com/Beaulewis1977/quick_ocr_doc_converter/blob/main/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/Beaulewis1977/quick_ocr_doc_converter</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/Beaulewis1977/quick_ocr_doc_converter/main/icon.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Enterprise-grade OCR and document conversion tool with dual OCR engines (Tesseract and EasyOCR), supporting 80+ languages. Features include batch processing, GUI interface, CLI tools, and VFP9/VB6 integration.</description>
+    <summary>Convert documents and images to text with powerful OCR capabilities</summary>
+    <releaseNotes>
+# OCR Document Converter v3.1.0
+
+## New Features
+- Dual OCR engines (Tesseract &amp; EasyOCR)
+- Multi-language support (80+ languages)
+- VFP9/VB6 integration with DLL wrapper
+- Enhanced GUI with drag-and-drop
+- Batch processing capabilities
+- Professional Windows installer
+
+## Improvements
+- Updated all launchers to use OCR version
+- Consistent v3.1.0 versioning throughout
+- Security and memory optimization
+- Comprehensive documentation
+    </releaseNotes>
+    <copyright>Copyright 2024 Beau Lewis</copyright>
+    <tags>ocr document conversion pdf text tesseract easyocr</tags>
+    <dependencies>
+      <dependency id="python3" version="3.8.0" />
+      <dependency id="tesseract" version="5.0.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>
