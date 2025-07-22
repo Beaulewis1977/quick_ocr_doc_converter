@@ -7,7 +7,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-orange?style=for-the-badge)
 ![Tests](https://img.shields.io/badge/Tests-Comprehensive-brightgreen?style=for-the-badge)
-![Version](https://img.shields.io/badge/Version-1.0.0-purple?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-3.1.0-purple?style=for-the-badge)
 
 > **Transform any document into searchable, editable text with enterprise-grade OCR technology**
 > 
@@ -61,6 +61,11 @@ OCR Document Converter is a **professional-grade, enterprise-ready OCR applicati
    ```bash
    python universal_document_converter_ocr.py
    ```
+   
+   Or use one of the launchers:
+   - **Windows**: Double-click `run_ocr_converter.bat` or `⚡ Quick Launch OCR.bat`
+   - **Cross-platform**: `python launch_ocr.py`
+   - **CLI**: `python cli.py input.pdf -o output.txt -t txt --ocr`
 
 ### 🔧 **Manual Installation**
 
@@ -255,18 +260,29 @@ sudo apt-get install tesseract-ocr-[LANG]
    - Monitor progress in real-time
    - Review results in the output directory
 
-### 💻 **Command Line Interface**
+### 💻 **Command Line Interface (CLI)**
+
+The OCR Document Converter includes a powerful CLI for automation and integration.
 
 #### Basic Usage
 ```bash
 # Single file OCR
-python ocr_engine/ocr_engine.py --input document.jpg --output result.txt
+python cli.py document.jpg -o result.txt -t txt --ocr
+
+# Convert without OCR
+python cli.py document.pdf -o document.md -t md
 
 # Batch processing
-python ocr_engine/ocr_engine.py --input "*.jpg" --output-dir ./results/
+python cli.py *.jpg -o converted/ -t txt --ocr
 
-# Specify OCR engine
-python ocr_engine/ocr_engine.py --input doc.png --engine tesseract --language eng+fra
+# Specify OCR language
+python cli.py scan.png -o text.txt --ocr --language fra
+```
+
+#### VFP9/VB6 Integration via CLI
+```bash
+# For VFP9/VB6 users - simple command line execution
+python cli.py input.md -o output.rtf -t rtf --quiet
 ```
 
 #### Advanced Options
@@ -456,9 +472,49 @@ python test_ocr_integration.py --category performance
 
 ---
 
+## 📥 **Download Options**
+
+### 1️⃣ **Complete Application Package** (Recommended)
+**File**: `Universal-Document-Converter-v2.1.0-Windows-Complete.zip` (63 KB)
+
+Contains EVERYTHING including:
+- ✅ Full GUI application with OCR
+- ✅ CLI interface (`cli.py`)
+- ✅ OCR engines (Tesseract & EasyOCR support)
+- ✅ VFP9/VB6 integration (DLL package included)
+- ✅ All documentation
+- ✅ Automated installer
+
+```bash
+# Download from GitHub Releases
+https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/Universal-Document-Converter-v2.1.0-Windows-Complete.zip
+```
+
+### 2️⃣ **32-bit DLL Package** (VFP9/VB6 Only)
+**File**: `UniversalConverter32.dll.zip` (12 KB)
+
+For users who ONLY need VFP9/VB6 integration:
+- 📦 Lightweight download
+- 📁 DLL wrapper files
+- 📝 VFP9/VB6 example code
+- 📚 Integration documentation
+- 🔧 Batch DLL simulator
+
+```bash
+# Download DLL package only
+https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/UniversalConverter32.dll.zip
+```
+
 ## 🛠️ **Installation Methods**
 
-### 🚀 **Method 1: Automated Setup (Recommended)**
+### 🚀 **Method 1: From Complete Package**
+
+1. **Download** the complete package
+2. **Extract** to any folder
+3. **Run** `install.bat` as Administrator
+4. **Launch** using desktop shortcut or `run_ocr_converter.bat`
+
+### 🚀 **Method 2: From Source (Development)**
 
 ```bash
 # Clone and setup in one command
@@ -691,6 +747,19 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - **OpenCV** - Computer vision library for image processing
 - **PyTorch** - Machine learning framework for EasyOCR
 - **Tkinter** - Python's standard GUI toolkit
+
+---
+
+## 🤝 **Support Open Source**
+
+Building and maintaining OCR Document Converter takes time and resources. While the tool is completely free, 
+your voluntary support helps ensure continued development and improvements.
+
+If this tool has saved you time or added value to your work, consider showing your appreciation:
+
+**Venmo**: @BeauinTulsa
+
+Together, we're making document conversion accessible to everyone. Thank you! 💪
 
 ---
 

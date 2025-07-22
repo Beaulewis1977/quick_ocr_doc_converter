@@ -92,7 +92,7 @@ Examples:
         # Setup and verification
         parser.add_argument('--setup', action='store_true',
                           help='Run system setup (install dependencies)')
-        parser.add_argument('--version', action='version', version='OCR Document Converter 2.1')
+        parser.add_argument('--version', action='version', version='OCR Document Converter 3.1.0')
         
         # Logging
         parser.add_argument('--verbose', '-v', action='store_true',
@@ -293,6 +293,10 @@ Examples:
         # Handle conversion
         return self.run_conversion(args)
 
-if __name__ == "__main__":
+def main():
+    """Main entry point for CLI"""
     cli = OCRCLI()
     sys.exit(cli.run())
+
+if __name__ == "__main__":
+    main()

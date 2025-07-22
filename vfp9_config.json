@@ -1,0 +1,10 @@
+{
+    "ipc_method": "json_file",
+    "request_file": "C:\\temp\\uc_request.json",
+    "response_file": "C:\\temp\\uc_response.json",
+    "pipe_name": "\\\\.\\pipe\\UniversalConverter",
+    "com_progid": "UniversalConverter.Application",
+    "dll_path": "UniversalConverter32.dll",
+    "timeout": 30,
+    "debug": false
+}

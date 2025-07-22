@@ -274,6 +274,9 @@ CLAUDE.md
 ENHANCED_TODO.md
 IMPLEMENTATION_PLAN.md
 OCR_FIXES_SUMMARY.md
+config.json
+=0.3.0
+.env.example
 
 # Test profile files
 test_profile.json

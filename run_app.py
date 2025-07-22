@@ -92,8 +92,17 @@ def main():
     try:
         # Import and run the application
         sys.path.insert(0, str(Path(__file__).parent))
-        from universal_document_converter import main
-        main()
+        # Try OCR version first
+        try:
+            from universal_document_converter_ocr import DocumentConverterApp
+            import tkinter as tk
+            root = tk.Tk()
+            app = DocumentConverterApp(root)
+            root.mainloop()
+        except ImportError:
+            # Fallback to non-OCR version
+            from universal_document_converter import main
+            main()
     except Exception as e:
         print(f"Error starting application: {e}")
         print("\nTrying alternative launch method...")

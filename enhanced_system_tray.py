@@ -295,7 +295,7 @@ class QuickConverterTray:
         content_frame.pack(fill=tk.BOTH, expand=True)
         
         # App info
-        info_text = """Quick Document Convertor v2.0.0
+        info_text = """Quick Document Convertor v3.1.0
 Enterprise Document Conversion Tool
 
 Created by Beau Lewis

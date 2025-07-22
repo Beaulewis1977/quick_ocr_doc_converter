@@ -337,6 +337,6 @@ python test_ocr_integration.py
 
 ---
 
-**Version**: 2.0.0 (OCR Enhanced)
+**Version**: 3.1.0 (OCR Enhanced)
 **Last Updated**: July 2025
 **License**: MIT

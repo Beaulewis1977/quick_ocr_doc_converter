@@ -2202,7 +2202,7 @@ class UniversalDocumentConverterGUI:
         """Show about dialog"""
         about_text = """Quick Document Convertor
 
-Version: 2.0 (Enterprise Edition)
+Version: 3.1.0 (Enterprise Edition)
 Designed and built by Beau Lewis
 
 A fast, simple, and powerful document conversion tool with support for multiple formats.

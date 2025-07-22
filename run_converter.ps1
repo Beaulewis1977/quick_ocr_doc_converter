@@ -11,7 +11,7 @@ $Host.UI.RawUI.ForegroundColor = 'Green'
 Clear-Host
 
 Write-Host "###########################################################" -ForegroundColor Cyan
-Write-Host "# QUICK DOCUMENT CONVERTOR v2.0                          #" -ForegroundColor Cyan
+Write-Host "# QUICK DOCUMENT CONVERTOR v3.1.0                        #" -ForegroundColor Cyan
 Write-Host "###########################################################" -ForegroundColor Cyan
 Write-Host ""
 

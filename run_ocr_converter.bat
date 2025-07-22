@@ -1,5 +1,5 @@
 @echo off
-title Quick Document Convertor
+title OCR Document Converter
 color 0A
 
 :: Check for Python installation
@@ -10,7 +10,7 @@ if %errorlevel% neq 0 (
     echo # PYTHON NOT FOUND IN SYSTEM PATH                         #
     echo ###########################################################
     echo.
-    echo Please install Python 3.6+ from:
+    echo Please install Python 3.8+ from:
     echo   https://www.python.org/downloads/
     echo.
     echo Make sure to check "Add Python to PATH" during installation

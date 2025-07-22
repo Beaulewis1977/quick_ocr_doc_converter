@@ -5,7 +5,7 @@ This package provides comprehensive OCR (Optical Character Recognition) function
 for converting images to text with support for multiple OCR backends and formats.
 
 Author: Beau Lewis (blewisxx@gmail.com)
-Version: 1.0.0
+Version: 3.1.0
 """
 
 from .ocr_engine import OCREngine
@@ -16,6 +16,6 @@ from .ocr_integration import OCRIntegration
 __all__ = ['OCREngine', 'ImageProcessor', 'OCRFormatDetector', 'OCRIntegration']
 
 # Version information
-__version__ = '1.0.0'
+__version__ = '3.1.0'
 __author__ = 'Beau Lewis'
 __email__ = 'blewisxx@gmail.com'

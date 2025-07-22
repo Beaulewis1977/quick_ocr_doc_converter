@@ -1,4 +1,4 @@
-# OCR Document Converter 2.1
+# OCR Document Converter 3.1.0
 
 Complete OCR-powered document converter with enhanced functionality and cross-platform support.
 

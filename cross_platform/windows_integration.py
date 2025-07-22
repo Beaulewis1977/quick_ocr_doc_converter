@@ -177,7 +177,7 @@ def register_file_associations(
 def create_uninstaller(
     app_dir: Path,
     app_name: str = "Quick Document Convertor",
-    version: str = "2.0.0"
+    version: str = "3.1.0"
 ) -> Path:
     """
     Create an uninstaller script for Windows.
@@ -228,7 +228,7 @@ pause
 def add_to_programs_list(
     app_path: Path,
     app_name: str = "Quick Document Convertor",
-    version: str = "2.0.0",
+    version: str = "3.1.0",
     publisher: str = "Beau Lewis",
     uninstaller_path: Optional[Path] = None
 ) -> bool:
@@ -270,7 +270,7 @@ def add_to_programs_list(
 def create_installer_script(
     app_dir: Path,
     app_name: str = "Quick Document Convertor",
-    version: str = "2.0.0"
+    version: str = "3.1.0"
 ) -> Path:
     """
     Create a Windows installer script.
