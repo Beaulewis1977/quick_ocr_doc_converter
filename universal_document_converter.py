@@ -1249,6 +1249,7 @@ class UniversalConverter:
             'errors': [],
             'start_time': time.time()
         }
+        results_lock = threading.Lock()
 
         def convert_single_file(file_info):
             """Convert a single file with error handling"""
@@ -1289,17 +1290,19 @@ class UniversalConverter:
             for future in concurrent.futures.as_completed(future_to_file):
                 result = future.result()
 
-                if result['status'] == 'success':
-                    results['successful'] += 1
-                elif result['status'] == 'error':
-                    results['failed'] += 1
-                    results['errors'].append(result)
-                elif result['status'] == 'skipped':
-                    results['skipped'] += 1
+                with results_lock:
+                    if result['status'] == 'success':
+                        results['successful'] += 1
+                    elif result['status'] == 'error':
+                        results['failed'] += 1
+                        results['errors'].append(result)
+                    elif result['status'] == 'skipped':
+                        results['skipped'] += 1
 
                 # Call progress callback if provided
                 if progress_callback:
-                    completed = results['successful'] + results['failed'] + results['skipped']
+                    with results_lock:
+                        completed = results['successful'] + results['failed'] + results['skipped']
                     progress_callback(completed, results['total'], result)
 
         results['end_time'] = time.time()

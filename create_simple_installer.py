@@ -19,7 +19,7 @@ def create_portable_package():
     
     # Files to include in package
     files_to_include = [
-        "universal_document_converter.py",
+        "universal_document_converter_ocr.py",
         "run_converter.bat",
         "run_converter.ps1",
         "install_converter.py",
@@ -28,7 +28,14 @@ def create_portable_package():
         "QUICK_START.md",
         "TROUBLESHOOTING.md",
         "requirements.txt",
-        "requirements_installer.txt"
+        "requirements_installer.txt",
+        "UniversalConverter_VFP9.prg",
+        "VB6_UniversalConverter.bas",
+        "VB6_ConverterForm.frm",
+        "VFP9_PipeClient.prg",
+        "VB6_PipeClient.bas",
+        "VFP9_VB6_INTEGRATION_GUIDE.md",
+        "dist/UniversalConverter32.dll.zip"
     ]
     
     # Create package directory
@@ -47,6 +54,18 @@ def create_portable_package():
         else:
             missing_files.append(file_path)
             print(f"⚠️ Missing: {file_path}")
+    
+    # Add ocr_engine directory
+    ocr_engine_dir = Path("ocr_engine")
+    if ocr_engine_dir.exists():
+        package_ocr_dir = package_dir / "ocr_engine"
+        package_ocr_dir.mkdir(exist_ok=True)
+        for ocr_file in ocr_engine_dir.glob("*.py"):
+            shutil.copy2(ocr_file, package_ocr_dir / ocr_file.name)
+            print(f"✅ Added: ocr_engine/{ocr_file.name}")
+    else:
+        print("⚠️ Missing: ocr_engine directory")
+        missing_files.append("ocr_engine")
     
     # Create ZIP file
     zip_path = dist_dir / f"{package_name}.zip"

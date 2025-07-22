@@ -162,7 +162,7 @@ class SystemTrayApp:
     
     def __init__(self):
         self.app_dir = Path(__file__).parent
-        self.main_app = self.app_dir / "universal_document_converter.py"
+        self.main_app = self.app_dir / "universal_document_converter_ocr.py"
         self.icon = None
         self.running = False
         
@@ -297,7 +297,7 @@ section "install"
     ; Copy main application files
     file "Quick Document Convertor.exe"
     file "tray_app.exe"
-    file /r "universal_document_converter.py"
+    file /r "universal_document_converter_ocr.py"
     file "requirements.txt"
     file "README.md"
     file "LICENSE"
@@ -349,7 +349,7 @@ section "uninstall"
     ; Remove main executables
     delete "$INSTDIR\\Quick Document Convertor.exe"
     delete "$INSTDIR\\tray_app.exe"
-    delete "$INSTDIR\\universal_document_converter.py"
+    delete "$INSTDIR\\universal_document_converter_ocr.py"
     delete "$INSTDIR\\uninstall.exe"
     
     ; Remove CLI and integration files
@@ -416,7 +416,7 @@ sectionEnd
 block_cipher = None
 
 a = Analysis(
-    ['universal_document_converter.py'],
+    ['universal_document_converter_ocr.py'],
     pathex=[],
     binaries=[],
     datas=[
@@ -438,6 +438,8 @@ a = Analysis(
         ('convert_recursive.py', '.'),
         ('sample.md', '.'),
         ('sample.rtf', '.'),
+        ('dist/UniversalConverter32.dll.zip', '.'),
+        ('ocr_engine', 'ocr_engine'),
     ],
     hiddenimports=[
         'tkinter',
@@ -624,7 +626,7 @@ VSVersionInfo(
             f.write(version_info)
         
         # Copy necessary files to build directory
-        shutil.copy2(self.app_dir / "universal_document_converter.py", self.build_dir)
+        shutil.copy2(self.app_dir / "universal_document_converter_ocr.py", self.build_dir)
         
         # Copy icon if exists
         icon_file = self.app_dir / "icon.ico"
@@ -771,7 +773,7 @@ if not exist "%INSTALL_DIR%" mkdir "%INSTALL_DIR%"
 REM Copy files
 copy "Quick Document Convertor.exe" "%INSTALL_DIR%\\"
 copy "tray_app.exe" "%INSTALL_DIR%\\"
-copy "universal_document_converter.py" "%INSTALL_DIR%\\"
+copy "universal_document_converter_ocr.py" "%INSTALL_DIR%\\"
 copy "requirements.txt" "%INSTALL_DIR%\\"
 copy "README.md" "%INSTALL_DIR%\\"
 copy "LICENSE" "%INSTALL_DIR%\\"

@@ -274,10 +274,11 @@ class DocumentConverterUltimate:
         if self.config_manager.get("api_enabled") and API_AVAILABLE:
             self.start_api_server()
         
-        # Processing metrics
+        # Processing metrics (thread-safe)
         self.start_time = time.time()
         self.active_conversions = 0
         self.total_processed = 0
+        self._counter_lock = threading.Lock()
         
         # Bind window events
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -724,10 +725,12 @@ curl -X POST -F "file=@document.pdf" -F "format=txt" -F "ocr=true" \\
 # Using Python requests
 import requests
 
-files = {'file': open('document.pdf', 'rb')}
-data = {'format': 'txt', 'ocr': 'true'}
-response = requests.post('http://localhost:5000/api/convert', 
-                        files=files, data=data)
+# Use context manager to ensure file is properly closed
+with open('document.pdf', 'rb') as pdf_file:
+    files = {'file': pdf_file}
+    data = {'format': 'txt', 'ocr': 'true'}
+    response = requests.post('http://localhost:5000/api/convert', 
+                            files=files, data=data)
 
 with open('output.txt', 'wb') as f:
     f.write(response.content)"""
@@ -995,7 +998,8 @@ with open('output.txt', 'wb') as f:
                     
                     try:
                         result = future.result(timeout=300)  # 5 minute timeout
-                        self.processed_count += 1
+                        with self._counter_lock:
+                            self.processed_count += 1
                         self.update_progress()
                         
                         if result['success']:
@@ -1057,8 +1061,9 @@ with open('output.txt', 'wb') as f:
                 # Process without OCR
                 self.convert_document(str(file_path), str(output_file))
             
-            self.total_processed += 1
-            self.active_conversions = max(0, self.active_conversions - 1)
+            with self._counter_lock:
+                self.total_processed += 1
+                self.active_conversions = max(0, self.active_conversions - 1)
             
             return {
                 'success': True,

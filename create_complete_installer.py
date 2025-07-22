@@ -189,7 +189,7 @@ class CompleteInstallerCreator:
         """Create executable with all features"""
         print("🔧 Creating comprehensive executable...")
         
-        main_script = self.app_dir / "universal_document_converter.py"
+        main_script = self.app_dir / "universal_document_converter_ocr.py"
         if not main_script.exists():
             print("   ❌ Main application script not found!")
             return False
@@ -210,6 +210,14 @@ class CompleteInstallerCreator:
             # Core application data
             '--add-data', f'{self.app_dir / "ocr_engine"};ocr_engine',
             '--add-data', f'{self.app_dir / "icon.ico"};.',
+            
+            # VFP9/VB6 Integration files
+            '--add-data', f'{self.app_dir / "UniversalConverter_VFP9.prg"};vfp9_vb6',
+            '--add-data', f'{self.app_dir / "VB6_UniversalConverter.bas"};vfp9_vb6',
+            '--add-data', f'{self.app_dir / "VB6_ConverterForm.frm"};vfp9_vb6',
+            '--add-data', f'{self.app_dir / "VFP9_PipeClient.prg"};vfp9_vb6',
+            '--add-data', f'{self.app_dir / "VB6_PipeClient.bas"};vfp9_vb6',
+            '--add-data', f'{self.app_dir / "dist" / "UniversalConverter32.dll.zip"};vfp9_vb6',
             
             # Core GUI and system dependencies
             '--hidden-import', 'tkinter',

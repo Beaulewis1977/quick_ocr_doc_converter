@@ -1,1 +1,10 @@
-{"input_file": "test_comprehensive.md", "output_file": "json_ipc_test.rtf", "input_format": "markdown", "output_format": "rtf"}
+{
+    "ipc_method": "json_file",
+    "request_file": "C:\\temp\\uc_request.json",
+    "response_file": "C:\\temp\\uc_response.json",
+    "pipe_name": "\\\\.\\pipe\\UniversalConverter",
+    "com_progid": "UniversalConverter.Application",
+    "dll_path": "UniversalConverter32.dll",
+    "timeout": 30,
+    "debug": false
+}
