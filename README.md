@@ -1,16 +1,39 @@
-# Universal Document Converter v2.1.0 - NOW WITH MARKDOWN!
+# Universal Document Converter v2.1.0 🚀
 
-🆕 **NEW IN v2.1.0**: **Bidirectional RTF ↔ Markdown Conversion!**
+The most comprehensive document conversion suite with OCR capabilities, supporting 15+ formats including bidirectional Markdown ↔ RTF conversion, with special integration for VFP9 and VB6 legacy systems.
 
-A powerful Python application that converts multiple document formats (PDF, DOCX, TXT, HTML, RTF, EPUB, **MARKDOWN**) with advanced OCR capabilities, multi-threaded processing, and legacy 32-bit system support (VFP9/VB6).
+![Version](https://img.shields.io/badge/version-2.1.0-blue)
+![Python](https://img.shields.io/badge/python-3.8+-green)
+![Platform](https://img.shields.io/badge/platform-windows%20%7C%20linux%20%7C%20macos-lightgrey)
+![License](https://img.shields.io/badge/license-MIT-orange)
 
-**Features 13.5x faster multi-threading performance and lightweight 32-bit DLL compatibility!**
+## 🌟 Key Features
 
-Designed and built by Beau Lewis.
+### Core Capabilities
+- **📄 15+ Format Support**: DOCX, PDF, HTML, RTF, TXT, EPUB, Markdown, ODT, and more
+- **👁️ OCR Integration**: Extract text from scanned documents and images
+- **🔄 Batch Processing**: Convert multiple files with progress tracking
+- **🖥️ Multiple Interfaces**: GUI (drag-and-drop), CLI, API, and programmatic access
+- **⚡ High Performance**: Multi-threaded processing (13.5x faster than v1.0)
 
-## 🎯 Quick Download (No Installation Required!) - v2.1.0
+### v2.1.0 New Features
+- **📝 Markdown Support**: Full bidirectional Markdown ↔ RTF conversion
+- **🏛️ Legacy Integration**: Native support for VFP9 and VB6 applications
+- **🔧 32-bit DLL**: UniversalConverter32.dll for legacy system compatibility
+- **🔌 5 Integration Methods**: CLI, JSON IPC, Named Pipes, COM Server, DLL
+- **🎯 Enhanced Error Handling**: Robust error recovery and detailed logging
+- **💾 Memory Optimization**: Efficient handling of large documents
 
-### 📦 **[Download Windows Complete Package → One-Click Install!](https://github.com/yourusername/universal-document-converter/releases/latest/download/Universal-Document-Converter-v2.1.0-Windows-Complete.zip)**
+## 📥 Download Options
+
+### Quick Downloads
+Choose the package that best fits your needs:
+
+| Package | Size | Description | Download Link |
+|---------|------|-------------|---------------|
+| **Complete Package** | 63 KB | Full application with GUI, CLI, OCR, and all features | [Download Universal-Document-Converter-v2.1.0-Windows-Complete.zip](https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/Universal-Document-Converter-v2.1.0-Windows-Complete.zip) |
+| **32-bit DLL Only** | 12 KB | VFP9/VB6 integration package | [Download UniversalConverter32.dll.zip](https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/UniversalConverter32.dll.zip) |
+| **Source Code** | - | Full source with tests and examples | [Clone Repository](https://github.com/Beaulewis1977/quick_ocr_doc_converter.git) |
 
 🆕 **NEW v2.1.0 Features:**
 - ✨ **Bidirectional Markdown ↔ RTF conversion**
@@ -58,6 +81,28 @@ pip install -r requirements.txt
 # Launch with all new v2.1.0 features
 python3 universal_document_converter.py
 ```
+
+---
+
+## 📚 Complete Documentation
+
+### Essential Guides
+- **[📖 Installation Guide](docs/INSTALLATION_GUIDE.md)** - Detailed installation instructions for all platforms
+- **[📘 User Manual](docs/USER_MANUAL.md)** - Comprehensive guide to all features and interfaces
+- **[⌨️ CLI Reference](docs/CLI_REFERENCE.md)** - Complete command-line documentation
+- **[🔧 Troubleshooting](docs/TROUBLESHOOTING_COMPLETE.md)** - Solutions to all common issues
+
+### Integration & Advanced Topics
+- **[🏛️ VFP9/VB6 Integration](docs/VFP9_VB6_COMPLETE_INTEGRATION_GUIDE.md)** - Complete legacy system integration
+- **[⚙️ Settings & Configuration](docs/SETTINGS_CONFIGURATION_GUIDE.md)** - All configuration options explained
+- **[🐍 Python API Reference](docs/USER_MANUAL.md#python-api)** - Using as a Python library
+- **[🚀 Performance Guide](docs/USER_MANUAL.md#performance-optimization)** - Optimization tips
+
+### Quick References
+- **[📄 Supported Formats](docs/USER_MANUAL.md#supported-formats)** - All input/output formats
+- **[🌍 OCR Languages](docs/CLI_REFERENCE.md#ocr-language-codes)** - Supported language codes
+- **[❌ Error Codes](docs/TROUBLESHOOTING_COMPLETE.md#error-messages-reference)** - Error reference
+- **[📁 All Documentation](docs/README.md)** - Complete documentation index
 
 ---
 
