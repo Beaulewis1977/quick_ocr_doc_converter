@@ -74,19 +74,19 @@ This creates in the `releases/` folder:
    - Upload both ZIP files from `releases/` folder
 
 3. **Update README links:**
-   - Replace `yourusername` with actual GitHub username
+   - ✅ All GitHub username placeholders updated to `Beaulewis1977`
    - Links will automatically point to latest release
 
 ### 🔗 Direct Download Links (after release):
 
 Windows ZIP:
 ```
-https://github.com/[username]/universal-document-converter/releases/latest/download/UniversalDocumentConverter_Windows_2.0.0_Installer.zip
+https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/UniversalDocumentConverter_Windows_2.0.0_Installer.zip
 ```
 
 Source ZIP:
 ```
-https://github.com/[username]/universal-document-converter/releases/latest/download/UniversalDocumentConverter_Source_2.0.0.zip
+https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/UniversalDocumentConverter_Source_2.0.0.zip
 ```
 
 ### ✨ User Experience:

@@ -1279,7 +1279,7 @@ with open('output.txt', 'wb') as f:
     
     def show_documentation(self):
         """Show application documentation"""
-        webbrowser.open("https://github.com/yourusername/universal-document-converter/wiki")
+        webbrowser.open("https://github.com/Beaulewis1977/quick_ocr_doc_converter/wiki")
     
     def show_api_documentation(self):
         """Show API documentation"""

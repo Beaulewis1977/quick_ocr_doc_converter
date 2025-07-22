@@ -10,7 +10,7 @@ Designed and built by Beau Lewis.
 
 ## 🎯 Quick Download (No Installation Required!) - v2.1.0
 
-### 📦 **[Download Windows Complete Package → One-Click Install!](https://github.com/yourusername/universal-document-converter/releases/latest/download/Universal-Document-Converter-v2.1.0-Windows-Complete.zip)**
+### 📦 **[Download Windows Complete Package → One-Click Install!](https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/Universal-Document-Converter-v2.1.0-Windows-Complete.zip)**
 
 🆕 **NEW v2.1.0 Features:**
 - ✨ **Bidirectional Markdown ↔ RTF conversion**
@@ -29,7 +29,7 @@ Designed and built by Beau Lewis.
 ---
 
 ### 🖥️ **Alternative: Standalone Executable**
-**[Download Universal-Document-Converter-v2.1.0.exe](https://github.com/yourusername/universal-document-converter/releases/latest/download/Universal-Document-Converter-v2.1.0.exe)**
+**[Download Universal-Document-Converter-v2.1.0.exe](https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/Universal-Document-Converter-v2.1.0.exe)**
 
 🆕 **Self-contained executable with all Markdown features:**
 - ✨ **NEW: Markdown → RTF/HTML/TXT/EPUB/DOCX/PDF conversion** 
@@ -44,13 +44,13 @@ Designed and built by Beau Lewis.
 ---
 
 ### 🍎 **macOS & 🐧 Linux Users**
-**[Download Source ZIP](https://github.com/yourusername/universal-document-converter/releases/latest/download/Universal-Document-Converter-v2.1.0-Source.zip)**
+**[Download Source ZIP](https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/Universal-Document-Converter-v2.1.0-Source.zip)**
 
 🆕 **v2.1.0 with full Markdown support:**
 ```bash
 # Extract the ZIP file
 unzip Universal-Document-Converter-v2.1.0-Source.zip
-cd universal-document-converter
+cd quick_ocr_doc_converter
 
 # Install dependencies (includes new Markdown libraries)
 pip install -r requirements.txt
