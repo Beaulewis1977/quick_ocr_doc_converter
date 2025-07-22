@@ -555,17 +555,27 @@ class OCRSettingsGUI:
     def test_google_vision(self):
         """Test Google Vision API connection"""
         self.test_button.config(state="disabled")
-        self.test_status_label.config(text="Testing...", foreground="blue")
+        self.test_status_label.config(text="⏳ Testing connection...", foreground="blue")
         
         def run_test():
             try:
-                # Temporarily save current Google Vision settings
+                # Get current settings
                 json_content = self.json_text.get(1.0, tk.END).strip()
-                temp_config = {
-                    "key_file": self.key_file_var.get(),
-                    "key_json": json_content if json_content else "",
-                    "enabled": True
-                }
+                key_file_path = self.key_file_var.get().strip()
+                
+                # Validate input
+                if not json_content and not key_file_path:
+                    self.window.after(0, lambda: self.test_status_label.config(
+                        text="❌ Please provide either JSON key or key file", foreground="red"
+                    ))
+                    return
+                
+                # Create temp config with correct parameter names
+                temp_config = {}
+                if key_file_path:
+                    temp_config["google_vision_key_file"] = key_file_path
+                if json_content:
+                    temp_config["google_vision_key_json"] = json_content
                 
                 # Create temporary backend for testing
                 from ocr_engine.google_vision_backend import GoogleVisionBackend
@@ -573,26 +583,75 @@ class OCRSettingsGUI:
                 
                 if not backend.is_available():
                     self.window.after(0, lambda: self.test_status_label.config(
-                        text="❌ Not configured", foreground="red"
+                        text="❌ Invalid credentials", foreground="red"
                     ))
                     return
                 
+                # Test connection
                 result = backend.test_connection()
                 
                 if result.get("success"):
+                    detected_text = result.get("text_detected", "")
+                    confidence = result.get("confidence")
+                    
+                    status_msg = "✅ API connection successful"
+                    if detected_text:
+                        status_msg += f" (detected: '{detected_text}')"
+                    if confidence:
+                        status_msg += f" [{confidence:.1f}% confidence]"
+                        
                     self.window.after(0, lambda: self.test_status_label.config(
-                        text="✅ Connection successful", foreground="green"
+                        text=status_msg, foreground="green"
                     ))
+                    
+                    # Show detailed results in messagebox
+                    details = f"✅ Google Vision API Test Results:\n\n"
+                    details += f"Status: Connection successful\n"
+                    details += f"Test image processed: Yes\n"
+                    details += f"Text detected: '{detected_text}'\n"
+                    if confidence:
+                        details += f"Detection confidence: {confidence:.1f}%\n"
+                    details += f"\nYour API key is working correctly!"
+                    
+                    self.window.after(0, lambda: messagebox.showinfo("API Test Success", details))
+                    
                 else:
                     error_msg = result.get("error", "Unknown error")
+                    details = result.get("details", "")
+                    full_error = f"{error_msg}"
+                    if details:
+                        full_error += f" - {details}"
+                    
                     self.window.after(0, lambda: self.test_status_label.config(
                         text=f"❌ {error_msg}", foreground="red"
                     ))
                     
+                    # Show detailed error in messagebox
+                    error_details = f"❌ Google Vision API Test Failed:\n\n{full_error}\n\n"
+                    error_details += "Common issues:\n"
+                    error_details += "• Invalid API key or JSON format\n"
+                    error_details += "• Vision API not enabled in Google Cloud\n"
+                    error_details += "• Billing not set up for the project\n"
+                    error_details += "• Network connectivity issues"
+                    
+                    self.window.after(0, lambda: messagebox.showerror("API Test Failed", error_details))
+                    
             except Exception as e:
+                error_str = str(e)
                 self.window.after(0, lambda: self.test_status_label.config(
-                    text=f"❌ Error: {str(e)}", foreground="red"
+                    text=f"❌ Test failed", foreground="red"
                 ))
+                
+                # Show detailed error in messagebox
+                error_details = f"❌ Connection test encountered an error:\n\n{error_str}\n\n"
+                error_details += "Please check:\n"
+                error_details += "• JSON key format is valid\n"
+                error_details += "• Key file path is correct\n"
+                error_details += "• Internet connection is working\n"
+                error_details += "• Google Cloud Vision API dependencies are installed"
+                
+                self.window.after(0, lambda: messagebox.showerror("Test Error", error_details))
+                
             finally:
                 self.window.after(0, lambda: self.test_button.config(state="normal"))
         

@@ -207,6 +207,30 @@ class OCREngine:
         # Sort by priority (lower is better)
         available.sort(key=lambda x: x[1])
         return available[0][0]
+    
+    def get_active_backend_info(self, backend: str = None) -> Dict[str, Any]:
+        """Get information about the active OCR backend"""
+        if backend is None:
+            backend = self.get_preferred_backend()
+        
+        if backend not in self.backends:
+            return {'name': 'Unknown', 'available': False, 'status': 'Not configured'}
+        
+        backend_info = self.backends[backend]
+        status = 'Ready' if backend_info['available'] else 'Not Available'
+        
+        # Special handling for Google Vision
+        if backend == 'google_vision' and hasattr(self, 'google_vision_backend'):
+            if not self.google_vision_backend.is_available():
+                status = 'API Key Required'
+        
+        return {
+            'name': backend_info['name'],
+            'backend_id': backend,
+            'available': backend_info['available'],
+            'status': status,
+            'priority': backend_info['priority']
+        }
 
     def _get_easyocr_reader(self, languages: List[str] = None):
         """Get thread-local EasyOCR reader"""
@@ -304,17 +328,46 @@ class OCREngine:
         except Exception as e:
             raise ImageProcessingError(f"Image preprocessing failed: {e}")
         
-        # Extract text based on backend
+        # Extract text based on backend with fallback support
         start_time = time.time()
+        result = None
         
         if backend == 'google_vision' and self.is_google_vision_available():
-            result = self._extract_with_google_vision(str(image_path), ocr_options)
+            try:
+                result = self._extract_with_google_vision(str(image_path), ocr_options)
+            except Exception as e:
+                self.logger.warning(f"Google Vision API failed: {e}")
+                # Fallback to Tesseract if available
+                if self.is_tesseract_available():
+                    self.logger.info("Falling back to Tesseract OCR")
+                    try:
+                        result = self._extract_with_tesseract(processed_image, ocr_options)
+                        result['fallback'] = True
+                        result['fallback_reason'] = f"Google Vision failed: {str(e)}"
+                    except Exception as fallback_error:
+                        self.logger.error(f"Tesseract fallback also failed: {fallback_error}")
+                        raise OCRBackendError(f"Both Google Vision and Tesseract failed. Google Vision: {e}, Tesseract: {fallback_error}")
+                elif self.is_easyocr_available():
+                    self.logger.info("Falling back to EasyOCR")
+                    try:
+                        result = self._extract_with_easyocr(processed_image, ocr_options)
+                        result['fallback'] = True
+                        result['fallback_reason'] = f"Google Vision failed: {str(e)}"
+                    except Exception as fallback_error:
+                        self.logger.error(f"EasyOCR fallback also failed: {fallback_error}")
+                        raise OCRBackendError(f"Both Google Vision and EasyOCR failed. Google Vision: {e}, EasyOCR: {fallback_error}")
+                else:
+                    raise OCRBackendError(f"Google Vision failed and no fallback backends available: {e}")
+        
         elif backend == 'tesseract' and self.is_tesseract_available():
             result = self._extract_with_tesseract(processed_image, ocr_options)
         elif backend == 'easyocr' and self.is_easyocr_available():
             result = self._extract_with_easyocr(processed_image, ocr_options)
         else:
             raise OCRBackendError(f"Selected backend '{backend}' is not available")
+        
+        if result is None:
+            raise OCRBackendError("OCR extraction failed - no result generated")
         
         duration = time.time() - start_time
         

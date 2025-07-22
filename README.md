@@ -186,6 +186,54 @@ OCR Document Converter is a **professional-grade, enterprise-ready OCR applicati
 }
 ```
 
+#### Google Vision API Configuration
+```python
+# google_vision_config.json
+{
+    "engine": "google_vision",
+    "enabled": true,
+    "service_account_key": "path/to/service-account.json",
+    "confidence_threshold": 0.8,
+    "features": ["TEXT_DETECTION", "DOCUMENT_TEXT_DETECTION"],
+    "language_hints": ["en", "fr", "de"],
+    "encryption": {
+        "enabled": true,
+        "encrypt_api_keys": true
+    }
+}
+```
+
+**🔑 Google Vision API Setup:**
+
+1. **Create Google Cloud Project:**
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create new project or select existing one
+
+2. **Enable Vision API:**
+   - Navigate to APIs & Services > Library
+   - Search for "Cloud Vision API" and enable it
+
+3. **Create Service Account:**
+   - Go to IAM & Admin > Service Accounts
+   - Click "Create Service Account"
+   - Give it a name (e.g., "ocr-converter")
+   - Grant "Vision API User" role
+
+4. **Download API Key:**
+   - Click on your service account
+   - Go to "Keys" tab → "Add Key" → "Create New Key"
+   - Choose JSON format and download
+
+5. **Configure in Application:**
+   - Open application → OCR Settings → Google Vision API tab
+   - Upload your JSON key file or paste the content
+   - Test connection to verify setup
+
+**💡 Cost Information:**
+- First 1,000 requests per month: FREE
+- Additional requests: $1.50 per 1,000 requests
+- See [Google Vision Pricing](https://cloud.google.com/vision/pricing) for details
+
 ### 🎛️ **Application Settings**
 
 #### GUI Configuration
