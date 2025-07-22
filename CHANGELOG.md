@@ -21,11 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Bidirectional Markdown Editor**: Live preview and real-time editing capabilities
 - **Thread Control System**: Adjustable processing threads with quality settings
 - **VB6/VFP9 Integration Package**: Complete legacy application support with examples
+- **Legacy Integration GUI Tab**: Integrated VB6/VFP9 code generation and DLL builder in main interface
 - **Enhanced Windows Installer**: Improved PyInstaller build with proper dependencies
 - **Unified Launcher System**: Consolidated to main GUI and VB6/VFP9 tools only
 
 ### Enhanced
-- **Main GUI Interface**: Tabbed design with all tools, settings, and functions integrated
+- **Main GUI Interface**: Tabbed design with all tools, settings, and functions integrated (now includes Legacy Integration tab)
 - **OCR Processing**: Support for multiple backends with seamless switching
 - **Document Reader**: Enhanced file type support and preview capabilities
 - **Cross-Platform Support**: Updated installers for Windows, macOS, and Linux

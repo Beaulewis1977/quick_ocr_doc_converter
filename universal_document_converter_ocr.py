@@ -49,7 +49,7 @@ class DocumentConverterApp:
     
     def __init__(self, root):
         self.root = root
-        self.root.title("Universal Document Converter with OCR")
+        self.root.title("Universal Document Converter with OCR v3.1.0")
         self.root.geometry("1000x700")
         self.root.minsize(800, 600)
         
@@ -198,7 +198,7 @@ class DocumentConverterApp:
         main_frame.rowconfigure(2, weight=1)
         
         # Title
-        title_label = ttk.Label(main_frame, text="Universal Document Converter with OCR", 
+        title_label = ttk.Label(main_frame, text="Universal Document Converter with OCR v3.1.0", 
                                font=("Arial", 16, "bold"))
         title_label.grid(row=0, column=0, columnspan=3, pady=(0, 10))
         

@@ -115,12 +115,17 @@ OCR Document Converter is a **professional-grade, enterprise-ready OCR applicati
 - **Background Processing**: Non-blocking operations
 
 ### 🎯 **User Interface**
-- **Professional GUI**: Modern, intuitive interface
+- **Professional GUI**: Modern, intuitive interface with tabbed design
 - **Drag & Drop**: Easy file handling
 - **Batch Processing**: Multiple file selection and processing
-- **Settings Panel**: Comprehensive configuration options
+- **Settings Panel**: Comprehensive configuration options with 4 dedicated tabs
 - **Preview Mode**: View processed results before saving
 - **Export Options**: Multiple output formats and destinations
+- **🔧 Legacy Integration Tab**: Complete VB6/VFP9 integration with:
+  - Code generation for Visual Basic 6 and Visual FoxPro 9
+  - One-click DLL/executable builder with real-time logs
+  - Integration testing and validation tools
+  - Examples folder access and comprehensive setup validation
 
 ---
 
@@ -259,6 +264,12 @@ sudo apt-get install tesseract-ocr-[LANG]
    - Configure batch settings in the Settings panel
    - Monitor progress in real-time
    - Review results in the output directory
+
+4. **🔧 Legacy Integration Tab** (New in v3.1.0):
+   - **VB6/VFP9 Code Generation**: Select project type and generate integration code
+   - **One-Click DLL Builder**: Build executable/DLL with real-time build logs
+   - **Integration Testing**: Test conversion functionality and validate setup
+   - **Examples Access**: Open examples folder with VB6/VFP9 template files
 
 ### 💻 **Command Line Interface (CLI)**
 
@@ -412,6 +423,12 @@ ocr_document_converter/
 ├── 📁 temp/                          # Temporary processing files
 ├── 📁 cache/                         # OCR result cache
 ├── 📁 logs/                          # Application logs
+├── 📁 vb6_vfp9_integration/          # Legacy VB6/VFP9 integration package
+│   ├── UniversalConverter32.py       # Main integration module
+│   ├── VB6_Example.vb                # VB6 integration template
+│   ├── VFP9_Example.prg              # VFP9 integration template
+│   ├── build_dll.bat                 # DLL/executable builder script
+│   └── README.md                     # Legacy integration documentation
 │
 ├── 📄 requirements.txt               # Python dependencies
 ├── 📄 setup_ocr_environment.py       # Automated setup script
