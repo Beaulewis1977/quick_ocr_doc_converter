@@ -1,0 +1,28 @@
+# Language detection overrides for GitHub
+*.py linguist-language=Python
+*.prg linguist-language=xBase
+*.bas linguist-language=Visual Basic 6.0
+*.frm linguist-language=Visual Basic 6.0
+*.vbs linguist-language=VBScript
+*.bat linguist-language=Batchfile
+*.ps1 linguist-language=PowerShell
+*.sh linguist-language=Shell
+*.md linguist-documentation
+*.txt linguist-documentation
+
+# Mark vendor/generated files
+*.min.js linguist-vendored
+*.min.css linguist-vendored
+
+# Ensure VFP9 and VB6 files are included in language stats
+UniversalConverter_VFP9.prg linguist-language=xBase
+VB6_*.bas linguist-language=Visual Basic 6.0
+VB6_*.frm linguist-language=Visual Basic 6.0
+VFP9_*.prg linguist-language=xBase
+
+# Don't count test files in language stats
+test_*.py linguist-vendored=false
+
+# Documentation
+docs/* linguist-documentation
+*.md linguist-documentation
