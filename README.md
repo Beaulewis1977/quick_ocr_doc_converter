@@ -487,7 +487,7 @@ Contains EVERYTHING including:
 
 ```bash
 # Download from GitHub Releases
-https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/Universal-Document-Converter-v2.1.0-Windows-Complete.zip
+https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/Universal-Document-Converter-v3.1.0-Windows-Complete.zip
 ```
 
 ### 2️⃣ **32-bit DLL Package** (VFP9/VB6 Only)

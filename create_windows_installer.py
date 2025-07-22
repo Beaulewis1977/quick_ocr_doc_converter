@@ -502,7 +502,15 @@ VSVersionInfo(
             f.write(version_info)
         
         # Copy necessary files to build directory
-        shutil.copy2(self.app_dir / "universal_document_converter.py", self.build_dir)
+        # Use the main OCR GUI as the primary application
+        main_app_file = self.app_dir / "universal_document_converter_ocr.py"
+        if main_app_file.exists():
+            shutil.copy2(main_app_file, self.build_dir / "universal_document_converter.py")
+        else:
+            # Fallback to basic version if OCR version doesn't exist
+            fallback_file = self.app_dir / "universal_document_converter.py"
+            if fallback_file.exists():
+                shutil.copy2(fallback_file, self.build_dir)
         
         # Copy icon if exists
         icon_file = self.app_dir / "icon.ico"

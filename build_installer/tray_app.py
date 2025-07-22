@@ -27,7 +27,7 @@ class SystemTrayApp:
     
     def __init__(self):
         self.app_dir = Path(__file__).parent
-        self.main_app = self.app_dir / "universal_document_converter.py"
+        self.main_app = self.app_dir / "universal_document_converter_ocr.py"
         self.icon = None
         self.running = False
         
@@ -60,7 +60,7 @@ class SystemTrayApp:
         root = tk.Tk()
         root.withdraw()
         messagebox.showinfo("About", 
-                          "Quick Document Convertor v2.0.0\n"
+                          "Quick Document Convertor v3.1.0\n"
                           "Enterprise document conversion tool\n"
                           "Created by Beau Lewis")
         root.destroy()
