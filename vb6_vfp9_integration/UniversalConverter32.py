@@ -8,6 +8,7 @@ import sys
 import os
 import json
 import tempfile
+import subprocess
 from pathlib import Path
 from typing import Dict, Any, Optional
 
@@ -19,8 +20,9 @@ try:
     from ocr_engine.ocr_integration import OCRIntegration
     from ocr_engine.config_manager import ConfigManager
     CLI_AVAILABLE = True
-except ImportError:
+except ImportError as e:
     CLI_AVAILABLE = False
+    IMPORT_ERROR = str(e)
 
 
 class UniversalConverter32:
@@ -45,7 +47,7 @@ class UniversalConverter32:
                 self.initialized = False
         else:
             self.initialized = False
-            self.last_error = "CLI module not available"
+            self.last_error = f"CLI module not available: {IMPORT_ERROR if 'IMPORT_ERROR' in globals() else 'Unknown error'}"
     
     def ConvertDocument(self, input_path: str, output_path: str, output_format: str = "txt") -> int:
         """
@@ -60,10 +62,6 @@ class UniversalConverter32:
             1 for success, 0 for failure
         """
         try:
-            if not self.initialized:
-                self.last_error = "Converter not initialized"
-                return 0
-            
             # Validate input file exists
             if not Path(input_path).exists():
                 self.last_error = f"Input file not found: {input_path}"
@@ -73,24 +71,27 @@ class UniversalConverter32:
             output_dir = Path(output_path).parent
             output_dir.mkdir(parents=True, exist_ok=True)
             
-            # Use CLI for conversion
-            sys.argv = [
-                'cli.py',
-                input_path,
-                '-o', output_path,
-                '-t', output_format,
-                '--quiet'
-            ]
-            
-            # Capture CLI result
-            result = cli_main()
-            
-            if result == 0:  # Success
-                self.last_error = ""
-                return 1
+            if self.initialized and CLI_AVAILABLE:
+                # Use CLI directly
+                sys.argv = [
+                    'cli.py',
+                    input_path,
+                    '-o', output_path,
+                    '-t', output_format,
+                    '--quiet'
+                ]
+                
+                result = cli_main()
+                
+                if result == 0:  # Success
+                    self.last_error = ""
+                    return 1
+                else:
+                    self.last_error = "Conversion failed"
+                    return 0
             else:
-                self.last_error = "Conversion failed"
-                return 0
+                # Fallback: Use subprocess to call CLI
+                return self._fallback_conversion(input_path, output_path, output_format, False)
                 
         except Exception as e:
             self.last_error = str(e)
@@ -111,10 +112,6 @@ class UniversalConverter32:
             1 for success, 0 for failure
         """
         try:
-            if not self.initialized:
-                self.last_error = "Converter not initialized"
-                return 0
-            
             # Validate input file exists
             if not Path(input_path).exists():
                 self.last_error = f"Input file not found: {input_path}"
@@ -124,29 +121,74 @@ class UniversalConverter32:
             output_dir = Path(output_path).parent
             output_dir.mkdir(parents=True, exist_ok=True)
             
-            # Use CLI with OCR options
-            sys.argv = [
-                'cli.py',
-                input_path,
-                '-o', output_path,
-                '-t', output_format,
-                '--ocr',
-                '--lang', ocr_language,
-                '--quiet'
-            ]
-            
-            # Capture CLI result
-            result = cli_main()
-            
-            if result == 0:  # Success
-                self.last_error = ""
-                return 1
+            if self.initialized and CLI_AVAILABLE:
+                # Use CLI with OCR options
+                sys.argv = [
+                    'cli.py',
+                    input_path,
+                    '-o', output_path,
+                    '-t', output_format,
+                    '--ocr',
+                    '--lang', ocr_language,
+                    '--quiet'
+                ]
+                
+                result = cli_main()
+                
+                if result == 0:  # Success
+                    self.last_error = ""
+                    return 1
+                else:
+                    self.last_error = "OCR conversion failed"
+                    return 0
             else:
-                self.last_error = "OCR conversion failed"
-                return 0
+                # Fallback: Use subprocess to call CLI with OCR
+                return self._fallback_conversion(input_path, output_path, output_format, True, ocr_language)
                 
         except Exception as e:
             self.last_error = str(e)
+            return 0
+    
+    def _fallback_conversion(self, input_path: str, output_path: str, output_format: str, 
+                           use_ocr: bool = False, ocr_language: str = "eng") -> int:
+        """
+        Fallback conversion using subprocess to call CLI directly
+        This works even when CLI modules cannot be imported due to dependencies
+        """
+        try:
+            # Find the CLI script
+            cli_path = Path(__file__).parent.parent / "cli.py"
+            if not cli_path.exists():
+                self.last_error = "CLI script not found"
+                return 0
+            
+            # Build command
+            cmd = [
+                "python3", str(cli_path),
+                str(input_path),
+                "-o", str(output_path),
+                "-t", output_format,
+                "--quiet"
+            ]
+            
+            if use_ocr:
+                cmd.extend(["--ocr", "--lang", ocr_language])
+            
+            # Execute conversion
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            
+            if result.returncode == 0:
+                self.last_error = ""
+                return 1
+            else:
+                self.last_error = f"Conversion failed: {result.stderr.strip() if result.stderr else 'Unknown error'}"
+                return 0
+                
+        except subprocess.TimeoutExpired:
+            self.last_error = "Conversion timed out"
+            return 0
+        except Exception as e:
+            self.last_error = f"Fallback conversion error: {str(e)}"
             return 0
     
     def GetLastError(self) -> str:

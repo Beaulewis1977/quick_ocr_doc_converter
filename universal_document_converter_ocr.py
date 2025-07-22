@@ -29,6 +29,8 @@ import concurrent.futures
 import time
 import hashlib
 from threading import Lock
+import subprocess
+import shutil
 
 # Import OCR components
 from ocr_engine.ocr_integration import OCRIntegration
@@ -47,7 +49,7 @@ class DocumentConverterApp:
     
     def __init__(self, root):
         self.root = root
-        self.root.title("Universal Document Converter with OCR")
+        self.root.title("Universal Document Converter with OCR v3.1.0")
         self.root.geometry("1000x700")
         self.root.minsize(800, 600)
         
@@ -196,7 +198,7 @@ class DocumentConverterApp:
         main_frame.rowconfigure(2, weight=1)
         
         # Title
-        title_label = ttk.Label(main_frame, text="Universal Document Converter with OCR", 
+        title_label = ttk.Label(main_frame, text="Universal Document Converter with OCR v3.1.0", 
                                font=("Arial", 16, "bold"))
         title_label.grid(row=0, column=0, columnspan=3, pady=(0, 10))
         
@@ -336,6 +338,89 @@ class DocumentConverterApp:
         
         tools_group.columnconfigure(0, weight=1)
         tools_frame.columnconfigure(1, weight=1)
+        
+        # Legacy Integration Tab
+        legacy_frame = ttk.Frame(settings_notebook, padding="10")
+        settings_notebook.add(legacy_frame, text="🔧 Legacy Integration")
+        
+        # VB6/VFP9 Code Generation Section
+        code_gen_group = ttk.LabelFrame(legacy_frame, text="📁 VB6/VFP9 Code Generation", padding="5")
+        code_gen_group.grid(row=0, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 10))
+        
+        # Project type selector
+        ttk.Label(code_gen_group, text="Project Type:").grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
+        self.legacy_project_type = tk.StringVar(value="VB6")
+        project_combo = ttk.Combobox(code_gen_group, textvariable=self.legacy_project_type,
+                                    values=["VB6", "VFP9"], state="readonly", width=15)
+        project_combo.grid(row=0, column=1, sticky=tk.W)
+        
+        # Generate integration code button
+        ttk.Button(code_gen_group, text="Generate Integration Code", 
+                  command=self.generate_legacy_code).grid(row=0, column=2, padx=(10, 0))
+        
+        # Code preview/editor window
+        code_preview_frame = ttk.Frame(code_gen_group)
+        code_preview_frame.grid(row=1, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(10, 0))
+        code_preview_frame.columnconfigure(0, weight=1)
+        code_preview_frame.rowconfigure(0, weight=1)
+        
+        self.legacy_code_text = scrolledtext.ScrolledText(code_preview_frame, height=8, width=70)
+        self.legacy_code_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        code_gen_group.columnconfigure(1, weight=1)
+        code_gen_group.rowconfigure(1, weight=1)
+        
+        # DLL Builder Interface Section
+        dll_group = ttk.LabelFrame(legacy_frame, text="🔨 DLL Builder Interface", padding="5")
+        dll_group.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 10))
+        
+        dll_buttons = ttk.Frame(dll_group)
+        dll_buttons.grid(row=0, column=0, sticky=(tk.W, tk.E))
+        
+        # Build executable button
+        ttk.Button(dll_buttons, text="Build DLL/Executable", 
+                  command=self.build_legacy_dll).pack(side="left", padx=(0, 5))
+        
+        # Build options/settings (simplified - just show current status)
+        self.build_status_var = tk.StringVar(value="Ready to build")
+        ttk.Label(dll_buttons, textvariable=self.build_status_var).pack(side="left", padx=(10, 0))
+        
+        # Build progress and logs
+        build_log_frame = ttk.Frame(dll_group)
+        build_log_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(10, 0))
+        build_log_frame.columnconfigure(0, weight=1)
+        build_log_frame.rowconfigure(0, weight=1)
+        
+        self.build_log_text = scrolledtext.ScrolledText(build_log_frame, height=6, width=70)
+        self.build_log_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        dll_group.columnconfigure(0, weight=1)
+        dll_group.rowconfigure(1, weight=1)
+        
+        # Testing & Validation Section
+        test_group = ttk.LabelFrame(legacy_frame, text="🧪 Testing & Validation", padding="5")
+        test_group.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 10))
+        
+        test_buttons = ttk.Frame(test_group)
+        test_buttons.grid(row=0, column=0, sticky=(tk.W, tk.E))
+        
+        # Test conversion button
+        ttk.Button(test_buttons, text="Test Conversion", 
+                  command=self.test_legacy_conversion).pack(side="left", padx=(0, 5))
+        
+        # Legacy app launcher
+        ttk.Button(test_buttons, text="Open Examples Folder", 
+                  command=self.open_legacy_examples).pack(side="left", padx=(0, 5))
+        
+        # Integration validator
+        ttk.Button(test_buttons, text="Validate Integration", 
+                  command=self.validate_legacy_integration).pack(side="left")
+        
+        test_group.columnconfigure(0, weight=1)
+        legacy_frame.columnconfigure(1, weight=1)
+        legacy_frame.rowconfigure(0, weight=1)
+        legacy_frame.rowconfigure(1, weight=1)
+        legacy_frame.rowconfigure(2, weight=1)
         
         # Make notebook expandable
         main_frame.rowconfigure(2, weight=1)
@@ -1103,6 +1188,298 @@ Last Updated: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         
         stats_text.insert(1.0, stats_content)
         stats_text.config(state="disabled")
+
+    # Legacy Integration Methods
+    
+    def generate_legacy_code(self):
+        """Generate VB6/VFP9 integration code"""
+        project_type = self.legacy_project_type.get()
+        
+        try:
+            if project_type == "VB6":
+                # Read VB6 example template
+                vb6_file = Path(__file__).parent / "vb6_vfp9_integration" / "VB6_Example.vb"
+                if vb6_file.exists():
+                    with open(vb6_file, 'r', encoding='utf-8') as f:
+                        code_content = f.read()
+                else:
+                    code_content = self._get_vb6_template()
+            else:  # VFP9
+                # Read VFP9 example template
+                vfp9_file = Path(__file__).parent / "vb6_vfp9_integration" / "VFP9_Example.prg"
+                if vfp9_file.exists():
+                    with open(vfp9_file, 'r', encoding='utf-8') as f:
+                        code_content = f.read()
+                else:
+                    code_content = self._get_vfp9_template()
+            
+            # Display code in the text widget
+            self.legacy_code_text.delete(1.0, tk.END)
+            self.legacy_code_text.insert(1.0, code_content)
+            
+            messagebox.showinfo("Success", f"{project_type} integration code generated!")
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to generate code: {str(e)}")
+    
+    def build_legacy_dll(self):
+        """Build the DLL/executable using the build script"""
+        try:
+            self.build_status_var.set("Building...")
+            self.build_log_text.delete(1.0, tk.END)
+            self.build_log_text.insert(tk.END, "Starting build process...\n")
+            
+            # Path to build script
+            build_script = Path(__file__).parent / "vb6_vfp9_integration" / "build_dll.bat"
+            
+            if not build_script.exists():
+                raise FileNotFoundError("Build script not found")
+            
+            # Run build script in a separate thread to avoid blocking GUI
+            def run_build():
+                try:
+                    process = subprocess.Popen(
+                        str(build_script),
+                        cwd=str(build_script.parent),
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                        text=True,
+                        universal_newlines=True,
+                        shell=True
+                    )
+                    
+                    # Read output in real-time
+                    for line in iter(process.stdout.readline, ''):
+                        self.root.after(0, lambda l=line: self.build_log_text.insert(tk.END, l))
+                        self.root.after(0, lambda: self.build_log_text.see(tk.END))
+                    
+                    process.wait()
+                    
+                    if process.returncode == 0:
+                        self.root.after(0, lambda: self.build_status_var.set("Build successful!"))
+                        self.root.after(0, lambda: messagebox.showinfo("Success", "DLL/Executable built successfully!"))
+                    else:
+                        self.root.after(0, lambda: self.build_status_var.set("Build failed"))
+                        self.root.after(0, lambda: messagebox.showerror("Error", "Build process failed. Check log for details."))
+                        
+                except Exception as e:
+                    self.root.after(0, lambda: self.build_status_var.set("Build error"))
+                    self.root.after(0, lambda: messagebox.showerror("Error", f"Build error: {str(e)}"))
+            
+            # Start build in background thread
+            build_thread = threading.Thread(target=run_build, daemon=True)
+            build_thread.start()
+            
+        except Exception as e:
+            self.build_status_var.set("Error")
+            messagebox.showerror("Error", f"Failed to start build: {str(e)}")
+    
+    def test_legacy_conversion(self):
+        """Test the legacy integration conversion"""
+        try:
+            # Check if UniversalConverter32.py is available
+            converter_file = Path(__file__).parent / "vb6_vfp9_integration" / "UniversalConverter32.py"
+            
+            if not converter_file.exists():
+                messagebox.showerror("Error", "UniversalConverter32.py not found in vb6_vfp9_integration folder")
+                return
+            
+            # Simple test conversion
+            test_window = tk.Toplevel(self.root)
+            test_window.title("Test Legacy Conversion")
+            test_window.geometry("500x300")
+            
+            ttk.Label(test_window, text="Testing Legacy Integration:").pack(pady=10)
+            
+            test_log = scrolledtext.ScrolledText(test_window, height=15)
+            test_log.pack(fill="both", expand=True, padx=10, pady=10)
+            
+            def run_test():
+                try:
+                    test_log.insert(tk.END, "Testing UniversalConverter32 module...\n")
+                    
+                    # Import and test the converter
+                    sys.path.insert(0, str(converter_file.parent))
+                    from UniversalConverter32 import UniversalConverter32
+                    
+                    converter = UniversalConverter32()
+                    test_log.insert(tk.END, f"✅ Module imported successfully\n")
+                    test_log.insert(tk.END, f"Version: {converter.version}\n")
+                    test_log.insert(tk.END, f"Initialized: {converter.initialized}\n")
+                    
+                    if not converter.initialized:
+                        test_log.insert(tk.END, f"⚠️ Warning: {converter.last_error}\n")
+                    
+                    test_log.insert(tk.END, "\n✅ Legacy integration test completed!\n")
+                    
+                except Exception as e:
+                    test_log.insert(tk.END, f"❌ Test failed: {str(e)}\n")
+                
+                test_log.see(tk.END)
+            
+            # Run test in background
+            test_thread = threading.Thread(target=run_test, daemon=True)
+            test_thread.start()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to run test: {str(e)}")
+    
+    def open_legacy_examples(self):
+        """Open the VB6/VFP9 integration examples folder"""
+        try:
+            examples_folder = Path(__file__).parent / "vb6_vfp9_integration"
+            
+            if not examples_folder.exists():
+                messagebox.showerror("Error", "VB6/VFP9 integration folder not found")
+                return
+            
+            # Open folder in file manager
+            if sys.platform == "win32":
+                os.startfile(str(examples_folder))
+            elif sys.platform == "darwin":
+                subprocess.run(["open", str(examples_folder)])
+            else:
+                subprocess.run(["xdg-open", str(examples_folder)])
+                
+            messagebox.showinfo("Success", "Examples folder opened in file manager")
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to open examples folder: {str(e)}")
+    
+    def validate_legacy_integration(self):
+        """Validate the legacy integration setup"""
+        try:
+            validation_window = tk.Toplevel(self.root)
+            validation_window.title("Validate Legacy Integration")
+            validation_window.geometry("600x400")
+            
+            ttk.Label(validation_window, text="Legacy Integration Validation:").pack(pady=10)
+            
+            validation_log = scrolledtext.ScrolledText(validation_window, height=20)
+            validation_log.pack(fill="both", expand=True, padx=10, pady=10)
+            
+            def run_validation():
+                integration_path = Path(__file__).parent / "vb6_vfp9_integration"
+                
+                validation_log.insert(tk.END, "🔍 Validating Legacy Integration Setup...\n\n")
+                
+                # Check required files
+                required_files = [
+                    "UniversalConverter32.py",
+                    "VB6_Example.vb", 
+                    "VFP9_Example.prg",
+                    "build_dll.bat",
+                    "README.md"
+                ]
+                
+                validation_log.insert(tk.END, "📁 Checking required files:\n")
+                all_files_exist = True
+                
+                for file in required_files:
+                    file_path = integration_path / file
+                    if file_path.exists():
+                        validation_log.insert(tk.END, f"✅ {file}\n")
+                    else:
+                        validation_log.insert(tk.END, f"❌ {file} (missing)\n")
+                        all_files_exist = False
+                
+                validation_log.insert(tk.END, "\n🐍 Checking Python requirements:\n")
+                
+                # Check Python version
+                python_version = sys.version_info
+                if python_version >= (3, 8):
+                    validation_log.insert(tk.END, f"✅ Python {python_version.major}.{python_version.minor}.{python_version.micro}\n")
+                else:
+                    validation_log.insert(tk.END, f"❌ Python {python_version.major}.{python_version.minor}.{python_version.micro} (3.8+ required)\n")
+                    all_files_exist = False
+                
+                # Check if main modules can be imported
+                validation_log.insert(tk.END, "\n📦 Checking module imports:\n")
+                try:
+                    sys.path.insert(0, str(integration_path))
+                    from UniversalConverter32 import UniversalConverter32
+                    validation_log.insert(tk.END, "✅ UniversalConverter32 module\n")
+                except Exception as e:
+                    validation_log.insert(tk.END, f"❌ UniversalConverter32 module: {str(e)}\n")
+                    all_files_exist = False
+                
+                # Final result
+                validation_log.insert(tk.END, f"\n{'='*50}\n")
+                if all_files_exist:
+                    validation_log.insert(tk.END, "🎉 Validation PASSED - Legacy integration ready!\n")
+                else:
+                    validation_log.insert(tk.END, "⚠️ Validation FAILED - Some issues found\n")
+                
+                validation_log.see(tk.END)
+            
+            # Run validation in background
+            validation_thread = threading.Thread(target=run_validation, daemon=True)
+            validation_thread.start()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to run validation: {str(e)}")
+    
+    def _get_vb6_template(self):
+        """Get VB6 code template if file not found"""
+        return """' VB6 Integration Template
+' Copy this code to your VB6 project
+
+Private Declare Function ShellExecute Lib "shell32.dll" Alias "ShellExecuteA" _
+    (ByVal hwnd As Long, ByVal lpOperation As String, ByVal lpFile As String, _
+     ByVal lpParameters As String, ByVal lpDirectory As String, ByVal nShowCmd As Long) As Long
+
+Private Const SW_HIDE = 0
+
+Public Function CallUniversalConverter(inputFile As String, outputFile As String, _
+                                      outputFormat As String, useOCR As Boolean) As Long
+    Dim command As String
+    Dim result As Long
+    
+    command = "python vb6_vfp9_integration\\UniversalConverter32.py """ & inputFile & """ """ & outputFile & """ " & outputFormat
+    
+    If useOCR Then
+        command = command & " --ocr"
+    End If
+    
+    result = ShellExecute(0, "open", "cmd.exe", "/c " & command, "", SW_HIDE)
+    
+    CallUniversalConverter = IIf(result > 32, 1, 0)
+End Function
+"""
+    
+    def _get_vfp9_template(self):
+        """Get VFP9 code template if file not found"""
+        return """* VFP9 Integration Template
+* Copy this code to your VFP9 project
+
+FUNCTION ConvertDocument(tcInputFile, tcOutputFile, tcFormat)
+    LOCAL lcCommand, lnResult
+    
+    lcCommand = "python vb6_vfp9_integration\\UniversalConverter32.py " + ;
+                CHR(34) + ALLTRIM(tcInputFile) + CHR(34) + " " + ;
+                CHR(34) + ALLTRIM(tcOutputFile) + CHR(34) + " " + ;
+                ALLTRIM(tcFormat)
+    
+    RUN &lcCommand
+    
+    * Return 1 for success, 0 for failure
+    RETURN IIF(_SCREEN.ProcessID > 0, 1, 0)
+ENDFUNC
+
+FUNCTION ConvertDocumentWithOCR(tcInputFile, tcOutputFile, tcFormat, tcLanguage)
+    LOCAL lcCommand, lnResult
+    
+    lcCommand = "python vb6_vfp9_integration\\UniversalConverter32.py " + ;
+                CHR(34) + ALLTRIM(tcInputFile) + CHR(34) + " " + ;
+                CHR(34) + ALLTRIM(tcOutputFile) + CHR(34) + " " + ;
+                ALLTRIM(tcFormat) + " --ocr --language " + ALLTRIM(tcLanguage)
+    
+    RUN &lcCommand
+    
+    * Return 1 for success, 0 for failure  
+    RETURN IIF(_SCREEN.ProcessID > 0, 1, 0)
+ENDFUNC
+"""
 
 def main():
     """Main application entry point"""
