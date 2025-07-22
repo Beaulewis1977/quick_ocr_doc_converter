@@ -767,6 +767,16 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
+<div align="center">
+
+**Made with ❤️ for the OCR community**
+
+⭐ **Star this repository if it helped you!** ⭐
+
+</div>
+
+---
+
 ## 🤝 **Support Open Source**
 
 Building and maintaining OCR Document Converter takes time and resources. While the tool is completely free, 
@@ -789,14 +799,6 @@ Together, we're making document conversion accessible to everyone. Thank you! �
 - **Email**: [Create an issue for support](https://github.com/Beaulewis1977/quick_ocr_document_converter/issues/new)
 
 ---
-
-<div align="center">
-
-**Made with ❤️ for the OCR community**
-
-⭐ **Star this repository if it helped you!** ⭐
-
-</div>
 
 ### 📦 **Create Standalone Executable (No Python Required)**
 
