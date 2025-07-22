@@ -333,7 +333,8 @@ class EnhancedDocumentConverterApp:
         ttk.Button(toolbar, text="🧹 Clear All", command=self.clear_all).pack(side="left", padx=(0, 10))
         
         # File count label
-        self.file_count_label = ttk.Label(toolbar, text="Files: 0")\n        self.file_count_label.pack(side="right")
+        self.file_count_label = ttk.Label(toolbar, text="Files: 0")
+        self.file_count_label.pack(side="right")
         
         # File list with tree view
         list_frame = ttk.Frame(file_frame)
@@ -401,8 +402,21 @@ class EnhancedDocumentConverterApp:
         output_frame = ttk.LabelFrame(parent, text="Output Settings", padding="10")
         output_frame.pack(fill="x", pady=(0, 10))
         
+        # Input format
+        ttk.Label(output_frame, text="Input Format:").grid(row=0, column=0, sticky="w", padx=(0, 10))
+        self.input_format_var = tk.StringVar(value=self.config.get("input_format", "auto"))
+        input_format_combo = ttk.Combobox(
+            output_frame,
+            textvariable=self.input_format_var,
+            values=["auto", "docx", "pdf", "txt", "html", "rtf", "markdown", "epub"],
+            state="readonly",
+            width=15
+        )
+        input_format_combo.grid(row=0, column=1, sticky="w")
+        input_format_combo.bind("<<ComboboxSelected>>", self.on_input_format_change)
+        
         # Output format
-        ttk.Label(output_frame, text="Output Format:").grid(row=0, column=0, sticky="w", padx=(0, 10))
+        ttk.Label(output_frame, text="Output Format:").grid(row=1, column=0, sticky="w", padx=(0, 10))
         self.format_var = tk.StringVar(value=self.config.get("output_format", "markdown"))
         format_combo = ttk.Combobox(
             output_frame,
@@ -411,13 +425,13 @@ class EnhancedDocumentConverterApp:
             state="readonly",
             width=15
         )
-        format_combo.grid(row=0, column=1, sticky="w")
+        format_combo.grid(row=1, column=1, sticky="w")
         format_combo.bind("<<ComboboxSelected>>", self.on_format_change)
         
         # Output directory
-        ttk.Label(output_frame, text="Output Directory:").grid(row=1, column=0, sticky="w", padx=(0, 10), pady=(10, 0))
+        ttk.Label(output_frame, text="Output Directory:").grid(row=2, column=0, sticky="w", padx=(0, 10), pady=(10, 0))
         dir_frame = ttk.Frame(output_frame)
-        dir_frame.grid(row=1, column=1, columnspan=2, sticky="ew", pady=(10, 0))
+        dir_frame.grid(row=2, column=1, columnspan=2, sticky="ew", pady=(10, 0))
         
         self.output_dir_var = tk.StringVar(value=self.config.get("output_directory", ""))
         output_entry = ttk.Entry(dir_frame, textvariable=self.output_dir_var, width=40)
@@ -461,7 +475,8 @@ class EnhancedDocumentConverterApp:
         lang_frame.pack(fill="x", pady=(10, 0))
         
         ttk.Label(lang_frame, text="Languages:").pack(side="left")
-        self.language_var = tk.StringVar(value=self.config.get("ocr_language", "eng"))\n        lang_combo = ttk.Combobox(
+        self.language_var = tk.StringVar(value=self.config.get("ocr_language", "eng"))
+        lang_combo = ttk.Combobox(
             lang_frame,
             textvariable=self.language_var,
             values=["eng", "fra", "deu", "spa", "ita", "por", "rus", "jpn", "kor", "chi_sim", "chi_tra", "ara"],
@@ -949,6 +964,148 @@ class EnhancedDocumentConverterApp:
             self.log_text.insert(tk.END, formatted_message, level)
             self.log_text.see(tk.END)
 
+    def on_input_format_change(self, event=None):
+        """Handle input format selection change"""
+        input_format = self.input_format_var.get()
+        self.log_to_gui(f"Input format changed to: {input_format}")
+        
+        # Save to config
+        self.config['input_format'] = input_format
+        if self.config.get('auto_save', True):
+            self.save_config()
+    
+    def on_format_change(self, event=None):
+        """Handle output format selection change"""
+        output_format = self.format_var.get()
+        self.log_to_gui(f"Output format changed to: {output_format}")
+        
+        # Save to config
+        self.config['output_format'] = output_format
+        if self.config.get('auto_save', True):
+            self.save_config()
+
+    # Placeholder methods for UI functionality
+    def add_files(self):
+        """Add files to the conversion list"""
+        files = filedialog.askopenfilenames(
+            title="Select files to convert",
+            filetypes=[
+                ("All supported", "*.docx;*.pdf;*.txt;*.html;*.htm;*.rtf;*.md;*.markdown;*.epub"),
+                ("Word documents", "*.docx"),
+                ("PDF files", "*.pdf"),
+                ("Text files", "*.txt"),
+                ("HTML files", "*.html;*.htm"),
+                ("RTF files", "*.rtf"),
+                ("Markdown files", "*.md;*.markdown"),
+                ("EPUB files", "*.epub"),
+                ("All files", "*.*")
+            ]
+        )
+        
+        for file_path in files:
+            self.current_files.append(file_path)
+            # Add to tree view (implementation needed)
+        
+        self.update_file_count()
+        self.log_to_gui(f"Added {len(files)} files")
+    
+    def add_folder(self):
+        """Add folder to the conversion list"""
+        folder = filedialog.askdirectory(title="Select folder to convert")
+        if folder:
+            # Implementation needed to scan folder for supported files
+            self.log_to_gui(f"Added folder: {folder}")
+    
+    def remove_selected(self):
+        """Remove selected files from the list"""
+        # Implementation needed
+        self.log_to_gui("Remove selected files")
+    
+    def clear_all(self):
+        """Clear all files from the list"""
+        self.current_files.clear()
+        # Clear tree view (implementation needed)
+        self.update_file_count()
+        self.log_to_gui("Cleared all files")
+    
+    def update_file_count(self):
+        """Update file count label"""
+        if hasattr(self, 'file_count_label'):
+            self.file_count_label.config(text=f"Files: {len(self.current_files)}")
+    
+    def browse_output_dir(self):
+        """Browse for output directory"""
+        directory = filedialog.askdirectory(title="Select output directory")
+        if directory:
+            self.output_dir_var.set(directory)
+            self.config['output_directory'] = directory
+            if self.config.get('auto_save', True):
+                self.save_config()
+    
+    def start_conversion(self):
+        """Start the conversion process"""
+        if not self.current_files:
+            messagebox.showwarning("No Files", "Please add files to convert first.")
+            return
+        
+        # Implementation needed for actual conversion
+        self.log_to_gui("Starting conversion process...")
+    
+    def pause_processing(self):
+        """Pause the processing"""
+        self.log_to_gui("Processing paused")
+    
+    def cancel_conversion(self):
+        """Cancel the conversion process"""
+        self.cancel_processing = True
+        self.log_to_gui("Conversion cancelled")
+    
+    def open_ocr_settings(self):
+        """Open OCR settings dialog"""
+        if OCR_SETTINGS_GUI_AVAILABLE:
+            # Implementation needed
+            self.log_to_gui("Opening OCR settings...")
+        else:
+            messagebox.showinfo("OCR Settings", "OCR settings GUI not available")
+    
+    def set_backend(self, backend):
+        """Set OCR backend"""
+        self.backend_var.set(backend)
+        self.log_to_gui(f"OCR backend set to: {backend}")
+
+    # Additional placeholder methods for other UI functionality
+    def update_worker_label(self, value):
+        """Update worker count label"""
+        if hasattr(self, 'worker_label'):
+            self.worker_label.config(text=str(int(float(value))))
+    
+    def update_batch_label(self, value):
+        """Update batch size label"""
+        if hasattr(self, 'batch_label'):
+            self.batch_label.config(text=str(int(float(value))))
+
+    def on_closing(self):
+        """Handle application closing"""
+        if self.config.get('auto_save', True):
+            self.save_config()
+        self.root.destroy()
+
+    # Additional methods would be implemented here for full functionality
+    def show_about(self):
+        """Show about dialog"""
+        messagebox.showinfo("About", "Universal Document Converter with OCR\nProfessional Edition")
+
+    def update_status(self):
+        """Update status periodically"""
+        # Update status information
+        if hasattr(self, 'status_label'):
+            if self.is_processing:
+                self.status_label.config(text=f"Processing... {self.processed_count}/{self.total_files}")
+            else:
+                self.status_label.config(text="Ready")
+        
+        # Schedule next update
+        self.root.after(1000, self.update_status)
 
 # Additional implementation methods would be added here to complete all functionality...
 

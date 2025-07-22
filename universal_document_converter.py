@@ -342,6 +342,7 @@ class FormatDetector:
         'txt': {'extensions': ['.txt'], 'name': 'Text File', 'reader': 'TxtReader'},
         'html': {'extensions': ['.html', '.htm'], 'name': 'HTML Document', 'reader': 'HtmlReader'},
         'rtf': {'extensions': ['.rtf'], 'name': 'Rich Text Format', 'reader': 'RtfReader'},
+        'markdown': {'extensions': ['.md', '.markdown'], 'name': 'Markdown Document', 'reader': 'MarkdownReader'},
         'epub': {'extensions': ['.epub'], 'name': 'EPUB eBook', 'reader': 'EpubReader'}
     }
     
@@ -637,6 +638,137 @@ class EpubReader(DocumentReader):
             paragraphs = [p.strip() for p in text.split('\n\n') if p.strip()]
             content.extend([('paragraph', p) for p in paragraphs])
 
+        return content
+
+
+class MarkdownReader(DocumentReader):
+    """Reader for Markdown files"""
+
+    def read(self, file_path):
+        try:
+            import markdown
+        except ImportError:
+            raise DependencyError("markdown is required for Markdown support. Install with: pip install markdown")
+
+        try:
+            # Read the markdown file
+            with open(file_path, 'r', encoding='utf-8') as file:
+                md_content = file.read()
+
+            # Parse markdown content
+            content = self._parse_markdown_content(md_content)
+            return content
+
+        except Exception as e:
+            raise FileProcessingError(f"Failed to read Markdown file: {str(e)}")
+
+    def _parse_markdown_content(self, md_content):
+        """Parse Markdown content and extract structured elements"""
+        content = []
+        lines = md_content.split('\n')
+        
+        current_paragraph = []
+        in_code_block = False
+        code_block_content = []
+        
+        for line in lines:
+            line = line.rstrip()
+            
+            # Handle code blocks
+            if line.startswith('```'):
+                if in_code_block:
+                    # End code block
+                    if code_block_content:
+                        content.append(('code_block', '\n'.join(code_block_content)))
+                    code_block_content = []
+                    in_code_block = False
+                else:
+                    # Start code block
+                    if current_paragraph:
+                        content.append(('paragraph', ' '.join(current_paragraph)))
+                        current_paragraph = []
+                    in_code_block = True
+                continue
+            
+            if in_code_block:
+                code_block_content.append(line)
+                continue
+            
+            # Handle headings
+            if line.startswith('#'):
+                # Finish current paragraph
+                if current_paragraph:
+                    content.append(('paragraph', ' '.join(current_paragraph)))
+                    current_paragraph = []
+                
+                # Extract heading
+                level = 0
+                while level < len(line) and line[level] == '#':
+                    level += 1
+                
+                if level <= 6 and level < len(line) and line[level] == ' ':
+                    heading_text = line[level + 1:].strip()
+                    if heading_text:
+                        content.append(('heading', level, heading_text))
+                continue
+            
+            # Handle empty lines (paragraph breaks)
+            if not line.strip():
+                if current_paragraph:
+                    content.append(('paragraph', ' '.join(current_paragraph)))
+                    current_paragraph = []
+                continue
+            
+            # Handle list items
+            if line.lstrip().startswith(('- ', '* ', '+ ')):
+                # Finish current paragraph
+                if current_paragraph:
+                    content.append(('paragraph', ' '.join(current_paragraph)))
+                    current_paragraph = []
+                
+                list_text = line.lstrip()[2:].strip()
+                if list_text:
+                    content.append(('list_item', list_text))
+                continue
+            
+            # Handle numbered lists
+            import re
+            numbered_list_match = re.match(r'^\s*(\d+)\.\s+(.+)', line)
+            if numbered_list_match:
+                # Finish current paragraph
+                if current_paragraph:
+                    content.append(('paragraph', ' '.join(current_paragraph)))
+                    current_paragraph = []
+                
+                list_text = numbered_list_match.group(2).strip()
+                if list_text:
+                    content.append(('numbered_list_item', list_text))
+                continue
+            
+            # Handle blockquotes
+            if line.lstrip().startswith('> '):
+                # Finish current paragraph
+                if current_paragraph:
+                    content.append(('paragraph', ' '.join(current_paragraph)))
+                    current_paragraph = []
+                
+                quote_text = line.lstrip()[2:].strip()
+                if quote_text:
+                    content.append(('blockquote', quote_text))
+                continue
+            
+            # Regular text - add to current paragraph
+            if line.strip():
+                current_paragraph.append(line.strip())
+        
+        # Finish any remaining paragraph
+        if current_paragraph:
+            content.append(('paragraph', ' '.join(current_paragraph)))
+        
+        # Finish any remaining code block
+        if in_code_block and code_block_content:
+            content.append(('code_block', '\n'.join(code_block_content)))
+        
         return content
 
 
@@ -976,6 +1108,7 @@ class UniversalConverter:
             'txt': TxtReader(),
             'html': HtmlReader(),
             'rtf': RtfReader(),
+            'markdown': MarkdownReader(),
             'epub': EpubReader()
         }
 
