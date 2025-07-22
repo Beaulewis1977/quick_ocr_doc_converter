@@ -475,7 +475,7 @@ python test_ocr_integration.py --category performance
 ## 📥 **Download Options**
 
 ### 1️⃣ **Complete Application Package** (Recommended)
-**File**: `Universal-Document-Converter-v2.1.0-Windows-Complete.zip` (63 KB)
+**File**: `Universal-Document-Converter-v3.1.0-Windows-Complete.zip` (59 KB)
 
 Contains EVERYTHING including:
 - ✅ Full GUI application with OCR
@@ -757,7 +757,8 @@ your voluntary support helps ensure continued development and improvements.
 
 If this tool has saved you time or added value to your work, consider showing your appreciation:
 
-**Venmo**: @BeauinTulsa
+**Venmo**: @BeauinTulsa  
+**Ko-fi**: https://ko-fi.com/beaulewis
 
 Together, we're making document conversion accessible to everyone. Thank you! 💪
 
