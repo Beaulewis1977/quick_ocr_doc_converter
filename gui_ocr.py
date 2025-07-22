@@ -221,7 +221,12 @@ class OCRGUI:
             if file_ext in ['.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif']:
                 # Image file - use OCR if enabled
                 if self.use_ocr.get() and self.ocr.is_available():
-                    text = self.ocr.extract_text(file_path, self.language_var.get())
+                    # Handle both old OCREngine (string) and new OCREngine (dict) formats
+                    ocr_result = self.ocr.extract_text(file_path, {'language': self.language_var.get()})
+                    if isinstance(ocr_result, dict):
+                        text = ocr_result.get('text', '')
+                    else:
+                        text = str(ocr_result)
                 else:
                     # Basic conversion without OCR
                     return None
@@ -237,7 +242,12 @@ class OCRGUI:
             elif file_ext == '.pdf':
                 # PDF file - use OCR if enabled
                 if self.use_ocr.get() and self.ocr.is_available():
-                    text = self.ocr.extract_text_from_pdf(file_path, self.language_var.get())
+                    # Handle both old OCREngine (string) and new OCREngine (dict) formats
+                    ocr_result = self.ocr.extract_text_from_pdf(file_path, self.language_var.get())
+                    if isinstance(ocr_result, dict):
+                        text = ocr_result.get('text', '')
+                    else:
+                        text = str(ocr_result)
                 else:
                     # Basic PDF text extraction
                     try:

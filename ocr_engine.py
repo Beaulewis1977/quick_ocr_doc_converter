@@ -8,6 +8,7 @@ import subprocess
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+import tesseract_config  # Auto-configure Tesseract
 class OCREngine:
     """
     OCR Engine with Tesseract integration
@@ -135,6 +136,94 @@ class OCREngine:
             self.logger.error(f"OCR extraction failed: {e}")
         
         return ""
+
+    def extract_text_from_pdf(self, pdf_path, language='eng'):
+        """
+        Extract text from PDF using OCR
+        
+        Args:
+            pdf_path: Path to PDF file
+            language: Language for OCR (default: eng)
+            
+        Returns:
+            Extracted text string
+        """
+        if not self.is_available():
+            self.logger.warning("No OCR backend available")
+            return ""
+        
+        try:
+            pdf_path = Path(pdf_path)
+            if not pdf_path.exists():
+                self.logger.error(f"PDF file not found: {pdf_path}")
+                return ""
+            
+            # Try to extract text with PyMuPDF first (faster)
+            try:
+                import fitz  # PyMuPDF
+                doc = fitz.open(str(pdf_path))
+                text = ""
+                
+                for page_num in range(len(doc)):
+                    page = doc[page_num]
+                    page_text = page.get_text()
+                    
+                    # If page has no text or very little text, use OCR
+                    if not page_text.strip() or len(page_text.strip()) < 50:
+                        # Convert page to image and OCR
+                        pix = page.get_pixmap()
+                        img_data = pix.tobytes("png")
+                        
+                        # Save temporary image
+                        temp_image = pdf_path.parent / f"temp_page_{page_num}.png"
+                        with open(temp_image, 'wb') as f:
+                            f.write(img_data)
+                        
+                        # OCR the image
+                        ocr_text = self.extract_text(temp_image, language)
+                        text += f"\n--- Page {page_num + 1} ---\n{ocr_text}\n"
+                        
+                        # Clean up
+                        temp_image.unlink(missing_ok=True)
+                    else:
+                        text += f"\n--- Page {page_num + 1} ---\n{page_text}\n"
+                
+                doc.close()
+                return text.strip()
+                
+            except ImportError:
+                # Fallback: Convert PDF to images and OCR each page
+                self.logger.info("PyMuPDF not available, using image conversion fallback")
+                
+                # Try with pdf2image
+                try:
+                    from pdf2image import convert_from_path
+                    
+                    # Convert PDF to images
+                    images = convert_from_path(str(pdf_path))
+                    text = ""
+                    
+                    for i, image in enumerate(images):
+                        # Save temporary image
+                        temp_image = pdf_path.parent / f"temp_page_{i}.png"
+                        image.save(temp_image, 'PNG')
+                        
+                        # OCR the image
+                        page_text = self.extract_text(temp_image, language)
+                        text += f"\n--- Page {i + 1} ---\n{page_text}\n"
+                        
+                        # Clean up
+                        temp_image.unlink(missing_ok=True)
+                    
+                    return text.strip()
+                    
+                except ImportError:
+                    self.logger.error("Neither PyMuPDF nor pdf2image available for PDF processing")
+                    return ""
+                    
+        except Exception as e:
+            self.logger.error(f"PDF OCR extraction failed: {e}")
+            return ""
 
 # Test the OCR engine
 if __name__ == "__main__":

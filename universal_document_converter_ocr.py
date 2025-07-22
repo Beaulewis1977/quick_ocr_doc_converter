@@ -207,8 +207,13 @@ class DocumentConverterApp:
         
     def setup_drag_drop(self):
         """Setup drag and drop functionality"""
-        self.root.drop_target_register(tk.DND_FILES)
-        self.root.dnd_bind('<<Drop>>', self.on_drop)
+        try:
+            from tkinterdnd2 import DND_FILES
+            self.root.drop_target_register(DND_FILES)
+            self.root.dnd_bind('<<Drop>>', self.on_drop)
+        except ImportError:
+            # Fallback: disable drag and drop if tkinterdnd2 is not available
+            pass
         
     def on_drop(self, event):
         """Handle file drop events"""
@@ -399,14 +404,12 @@ class DocumentConverterApp:
                 f.write("Content extraction not implemented for this format.\n")
                 
     def update_status(self, message: str):
-        """Update status label"""
-        self.status_label.config(text=message)
-        self.root.update_idletasks()
+        """Update status label (thread-safe)"""
+        self.root.after(0, lambda: self.status_label.config(text=message))
         
     def update_progress(self, value: float):
-        """Update progress bar"""
-        self.progress_var.set(value)
-        self.root.update_idletasks()
+        """Update progress bar (thread-safe)"""
+        self.root.after(0, lambda: self.progress_var.set(value))
         
     def processing_complete(self):
         """Handle processing completion"""

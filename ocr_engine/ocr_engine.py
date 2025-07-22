@@ -36,6 +36,7 @@ except ImportError:
 from .image_processor import ImageProcessor
 from .format_detector import OCRFormatDetector
 
+import tesseract_config  # Auto-configure Tesseract
 class OCREngineError(Exception):
     """Base exception for OCR engine errors"""
     pass
@@ -150,6 +151,10 @@ class OCREngine:
     def is_easyocr_available(self) -> bool:
         """Check if EasyOCR is available"""
         return 'easyocr' in self.backends and self.backends['easyocr']['available']
+
+    def is_available(self) -> bool:
+        """Check if any OCR backend is available"""
+        return len(self.get_available_backends()) > 0
 
     def get_available_backends(self) -> List[str]:
         """Get list of available OCR backends"""
@@ -506,3 +511,63 @@ class OCREngine:
         except Exception as e:
             self.logger.error(f"Failed to save result: {e}")
             return False
+
+    def extract_text_from_pdf(self, pdf_path: str, language: str = 'eng') -> str:
+        """
+        Extract text from PDF using OCR
+        
+        Args:
+            pdf_path: Path to PDF file
+            language: Language for OCR (default: eng)
+            
+        Returns:
+            Extracted text string
+        """
+        try:
+            # Import PDF processing libraries
+            try:
+                import fitz  # PyMuPDF
+            except ImportError:
+                self.logger.error("PyMuPDF not available for PDF processing")
+                return ""
+            
+            pdf_path = Path(pdf_path)
+            if not pdf_path.exists():
+                self.logger.error(f"PDF file not found: {pdf_path}")
+                return ""
+            
+            # Open PDF and extract text
+            doc = fitz.open(str(pdf_path))
+            text = ""
+            
+            for page_num in range(len(doc)):
+                page = doc[page_num]
+                page_text = page.get_text()
+                
+                # If page has no text or very little text, use OCR
+                if not page_text.strip() or len(page_text.strip()) < 50:
+                    # Convert page to image and OCR
+                    pix = page.get_pixmap()
+                    img_data = pix.tobytes("png")
+                    
+                    # Save temporary image
+                    temp_image = pdf_path.parent / f"temp_page_{page_num}.png"
+                    with open(temp_image, 'wb') as f:
+                        f.write(img_data)
+                    
+                    # OCR the image
+                    ocr_result = self.extract_text(str(temp_image), {'language': language})
+                    ocr_text = ocr_result.get('text', '')
+                    text += f"\n--- Page {page_num + 1} ---\n{ocr_text}\n"
+                    
+                    # Clean up
+                    temp_image.unlink(missing_ok=True)
+                else:
+                    text += f"\n--- Page {page_num + 1} ---\n{page_text}\n"
+            
+            doc.close()
+            return text.strip()
+            
+        except Exception as e:
+            self.logger.error(f"PDF OCR extraction failed: {e}")
+            return ""
