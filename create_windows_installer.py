@@ -440,6 +440,8 @@ a = Analysis(
         ('sample.rtf', '.'),
         ('dist/UniversalConverter32.dll.zip', '.'),
         ('ocr_engine', 'ocr_engine'),
+        ('docs', 'docs'),
+        ('DOCUMENTATION_COMPLETE.md', '.'),
     ],
     hiddenimports=[
         'tkinter',

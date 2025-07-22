@@ -219,6 +219,10 @@ class CompleteInstallerCreator:
             '--add-data', f'{self.app_dir / "VB6_PipeClient.bas"};vfp9_vb6',
             '--add-data', f'{self.app_dir / "dist" / "UniversalConverter32.dll.zip"};vfp9_vb6',
             
+            # Documentation
+            '--add-data', f'{self.app_dir / "docs"};docs',
+            '--add-data', f'{self.app_dir / "DOCUMENTATION_COMPLETE.md"};.',
+            
             # Core GUI and system dependencies
             '--hidden-import', 'tkinter',
             '--hidden-import', 'tkinter.ttk',

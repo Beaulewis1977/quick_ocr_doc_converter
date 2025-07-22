@@ -35,7 +35,8 @@ def create_portable_package():
         "VFP9_PipeClient.prg",
         "VB6_PipeClient.bas",
         "VFP9_VB6_INTEGRATION_GUIDE.md",
-        "dist/UniversalConverter32.dll.zip"
+        "dist/UniversalConverter32.dll.zip",
+        "DOCUMENTATION_COMPLETE.md"
     ]
     
     # Create package directory
@@ -66,6 +67,17 @@ def create_portable_package():
     else:
         print("⚠️ Missing: ocr_engine directory")
         missing_files.append("ocr_engine")
+    
+    # Add documentation directory
+    docs_dir = Path("docs")
+    if docs_dir.exists():
+        package_docs_dir = package_dir / "docs"
+        package_docs_dir.mkdir(exist_ok=True)
+        for doc_file in docs_dir.glob("*.md"):
+            shutil.copy2(doc_file, package_docs_dir / doc_file.name)
+            print(f"✅ Added: docs/{doc_file.name}")
+    else:
+        print("⚠️ Missing: docs directory")
     
     # Create ZIP file
     zip_path = dist_dir / f"{package_name}.zip"
