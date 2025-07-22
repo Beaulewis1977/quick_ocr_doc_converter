@@ -56,7 +56,7 @@ def get_user_applications_dir() -> Path:
 def create_info_plist(
     app_name: str,
     bundle_id: str,
-    version: str = "2.0.0",
+    version: str = "3.1.0",
     executable_name: str = "main",
     icon_file: Optional[str] = None
 ) -> Dict:
@@ -190,7 +190,7 @@ def create_py2app_setup(
     script_path: Path,
     app_name: str = "Quick Document Convertor",
     bundle_id: str = "com.beaulewis.quickdocumentconvertor",
-    version: str = "2.0.0",
+    version: str = "3.1.0",
     icon_path: Optional[Path] = None
 ) -> str:
     """

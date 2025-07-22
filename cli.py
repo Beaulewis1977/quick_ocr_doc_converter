@@ -96,7 +96,7 @@ Supported Output Formats: Markdown, TXT, HTML, RTF
         # Information commands
         parser.add_argument('--list-formats', action='store_true',
                           help='List all supported input and output formats')
-        parser.add_argument('--version', action='version', version='Quick Document Convertor 2.0')
+        parser.add_argument('--version', action='version', version='Quick Document Convertor 3.1.0')
         
         # Logging and output
         parser.add_argument('--verbose', '-v', action='store_true',

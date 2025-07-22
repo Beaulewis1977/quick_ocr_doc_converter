@@ -1,0 +1,14 @@
+include README.md
+include LICENSE
+include requirements.txt
+include *.md
+recursive-include ocr_engine *.py *.json
+recursive-include tests *.py
+exclude dev_docs_backup/*
+exclude build_installer/*
+exclude .gitignore
+exclude *.bat
+exclude *.sh
+global-exclude __pycache__
+global-exclude *.py[co]
+global-exclude .DS_Store

@@ -32,14 +32,11 @@ def main():
         
         # Import the application
         print("Loading application...")
-        from universal_document_converter import ConfigManager, UniversalDocumentConverterGUI
-        
-        # Initialize configuration
-        config_manager = ConfigManager()
+        from universal_document_converter_ocr import DocumentConverterApp
         
         # Configure the main window
-        root.title("Quick Document Convertor")
-        root.geometry("700x600")
+        root.title("OCR Document Converter")
+        root.geometry("900x700")
         
         # Force window to appear
         root.deiconify()  # Show window
@@ -47,7 +44,7 @@ def main():
         
         # Create the application
         print("Starting GUI...")
-        app = UniversalDocumentConverterGUI(root, config_manager)
+        app = DocumentConverterApp(root)
         
         # Center window on screen
         root.update_idletasks()

@@ -19,7 +19,7 @@ class WindowsInstallerCreator:
     
     def __init__(self):
         self.app_name = "Quick Document Convertor"
-        self.app_version = "2.0.0"
+        self.app_version = "3.1.0"
         self.publisher = "Beau Lewis"
         self.app_dir = Path(__file__).parent
         self.build_dir = self.app_dir / "build_installer"
@@ -154,7 +154,7 @@ class SystemTrayApp:
         root = tk.Tk()
         root.withdraw()
         messagebox.showinfo("About", 
-                          "Quick Document Convertor v2.0.0\\n"
+                          "Quick Document Convertor v3.1.0\\n"
                           "Enterprise document conversion tool\\n"
                           "Created by Beau Lewis")
         root.destroy()
@@ -214,8 +214,8 @@ if __name__ == "__main__":
 !define APPNAME "Quick Document Convertor"
 !define COMPANYNAME "Beau Lewis"
 !define DESCRIPTION "Enterprise document conversion tool"
-!define VERSIONMAJOR 2
-!define VERSIONMINOR 0
+!define VERSIONMAJOR 3
+!define VERSIONMINOR 1
 !define VERSIONBUILD 0
 !define HELPURL "https://github.com/Beaulewis1977/quick_doc_convertor"
 !define UPDATEURL "https://github.com/Beaulewis1977/quick_doc_convertor/releases"
@@ -466,8 +466,8 @@ exe = EXE(
         version_info = f'''
 VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=(2, 0, 0, 0),
-    prodvers=(2, 0, 0, 0),
+    filevers=(3, 1, 0, 0),
+    prodvers=(3, 1, 0, 0),
     mask=0x3f,
     flags=0x0,
     OS=0x40004,
@@ -482,12 +482,12 @@ VSVersionInfo(
         u'040904B0',
         [StringStruct(u'CompanyName', u'Beau Lewis'),
         StringStruct(u'FileDescription', u'Quick Document Convertor'),
-        StringStruct(u'FileVersion', u'2.0.0.0'),
+        StringStruct(u'FileVersion', u'3.1.0.0'),
         StringStruct(u'InternalName', u'QuickDocConvertor'),
         StringStruct(u'LegalCopyright', u'Copyright © 2024 Beau Lewis'),
         StringStruct(u'OriginalFilename', u'Quick Document Convertor.exe'),
         StringStruct(u'ProductName', u'Quick Document Convertor'),
-        StringStruct(u'ProductVersion', u'2.0.0.0')])
+        StringStruct(u'ProductVersion', u'3.1.0.0')])
       ]),
     VarFileInfo([VarStruct(u'Translation', [1033, 1200])])
   ]

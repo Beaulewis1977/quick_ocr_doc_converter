@@ -1,0 +1,17 @@
+# Updated requirements for OCR Document Converter
+pytesseract>=0.3.13
+pillow>=11.3.0
+numpy>=2.2.6
+opencv-python>=4.12.0.88
+PyMuPDF>=1.25.0
+tqdm>=4.67.1
+colorama>=0.4.6
+python-docx>=0.8.11
+markdown>=3.4.0
+beautifulsoup4>=4.11.0
+
+# System dependencies (manual installation required)
+# Tesseract OCR 5.x (system-level)
+# Windows: winget install tesseract-ocr.tesseract-ocr
+# macOS: brew install tesseract
+# Linux: sudo apt-get install tesseract-ocr

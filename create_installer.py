@@ -30,7 +30,7 @@ def create_installer():
 
 [Setup]
 AppName=Quick Document Convertor
-AppVersion=2.0
+AppVersion=3.1.0
 DefaultDirName={{autopf}}\\QuickDocumentConvertor
 DefaultGroupName=Quick Document Convertor
 UninstallDisplayIcon={{app}}\\Quick Document Convertor.exe

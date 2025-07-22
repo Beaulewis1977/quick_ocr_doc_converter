@@ -212,3 +212,87 @@ temp/
 ehthumbs.db
 Icon?
 Thumbs.db
+
+.kilocode/
+.kilocode/mcp.json
+
+# Added by Task Master AI
+# Logs
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+# Dependency directories
+node_modules/
+# Environment variables
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+# Task files
+tasks.json
+tasks/
+
+# Development documentation
+*IMPLEMENTATION*.md
+*HANDOFF*.md
+*SUMMARY.md
+*-ocr-weakness.md
+*-ocr-report.md
+PROJECT_SUMMARY.md
+DEVELOPMENT_SUMMARY.md
+WINDOWS_INSTALLER_*.md
+AI_AGENT_*.md
+augment_rules.md
+prd.md
+forge*.md
+kiro_*.md
+OCR_ANALYSIS_REPORT.md
+OCR_INTEGRATION_COMPLETE.md
+docs/*agent*.md
+docs/augment*.md
+
+# Development directories
+.roo/
+.cursor/
+.kiro/
+.taskmaster/
+.roomodes
+.windsurfrules
+workflow/
+dev_docs_backup/
+
+# Development config files
+forge.yaml
+CLAUDE.md
+ENHANCED_TODO.md
+IMPLEMENTATION_PLAN.md
+OCR_FIXES_SUMMARY.md
+config.json
+=0.3.0
+.env.example
+
+# Test profile files
+test_profile.json
+ocr_environment.json
+
+# MCP config files
+.mcp.json*
+claude_global_mcp_config.json
+
+# Build tools
+build_tools/
+
+# Dev scripts
+fix_*.bat
+fix_*.sh
+fix_*.js
+fix_*.py
+setup_vibe_coder_*.bat
+setup_vibe_coder_*.sh 

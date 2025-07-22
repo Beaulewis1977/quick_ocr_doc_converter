@@ -116,7 +116,7 @@ python build_all_platforms.py
 python build_all_platforms.py --platform linux
 
 # Build with custom options
-python build_all_platforms.py --platform all --version 2.1.0 --icon app_icon.ico --install-deps
+python build_all_platforms.py --platform all --version 3.1.0 --icon app_icon.ico --install-deps
 ```
 
 ### Platform-Specific Building
