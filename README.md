@@ -279,11 +279,21 @@ python cli.py *.jpg -o converted/ -t txt --ocr
 python cli.py scan.png -o text.txt --ocr --language fra
 ```
 
-#### VFP9/VB6 Integration via CLI
+#### VFP9/VB6 Integration
+Legacy VB6 and VFP9 integration has been moved to a dedicated module:
 ```bash
-# For VFP9/VB6 users - simple command line execution
-python cli.py input.md -o output.rtf -t rtf --quiet
+# Navigate to legacy DLL builder
+cd legacy_dll_builder
+
+# Build 32-bit DLL
+python cli.py build
+
+# Generate integration templates
+python cli.py vb6 generate   # For VB6
+python cli.py vfp9 generate  # For VFP9
 ```
+
+See `legacy_dll_builder/README.md` for detailed VB6/VFP9 integration instructions.
 
 #### Advanced Options
 ```bash
@@ -394,13 +404,22 @@ ocr_document_converter/
 │   ├── document_converter_gui.py                # Simple markdown GUI
 │   └── gui_ocr.py                    # Dedicated OCR GUI
 │
+├── 📁 legacy_dll_builder/            # VB6/VFP9 Integration (Separated)
+│   ├── README.md                     # Legacy system documentation
+│   ├── cli.py                        # DLL builder CLI
+│   ├── cli_new.py                    # Enhanced Click-based CLI
+│   ├── dll_source/                   # C++ DLL source code
+│   ├── templates/                    # VB6/VFP9 templates
+│   └── src/commands/                 # Build system components
+│
 ├── 📁 tests/                         # Test suite
-│   ├── test_ocr_integration.py       # Integration tests
-│   ├── validate_ocr_integration.py   # Validation scripts
+│   ├── test_base.py                  # Base test utilities
+│   ├── test_fixtures.py              # Test data fixtures
+│   ├── test_performance.py           # Performance benchmarks
+│   ├── test_security.py              # Security tests
+│   ├── test_integration_main.py      # Main app integration tests
+│   ├── test_integration_legacy.py    # Legacy DLL tests
 │   └── test_data/                    # Sample test files
-│       ├── sample_document.jpg
-│       ├── multi_language.png
-│       └── low_quality.pdf
 │
 ├── 📁 config/                        # Configuration files
 │   ├── tesseract_config.json         # Tesseract settings
@@ -481,7 +500,7 @@ Contains EVERYTHING including:
 - ✅ Full GUI application with OCR
 - ✅ CLI interface (`cli.py`)
 - ✅ OCR engines (Tesseract & EasyOCR support)
-- ✅ VFP9/VB6 integration (DLL package included)
+- ✅ VFP9/VB6 integration (via legacy_dll_builder module)
 - ✅ All documentation
 - ✅ Automated installer
 
@@ -490,18 +509,23 @@ Contains EVERYTHING including:
 https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/Universal-Document-Converter-v3.1.0-Windows-Complete.zip
 ```
 
-### 2️⃣ **32-bit DLL Package** (VFP9/VB6 Only)
-**File**: `UniversalConverter32.dll.zip` (12 KB)
+### 2️⃣ **Legacy DLL Builder** (VFP9/VB6 Integration)
+**Directory**: `legacy_dll_builder/`
 
-For users who ONLY need VFP9/VB6 integration:
-- 📦 Lightweight download
-- 📁 DLL wrapper files
-- 📝 VFP9/VB6 example code
-- 📚 Integration documentation
-- 🔧 Batch DLL simulator
+For VFP9/VB6 integration:
+- 📦 Standalone 32-bit DLL builder
+- 📁 C++ DLL source code
+- 📝 Production-ready VFP9/VB6 templates  
+- 📚 Comprehensive integration documentation
+- 🔧 Automated build system with compiler detection
+- ⚡ Enhanced CLI with configuration support
 
 ```bash
-# Download DLL package only
+# Build DLL for VFP9/VB6
+cd legacy_dll_builder
+python cli.py build
+
+# Or download pre-built DLL package
 https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/UniversalConverter32.dll.zip
 ```
 

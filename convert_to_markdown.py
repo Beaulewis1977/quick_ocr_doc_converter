@@ -9,8 +9,9 @@ import sys
 from pathlib import Path
 import argparse
 import subprocess
+from typing import Optional
 
-def install_requirements():
+def install_requirements() -> None:
     """Install required packages"""
     required_packages = [
         'python-docx',
@@ -26,7 +27,7 @@ def install_requirements():
             print(f"Installing {package}...")
             subprocess.run([sys.executable, '-m', 'pip', 'install', package], capture_output=True)
 
-def convert_docx_to_markdown(file_path):
+def convert_docx_to_markdown(file_path: str) -> Optional[str]:
     """Convert DOCX file to Markdown"""
     try:
         from docx import Document
@@ -54,7 +55,7 @@ def convert_docx_to_markdown(file_path):
         print(f"Error converting DOCX file {file_path}: {e}")
         return None
 
-def convert_pdf_to_markdown(file_path):
+def convert_pdf_to_markdown(file_path: str) -> Optional[str]:
     """Convert PDF file to Markdown"""
     try:
         import PyPDF2
@@ -84,7 +85,7 @@ def convert_pdf_to_markdown(file_path):
         print(f"Error converting PDF file {file_path}: {e}")
         return None
 
-def convert_txt_to_markdown(file_path):
+def convert_txt_to_markdown(file_path: str) -> Optional[str]:
     """Convert TXT file to Markdown"""
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
@@ -110,7 +111,7 @@ def convert_txt_to_markdown(file_path):
         print(f"Error converting TXT file {file_path}: {e}")
         return None
 
-def convert_file(file_path, output_dir):
+def convert_file(file_path: str, output_dir: str) -> bool:
     """Convert a single file to Markdown"""
     file_path = Path(file_path)
     output_dir = Path(output_dir)
@@ -148,7 +149,7 @@ def convert_file(file_path, output_dir):
         print(f"✗ Failed to convert: {file_path}")
         return False
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(description='Convert documents to Markdown')
     parser.add_argument('input_dir', nargs='?', default='.', 
                        help='Input directory (default: current directory)')
@@ -180,7 +181,7 @@ def main():
     if not files_to_convert:
         print(f"No supported files found in '{input_dir}'")
         print(f"Supported formats: {', '.join(supported_extensions)}")
-        return
+        return 1
     
     print(f"Found {len(files_to_convert)} files to convert:")
     for file in files_to_convert:
@@ -206,10 +207,12 @@ def main():
     
     if successful > 0:
         print(f"\nMarkdown files saved to: {output_dir}")
+    
+    return 0 if failed == 0 else 1
 
 if __name__ == '__main__':
     main() 
-def convert_to_markdown(input_path, output_path=None):
+def convert_to_markdown(input_path: str, output_path: Optional[str] = None) -> bool:
     """Main conversion function for CLI compatibility"""
     input_path = Path(input_path)
     

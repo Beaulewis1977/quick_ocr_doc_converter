@@ -70,6 +70,12 @@ This creates:
 - Integration documentation
 - CLI interface
 
+> **Note**: The DLL builder is now in the `legacy_dll_builder/` directory. Build with:
+> ```bash
+> cd legacy_dll_builder
+> python cli.py build
+> ```
+
 ### 🛠️ Installation
 
 #### From Complete Package:

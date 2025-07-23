@@ -4,11 +4,13 @@
 
 This document provides comprehensive instructions for integrating the Universal Document Converter with Visual FoxPro 9 (VFP9) and Visual Basic 6 (VB6) applications.
 
+> **🔔 Important Note**: The legacy DLL builder has been moved to a dedicated module at `legacy_dll_builder/`. For DLL-based integration, navigate to that directory and follow the instructions in `legacy_dll_builder/README.md`.
+
 ## ✅ Integration Methods - All 5 Methods Available
 
 ### **Method 1: Command-Line Execution** ✅ TESTED & WORKING
 
-The simplest and most reliable method for VFP9/VB6 integration.
+The simplest and most reliable method for VFP9/VB6 integration. This method works with the main converter's CLI interface.
 
 #### VFP9 Implementation:
 ```foxpro
@@ -21,6 +23,7 @@ RUN /N (lcCommand)
 FUNCTION ConvertMarkdownToRTF(tcInputFile, tcOutputFile)
     LOCAL lcCommand, lnExitCode
     
+    * Note: This uses the main converter's cli.py, not the legacy DLL builder
     lcCommand = 'python cli.py "' + tcInputFile + '" -o "' + tcOutputFile + '" -t rtf --quiet'
     
     RUN /N7 (lcCommand) TO lnExitCode
@@ -221,14 +224,19 @@ Else
 End If
 ```
 
-### **Method 5: DLL Wrapper** ✅ IMPLEMENTED
+### **Method 5: DLL Wrapper** ✅ MOVED TO DEDICATED MODULE
 
 32-bit DLL for maximum performance and integration.
 
+> **📦 Important**: The DLL builder has been moved to `legacy_dll_builder/` directory for better organization and maintenance.
+
 #### Building the DLL:
 ```cmd
-python dll_wrapper.py --all
-python build_dll.py
+cd legacy_dll_builder
+python cli.py build
+
+# Or use the enhanced CLI with better error handling:
+python cli_new.py build --source dll_source --output UniversalConverter32.dll
 ```
 
 #### VFP9 DLL Implementation:

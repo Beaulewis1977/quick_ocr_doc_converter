@@ -1,0 +1,38 @@
+{
+  "compiler": {
+    "type": "auto",
+    "build_timeout": 300,
+    "paths": {
+      "vs_path": "C:\\Program Files\\Microsoft Visual Studio\\2022",
+      "mingw_path": "C:\\mingw64\\bin",
+      "custom_vcvarsall": null
+    }
+  },
+  "dll": {
+    "source_dir": "dll_source",
+    "output_dir": "dist",
+    "name": "UniversalConverter32.dll",
+    "copy_to_system32": false
+  },
+  "python": {
+    "executable": "python",
+    "cli_path": "cli.py",
+    "venv_path": null
+  },
+  "build": {
+    "clean_before_build": true,
+    "parallel_jobs": 1,
+    "optimization_level": "O2",
+    "debug_symbols": false
+  },
+  "testing": {
+    "test_file_path": "test_files",
+    "performance_iterations": 5,
+    "timeout_per_test": 60
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "build.log",
+    "console": true
+  }
+}
