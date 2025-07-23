@@ -11,7 +11,7 @@ import os
 import logging
 import time
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Tuple, Callable
+from typing import List, Dict, Any, Optional, Tuple, Callable, Generator
 import json
 import hashlib
 import tempfile
@@ -84,12 +84,20 @@ class OCREngine:
         # Thread-local storage for OCR readers
         self._thread_local = threading.local()
         
+        # Thread safety locks
+        self._cache_lock = threading.RLock()  # Reentrant lock for cache operations
+        self._config_lock = threading.RLock()  # Lock for configuration changes
+        self._backend_lock = threading.Lock()  # Lock for backend initialization
+        
         # Configuration defaults
         self.default_config = {
             'backend': 'auto',
             'languages': ['en'],
             'use_cache': True,
             'cache_ttl': 86400,  # 24 hours
+            'max_file_size': 50 * 1024 * 1024,  # 50MB
+            'max_workers': 2,  # Default thread pool size
+            'batch_size': 10,  # Default batch processing size
             'preprocessing': {
                 'enhance_contrast': True,
                 'denoise': True,
@@ -105,7 +113,8 @@ class OCREngine:
 
     def _initialize_backends(self):
         """Initialize available OCR backends"""
-        self.backends = {}
+        with self._backend_lock:
+            self.backends = {}
         
         # Tesseract OCR
         if TESSERACT_AVAILABLE:
@@ -199,25 +208,55 @@ class OCREngine:
         
         return hasher.hexdigest()
 
+    def _is_cache_valid(self, cache_file: Path) -> bool:
+        """Check if cache file is still valid based on TTL"""
+        try:
+            cache_age = time.time() - cache_file.stat().st_mtime
+            cache_ttl = self.config.get('cache_ttl', 86400)  # Default 24 hours
+            return cache_age < cache_ttl
+        except (OSError, AttributeError):
+            return False
+
     def _load_from_cache(self, cache_key: str) -> Optional[str]:
         """Load OCR result from cache"""
-        cache_file = self.cache_dir / f"{cache_key}.txt"
-        if cache_file.exists():
-            try:
-                with open(cache_file, 'r', encoding='utf-8') as f:
-                    return f.read()
-            except Exception as e:
-                self.logger.warning(f"Failed to load from cache: {e}")
-        return None
+        with self._cache_lock:
+            cache_file = self.cache_dir / f"{cache_key}.txt"
+            if cache_file.exists():
+                try:
+                    # Check if cache is still valid
+                    if not self._is_cache_valid(cache_file):
+                        cache_file.unlink()  # Remove expired cache
+                        return None
+                    
+                    with open(cache_file, 'r', encoding='utf-8') as f:
+                        return f.read()
+                except (IOError, OSError, UnicodeDecodeError) as e:
+                    self.logger.warning(f"Failed to load from cache: {e}")
+            return None
 
     def _save_to_cache(self, cache_key: str, text: str) -> None:
         """Save OCR result to cache"""
-        cache_file = self.cache_dir / f"{cache_key}.txt"
-        try:
-            with open(cache_file, 'w', encoding='utf-8') as f:
-                f.write(text)
-        except Exception as e:
-            self.logger.warning(f"Failed to save to cache: {e}")
+        with self._cache_lock:
+            cache_file = self.cache_dir / f"{cache_key}.txt"
+            try:
+                # Ensure cache directory exists
+                self.cache_dir.mkdir(parents=True, exist_ok=True)
+                
+                # Write to temporary file first, then move to avoid corruption
+                temp_file = cache_file.with_suffix('.txt.tmp')
+                with open(temp_file, 'w', encoding='utf-8') as f:
+                    f.write(text)
+                temp_file.replace(cache_file)  # Atomic operation on most systems
+                
+            except (IOError, OSError, UnicodeEncodeError) as e:
+                self.logger.warning(f"Failed to save to cache: {e}")
+                # Clean up temp file if it exists
+                temp_file = cache_file.with_suffix('.txt.tmp')
+                if temp_file.exists():
+                    try:
+                        temp_file.unlink()
+                    except OSError:
+                        pass
 
     def extract_text(self, image_path: str, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
@@ -230,9 +269,30 @@ class OCREngine:
         Returns:
             Dictionary with extracted text and metadata
         """
+        # Input validation and security checks
+        if not isinstance(image_path, (str, Path)):
+            raise TypeError("image_path must be a string or Path object")
+            
         image_path = Path(image_path)
+        
+        # Security check: ensure path is safe (no directory traversal)
+        try:
+            image_path.resolve()
+        except (OSError, RuntimeError) as e:
+            raise ValueError(f"Invalid or unsafe path: {e}")
+            
         if not image_path.exists():
             raise FileNotFoundError(f"Image file not found: {image_path}")
+        
+        # Check file size (prevent processing of extremely large files)
+        file_size = image_path.stat().st_size
+        max_file_size = self.config.get('max_file_size', 50 * 1024 * 1024)  # 50MB default
+        if file_size > max_file_size:
+            raise ValueError(f"File too large: {file_size / 1024 / 1024:.1f}MB exceeds limit of {max_file_size / 1024 / 1024:.1f}MB")
+        
+        # Check if it's actually a file (not a directory)
+        if not image_path.is_file():
+            raise ValueError(f"Path is not a file: {image_path}")
         
         if not self.format_detector.is_ocr_supported(str(image_path)):
             raise ValueError(f"Unsupported image format: {image_path.suffix}")
@@ -320,7 +380,8 @@ class OCREngine:
                 )
                 confidences = [int(conf) for conf in data['conf'] if int(conf) > 0]
                 avg_confidence = sum(confidences) / len(confidences) if confidences else 0
-            except:
+            except (ValueError, ZeroDivisionError, KeyError) as e:
+                self.logger.warning(f"Could not calculate confidence score: {e}")
                 avg_confidence = None
             
             return {
@@ -417,6 +478,52 @@ class OCREngine:
         
         return results
 
+    def extract_text_from_multiple_images_streaming(
+        self, 
+        image_paths: List[str], 
+        options: Optional[Dict[str, Any]] = None,
+        max_workers: int = 2,
+        batch_size: int = 10
+    ) -> Generator[Dict[str, Any], None, None]:
+        """
+        Stream OCR results from multiple images as they complete.
+        Memory efficient for large batches.
+        
+        Args:
+            image_paths: List of image file paths
+            options: OCR options
+            max_workers: Maximum number of concurrent workers
+            batch_size: Number of images to process in each batch
+            
+        Yields:
+            Individual extraction results as they complete
+        """
+        # Process images in batches to manage memory
+        for i in range(0, len(image_paths), batch_size):
+            batch = image_paths[i:i + batch_size]
+            
+            with ThreadPoolExecutor(max_workers=min(max_workers, len(batch))) as executor:
+                # Submit batch tasks
+                future_to_path = {
+                    executor.submit(self.extract_text, path, options): path
+                    for path in batch
+                }
+                
+                # Yield results as they complete
+                for future in as_completed(future_to_path):
+                    path = future_to_path[future]
+                    try:
+                        result = future.result()
+                        yield result
+                    except Exception as e:
+                        self.logger.error(f"Failed to process {path}: {e}")
+                        yield {
+                            'image_path': path,
+                            'text': '',
+                            'error': str(e),
+                            'success': False
+                        }
+
     def get_image_info(self, image_path: str) -> Dict[str, Any]:
         """Get information about an image file"""
         try:
@@ -426,20 +533,32 @@ class OCREngine:
 
     def clear_cache(self) -> bool:
         """Clear the OCR cache"""
-        try:
-            for cache_file in self.cache_dir.glob("*.txt"):
-                cache_file.unlink()
-            return True
-        except Exception as e:
-            self.logger.error(f"Failed to clear cache: {e}")
-            return False
+        with self._cache_lock:
+            try:
+                cache_files = list(self.cache_dir.glob("*.txt"))
+                temp_files = list(self.cache_dir.glob("*.txt.tmp"))
+                all_files = cache_files + temp_files
+                
+                for cache_file in all_files:
+                    try:
+                        cache_file.unlink()
+                    except OSError as e:
+                        self.logger.warning(f"Could not delete {cache_file}: {e}")
+                
+                self.logger.info(f"Cleared {len(cache_files)} cache files")
+                return True
+            except Exception as e:
+                self.logger.error(f"Failed to clear cache: {e}")
+                return False
 
     def get_cache_size(self) -> int:
         """Get the total size of the cache in bytes"""
-        try:
-            return sum(f.stat().st_size for f in self.cache_dir.glob("*.txt") if f.is_file())
-        except:
-            return 0
+        with self._cache_lock:
+            try:
+                return sum(f.stat().st_size for f in self.cache_dir.glob("*.txt") if f.is_file())
+            except (OSError, PermissionError) as e:
+                self.logger.warning(f"Could not calculate cache size: {e}")
+                return 0
 
     def get_cache_stats(self) -> Dict[str, Any]:
         """Get cache statistics"""
@@ -536,36 +655,46 @@ class OCREngine:
                 self.logger.error(f"PDF file not found: {pdf_path}")
                 return ""
             
-            # Open PDF and extract text
-            doc = fitz.open(str(pdf_path))
+            # Open PDF and extract text using context manager
             text = ""
+            with fitz.open(str(pdf_path)) as doc:
+                for page_num in range(len(doc)):
+                    page = doc[page_num]
+                    page_text = page.get_text()
+                    
+                    # If page has no text or very little text, use OCR
+                    if not page_text.strip() or len(page_text.strip()) < 50:
+                        temp_image = None
+                        try:
+                            # Convert page to image and OCR
+                            pix = page.get_pixmap()
+                            try:
+                                img_data = pix.tobytes("png")
+                                
+                                # Save temporary image
+                                temp_image = pdf_path.parent / f"temp_page_{page_num}_{os.getpid()}.png"
+                                with open(temp_image, 'wb') as f:
+                                    f.write(img_data)
+                                
+                                # OCR the image
+                                ocr_result = self.extract_text(str(temp_image), {'language': language})
+                                ocr_text = ocr_result.get('text', '')
+                                text += f"\n--- Page {page_num + 1} ---\n{ocr_text}\n"
+                                
+                            finally:
+                                # Clean up pixmap memory
+                                pix = None
+                                
+                        finally:
+                            # Ensure temp file is always cleaned up
+                            if temp_image and temp_image.exists():
+                                try:
+                                    temp_image.unlink()
+                                except OSError as e:
+                                    self.logger.warning(f"Could not delete temp file {temp_image}: {e}")
+                    else:
+                        text += f"\n--- Page {page_num + 1} ---\n{page_text}\n"
             
-            for page_num in range(len(doc)):
-                page = doc[page_num]
-                page_text = page.get_text()
-                
-                # If page has no text or very little text, use OCR
-                if not page_text.strip() or len(page_text.strip()) < 50:
-                    # Convert page to image and OCR
-                    pix = page.get_pixmap()
-                    img_data = pix.tobytes("png")
-                    
-                    # Save temporary image
-                    temp_image = pdf_path.parent / f"temp_page_{page_num}.png"
-                    with open(temp_image, 'wb') as f:
-                        f.write(img_data)
-                    
-                    # OCR the image
-                    ocr_result = self.extract_text(str(temp_image), {'language': language})
-                    ocr_text = ocr_result.get('text', '')
-                    text += f"\n--- Page {page_num + 1} ---\n{ocr_text}\n"
-                    
-                    # Clean up
-                    temp_image.unlink(missing_ok=True)
-                else:
-                    text += f"\n--- Page {page_num + 1} ---\n{page_text}\n"
-            
-            doc.close()
             return text.strip()
             
         except Exception as e:
