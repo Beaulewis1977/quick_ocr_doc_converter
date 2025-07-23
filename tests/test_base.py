@@ -80,7 +80,7 @@ class GUITestCase(BaseTestCase):
             try:
                 self.root.quit()
                 self.root.destroy()
-            except:
+            except (AttributeError, tkinter.TclError):
                 pass
         super().tearDown()
     
@@ -370,7 +370,7 @@ def requires_gui():
             root = tkinter.Tk()
             root.destroy()
             return test_item
-        except:
+        except (ImportError, tkinter.TclError, Exception):
             return unittest.skip("Requires GUI support")(test_item)
     return decorator
 

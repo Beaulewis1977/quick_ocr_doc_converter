@@ -24,6 +24,53 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def secure_dll_load(dll_path: Path) -> Optional[object]:
+    """
+    Securely load a DLL with path validation and basic verification
+    
+    Args:
+        dll_path: Path to the DLL file
+        
+    Returns:
+        DLL handle if successful, None otherwise
+    """
+    if sys.platform != "win32":
+        logger.warning("DLL loading only supported on Windows")
+        return None
+        
+    try:
+        # Validate path
+        resolved_path = dll_path.resolve()
+        if not resolved_path.exists():
+            logger.error(f"DLL file not found: {resolved_path}")
+            return None
+            
+        if not resolved_path.is_file():
+            logger.error(f"Path is not a file: {resolved_path}")
+            return None
+            
+        # Check file extension
+        if resolved_path.suffix.lower() != '.dll':
+            logger.error(f"File is not a DLL: {resolved_path}")
+            return None
+            
+        # Basic file size check (reasonable bounds)
+        file_size = resolved_path.stat().st_size
+        if file_size < 1024 or file_size > 50 * 1024 * 1024:  # 1KB to 50MB
+            logger.error(f"DLL file size suspicious: {file_size} bytes")
+            return None
+            
+        # Ensure we're loading from absolute path
+        import ctypes
+        dll_handle = ctypes.WinDLL(str(resolved_path))
+        logger.info(f"Successfully loaded DLL: {resolved_path}")
+        return dll_handle
+        
+    except Exception as e:
+        logger.error(f"Failed to load DLL {dll_path}: {e}")
+        return None
+
+
 class CompilerDetector:
     """Detect and validate compiler tools"""
     
@@ -67,7 +114,7 @@ class CompilerDetector:
         try:
             result = subprocess.run(["gcc", "--version"], capture_output=True, text=True)
             return result.returncode == 0
-        except:
+        except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError, OSError):
             return False
 
 
@@ -101,14 +148,23 @@ class DLLBuilder:
         
         vcvarsall = self.compiler_info['vcvarsall']
         
-        # Create build command
-        build_cmd = f'"{vcvarsall}" x86 && cl /LD /Fe"{output_file}" "{source_dir / "UniversalConverter32.cpp"}" /DEF:"{source_dir / "UniversalConverter32.def"}"'
+        # Validate and escape file paths for security
+        import shlex
+        try:
+            vcvarsall_escaped = shlex.quote(str(vcvarsall))
+            output_file_escaped = shlex.quote(str(output_file))
+            cpp_file_escaped = shlex.quote(str(source_dir / "UniversalConverter32.cpp"))
+            def_file_escaped = shlex.quote(str(source_dir / "UniversalConverter32.def"))
+        except Exception as e:
+            return False, f"Path validation failed: {e}"
+        
+        # Create build command with escaped paths
+        build_cmd = f'{vcvarsall_escaped} x86 && cl /LD /Fe:{output_file_escaped} {cpp_file_escaped} /DEF:{def_file_escaped}'
         
         try:
-            # Run build with timeout
+            # Run build with timeout - need shell=True for vcvarsall to work
             process = subprocess.run(
-                build_cmd,
-                shell=True,
+                ["cmd", "/c", build_cmd],
                 capture_output=True,
                 text=True,
                 timeout=self.timeout,
@@ -298,7 +354,7 @@ def verify_tools(dll_path):
             result = subprocess.run(["gcc", "--version"], capture_output=True, text=True)
             version_line = result.stdout.split('\n')[0]
             click.echo(f"   Version: {version_line}")
-        except:
+        except (IndexError, AttributeError, subprocess.SubprocessError):
             pass
     else:
         click.echo(click.style("❌ MinGW not found", fg='yellow'))
@@ -397,9 +453,8 @@ def test(dll, test_file):
     
     # Basic DLL load test (Windows only)
     if sys.platform == "win32":
-        try:
-            import ctypes
-            dll_handle = ctypes.WinDLL(str(dll_path))
+        dll_handle = secure_dll_load(dll_path)
+        if dll_handle:
             click.echo(click.style("✅ DLL loads successfully", fg='green'))
             
             # Test GetVersion
@@ -408,7 +463,7 @@ def test(dll, test_file):
                 get_version.restype = ctypes.c_char_p
                 version = get_version().decode('utf-8')
                 click.echo(f"   Version: {version}")
-            except:
+            except (AttributeError, OSError, UnicodeDecodeError, Exception):
                 click.echo(click.style("⚠️  Could not get version", fg='yellow'))
             
             # Test GetSupportedInputFormats
@@ -417,7 +472,7 @@ def test(dll, test_file):
                 get_formats.restype = ctypes.c_char_p
                 formats = get_formats().decode('utf-8')
                 click.echo(f"   Input formats: {formats}")
-            except:
+            except (AttributeError, OSError, UnicodeDecodeError, Exception):
                 click.echo(click.style("⚠️  Could not get formats", fg='yellow'))
                 
         except Exception as e:

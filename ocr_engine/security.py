@@ -75,6 +75,10 @@ class OCRSecurityValidator:
                     f"File too large: {file_size} bytes > {self.max_file_size} bytes"
                 )
             
+            # Basic file content validation (magic number check)
+            if not self._validate_file_content(path_obj):
+                raise SecurityError(f"File content validation failed: {path_obj.suffix}")
+            
             # Verify file permissions (readable)
             if not os.access(path_obj, os.R_OK):
                 raise SecurityError(f"File is not readable: {path_obj}")
@@ -83,6 +87,59 @@ class OCRSecurityValidator:
             
         except (OSError, IOError) as e:
             raise SecurityError(f"File access error: {e}")
+    
+    def _validate_file_content(self, path_obj: Path) -> bool:
+        """
+        Validate file content using magic numbers (file signatures)
+        
+        Args:
+            path_obj: Path object to validate
+            
+        Returns:
+            True if file content matches expected type
+        """
+        try:
+            # Read first few bytes to check magic numbers
+            with open(path_obj, 'rb') as f:
+                header = f.read(16)
+            
+            if not header:
+                return False
+            
+            # Define magic number signatures for supported file types
+            file_signatures = {
+                '.png': [b'\x89PNG\r\n\x1a\n'],
+                '.jpg': [b'\xff\xd8\xff'],
+                '.jpeg': [b'\xff\xd8\xff'],
+                '.pdf': [b'%PDF-'],
+                '.tiff': [b'II*\x00', b'MM\x00*'],  # Little-endian and big-endian TIFF
+                '.bmp': [b'BM'],
+            }
+            
+            file_ext = path_obj.suffix.lower()
+            
+            # If we don't have signature validation for this type, allow it
+            if file_ext not in file_signatures:
+                return True
+            
+            # Check if file starts with any of the valid signatures for this type
+            valid_signatures = file_signatures[file_ext]
+            for signature in valid_signatures:
+                if header.startswith(signature):
+                    return True
+            
+            # Special case for JPEG files - they might have different headers
+            if file_ext in ['.jpg', '.jpeg']:
+                # JPEG files can have various markers, but should start with FFD8
+                if header.startswith(b'\xff\xd8'):
+                    return True
+            
+            self.logger.warning(f"File content doesn't match expected type: {file_ext}")
+            return False
+            
+        except Exception as e:
+            self.logger.error(f"Content validation error: {e}")
+            return False  # Fail safe - reject if we can't validate
     
     def validate_output_path(self, path: str) -> bool:
         """
@@ -209,3 +266,96 @@ class OCRSecurityValidator:
 
 # Global security validator instance
 security_validator = OCRSecurityValidator()
+
+def validate_file_path(file_path: str) -> bool:
+    """
+    Validate file path for security using the global security validator
+    
+    Args:
+        file_path: Path to validate
+        
+    Returns:
+        True if valid
+        
+    Raises:
+        SecurityError: If path is insecure
+    """
+    return security_validator.validate_input_path(file_path)
+
+def validate_output_path(output_path: str) -> bool:
+    """
+    Validate output path for security using the global security validator
+    
+    Args:
+        output_path: Output path to validate
+        
+    Returns:
+        True if valid
+        
+    Raises:
+        SecurityError: If path is insecure
+    """
+    return security_validator.validate_output_path(output_path)
+
+def sanitize_path_for_logging(file_path: str) -> str:
+    """
+    Sanitize file path for safe logging, removing sensitive directory information
+    
+    Args:
+        file_path: Full file path
+        
+    Returns:
+        Sanitized path showing only filename and parent directory
+    """
+    try:
+        path_obj = Path(file_path)
+        
+        # Only show filename and immediate parent directory
+        if path_obj.parent.name:
+            return f".../{path_obj.parent.name}/{path_obj.name}"
+        else:
+            return path_obj.name
+    except Exception:
+        return "[sanitized_path]"
+
+def sanitize_error_message(error_msg: str, file_path: str = None) -> str:
+    """
+    Sanitize error message to remove sensitive information
+    
+    Args:
+        error_msg: Original error message
+        file_path: Optional file path to sanitize within the message
+        
+    Returns:
+        Sanitized error message
+    """
+    if not isinstance(error_msg, str):
+        return "Error occurred"
+    
+    # If a file path is provided, replace it with sanitized version
+    if file_path:
+        try:
+            sanitized_path = sanitize_path_for_logging(file_path)
+            error_msg = error_msg.replace(str(file_path), sanitized_path)
+            error_msg = error_msg.replace(str(Path(file_path).resolve()), sanitized_path)
+        except Exception:
+            pass
+    
+    # Remove common sensitive patterns
+    import re
+    
+    # Remove full Windows paths (C:\Users\username\...)
+    error_msg = re.sub(r'[C-Z]:\\Users\\[^\\]+\\[^\\]*', '[user_directory]', error_msg)
+    
+    # Remove full Unix paths (/home/username/...)  
+    error_msg = re.sub(r'/home/[^/]+/[^/]*', '[user_directory]', error_msg)
+    
+    # Remove temporary file paths
+    error_msg = re.sub(r'/tmp/[^/\s]+', '[temp_file]', error_msg)
+    error_msg = re.sub(r'\\temp\\[^\\s]+', '[temp_file]', error_msg)
+    
+    # Limit message length
+    if len(error_msg) > 200:
+        error_msg = error_msg[:197] + "..."
+    
+    return error_msg

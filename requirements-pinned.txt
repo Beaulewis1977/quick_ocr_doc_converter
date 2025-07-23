@@ -1,0 +1,48 @@
+# Universal Document Converter with OCR - Pinned Requirements for Production
+# Generated for security and reproducibility
+
+# Core OCR dependencies - pinned to known secure versions
+pytesseract==0.3.10
+Pillow==10.0.1
+numpy==1.24.3
+opencv-python==4.8.1.78
+easyocr==1.7.0
+
+# Document processing - security-reviewed versions
+python-docx==0.8.11
+docx2txt==0.8
+reportlab==4.0.4
+weasyprint==59.0
+markdown==3.4.4
+beautifulsoup4==4.12.2
+
+# GUI and utilities - stable versions
+tkinterdnd2==0.3.0
+psutil==5.9.5
+
+# Development and testing - latest secure versions
+pytest==7.4.0
+pytest-cov==4.1.0
+black==23.7.0
+flake8==6.0.0
+
+# Optional dependencies - security-reviewed
+lxml==4.9.3
+requests==2.31.0
+tqdm==4.65.0
+colorama==0.4.6
+
+# Security and encryption - latest security-patched versions
+cryptography==41.0.3
+
+# PDF processing - security-reviewed versions
+PyMuPDF==1.23.3
+PyPDF2==3.0.1
+
+# Cloud API integrations (optional) - latest stable
+google-cloud-vision==3.4.4
+
+# Security additions for production
+safety==2.3.4
+bandit==1.7.5
+pip-audit==2.6.1

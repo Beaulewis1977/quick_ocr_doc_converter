@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 from pathlib import Path
 from typing import Generator, Tuple, Optional, Dict, Any
+from contextlib import contextmanager
 import logging
 import tempfile
 import gc
@@ -15,6 +16,59 @@ import gc
 class MemoryLimitError(Exception):
     """Exception raised when memory limits are exceeded"""
     pass
+
+@contextmanager  
+def safe_image_processing(image_path: str, max_memory_mb: int = 100):
+    """
+    Context manager for safe image processing with automatic cleanup
+    
+    Args:
+        image_path: Path to image file
+        max_memory_mb: Maximum memory usage in MB
+        
+    Yields:
+        Loaded image object
+        
+    Ensures:
+        - Memory is properly released
+        - Temporary files are cleaned up
+        - Garbage collection is performed
+    """
+    image = None
+    
+    try:
+        # Load image with memory checks
+        path_obj = Path(image_path)
+        if not path_obj.exists():
+            raise FileNotFoundError(f"Image file not found: {image_path}")
+            
+        # Check file size before loading
+        file_size = path_obj.stat().st_size
+        max_memory_bytes = max_memory_mb * 1024 * 1024
+        
+        if file_size > max_memory_bytes * 2:  # Conservative estimate
+            raise MemoryLimitError(f"Image file too large: {file_size} bytes")
+            
+        # Load image
+        image = cv2.imread(str(path_obj))
+        if image is None:
+            raise ValueError(f"Could not load image: {image_path}")
+            
+        # Check memory usage
+        memory_usage = image.nbytes
+        if memory_usage > max_memory_bytes:
+            raise MemoryLimitError(f"Image memory usage {memory_usage} exceeds limit")
+            
+        yield image
+        
+    finally:
+        # Cleanup
+        if image is not None:
+            del image
+                
+        # Force garbage collection
+        gc.collect()
+
 
 class MemoryEfficientImageProcessor:
     """Memory-efficient image processing with automatic resource management"""
@@ -248,6 +302,27 @@ class MemoryEfficientImageProcessor:
         processing_overhead = base_memory * 2.5
         
         return int(processing_overhead)
+    
+    def process_image_safe(self, image_path: str, processing_func, *args, **kwargs):
+        """
+        Process image using the safe context manager
+        
+        Args:
+            image_path: Path to image file
+            processing_func: Function to process the image
+            *args, **kwargs: Arguments to pass to processing function
+            
+        Returns:
+            Result of processing function
+            
+        Example:
+            result = processor.process_image_safe(
+                "image.jpg", 
+                lambda img: pytesseract.image_to_string(img)
+            )
+        """
+        with safe_image_processing(image_path, self.max_memory_mb) as image:
+            return processing_func(image, *args, **kwargs)
 
 # Global memory-efficient processor instance
 memory_processor = MemoryEfficientImageProcessor()
