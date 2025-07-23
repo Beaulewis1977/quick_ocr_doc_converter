@@ -252,11 +252,10 @@ class OCRGUI:
                     # Basic PDF text extraction
                     try:
                         import fitz
-                        doc = fitz.open(file_path)
-                        text = ""
-                        for page in doc:
-                            text += page.get_text()
-                        doc.close()
+                        with fitz.open(file_path) as doc:
+                            text = ""
+                            for page in doc:
+                                text += page.get_text()
                     except ImportError:
                         return None
                 

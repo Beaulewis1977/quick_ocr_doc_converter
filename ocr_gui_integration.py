@@ -246,7 +246,8 @@ class OCRSettingsDialog:
                 ttk.Label(cache_frame, 
                          text=f"Cache: {cache_stats['file_count']} files, {cache_stats['total_size_mb']} MB").grid(
                     row=1, column=0, sticky=tk.W, pady=(5, 0))
-        except:
+        except (AttributeError, KeyError) as e:
+            # Cache stats not available, silently skip
             pass
     
     def center_dialog(self):

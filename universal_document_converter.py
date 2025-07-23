@@ -126,12 +126,16 @@ class UniversalDocumentConverter:
         # Setup file handler
         log_file = log_dir / f"converter_{datetime.datetime.now().strftime('%Y%m%d')}.log"
         
+        # Store handlers for proper cleanup
+        self.file_handler = logging.FileHandler(log_file)
+        self.stream_handler = logging.StreamHandler()
+        
         logging.basicConfig(
             level=getattr(logging, log_level.upper()),
             format=log_format,
             handlers=[
-                logging.FileHandler(log_file),
-                logging.StreamHandler()
+                self.file_handler,
+                self.stream_handler
             ]
         )
         
@@ -957,7 +961,8 @@ class UniversalDocumentConverter:
                 rel_path = input_file.relative_to(base_dir).parent
                 output_subdir = output_dir / rel_path
                 output_subdir.mkdir(parents=True, exist_ok=True)
-            except:
+            except (ValueError, AttributeError) as e:
+                self.logger.debug(f"Could not determine relative path: {e}")
                 output_subdir = output_dir
         else:
             output_subdir = output_dir
@@ -1009,7 +1014,8 @@ class UniversalDocumentConverter:
                 with open(output_file, 'rb') as f:
                     content = f.read()
                     self.cache_result(cache_key, content)
-            except:
+            except (IOError, OSError) as e:
+                self.logger.debug(f"Could not cache result: {e}")
                 pass
         
         return True, 'converted'
@@ -1469,7 +1475,10 @@ Output directory: {self.output_dir.get()}"""
         command = self.cli_command.get()
         
         try:
-            result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=30)
+            # Parse command safely - split into args
+            import shlex
+            args = shlex.split(command)
+            result = subprocess.run(args, capture_output=True, text=True, timeout=30)
             
             self.cli_output.delete(1.0, tk.END)
             self.cli_output.insert(tk.END, f"Command: {command}\n")
@@ -2240,7 +2249,8 @@ MESSAGEBOX(TRANSFORM(lnConverted) + " files converted")
             # Create cache key
             key_string = f"{file_path}:{output_format}:{mtime}:{size}"
             return hashlib.md5(key_string.encode()).hexdigest()
-        except:
+        except (OSError, AttributeError) as e:
+            self.logger.debug(f"Could not generate cache key: {e}")
             return None
     
     def get_cached_result(self, cache_key: str) -> Optional[bytes]:
@@ -2284,9 +2294,10 @@ MESSAGEBOX(TRANSFORM(lnConverted) + " files converted")
             process = psutil.Process()
             memory_info = process.memory_info()
             
-            # Cache information
-            cache_size_mb = self.current_cache_size / 1024 / 1024
-            cache_entries = len(self.conversion_cache)
+            # Cache information - access with lock
+            with self.cache_lock:
+                cache_size_mb = self.current_cache_size / 1024 / 1024
+                cache_entries = len(self.conversion_cache)
             
             info_text = f"""Memory Usage Information:
 - RSS (Resident Set Size): {memory_info.rss / 1024 / 1024:.2f} MB
@@ -2304,6 +2315,11 @@ Cache Information:
                 info_text += "\n\n⚠️ High memory usage detected!"
             
         except ImportError:
+            # Access cache with lock
+            with self.cache_lock:
+                cache_size_mb = self.current_cache_size / 1024 / 1024
+                cache_entries = len(self.conversion_cache)
+                
             info_text = f"""Memory monitoring requires psutil package.
 Install with: pip install psutil
 
@@ -2311,8 +2327,8 @@ Basic memory info:
 - Python objects in memory: {len(gc.get_objects())} objects
 
 Cache Information:
-- Cache Size: {self.current_cache_size / 1024 / 1024:.2f} MB
-- Cached Items: {len(self.conversion_cache)} files"""
+- Cache Size: {cache_size_mb:.2f} MB
+- Cached Items: {cache_entries} files"""
         
         self.memory_info_text.delete(1.0, tk.END)
         self.memory_info_text.insert(tk.END, info_text)
@@ -2321,8 +2337,11 @@ Cache Information:
         """Optimize memory usage"""
         self.update_status("Optimizing memory...")
         
-        # Clear cache if it's large
-        if self.current_cache_size > 50 * 1024 * 1024:  # > 50MB
+        # Clear cache if it's large - check size with lock
+        with self.cache_lock:
+            should_clear = self.current_cache_size > 50 * 1024 * 1024  # > 50MB
+        
+        if should_clear:
             self.clear_cache()
         
         # Force garbage collection
@@ -2411,7 +2430,8 @@ Cache Information:
                         self.root.after(0, lambda: self.ocr_status_label.config(
                             text="⚠️ OCR Engine: Tesseract (API Error Fallback)"
                         ))
-                except:
+                except Exception as e:
+                    self.logger.debug(f"Could not update OCR status: {e}")
                     pass
         
         # Update configuration if needed to remember preference
@@ -2429,10 +2449,27 @@ Cache Information:
                 self.cancel_processing = True
                 if self.processing_thread and self.processing_thread.is_alive():
                     self.processing_thread.join(timeout=2)
+                self.cleanup_resources()
                 self.root.destroy()
         else:
             self.save_config()  # Save settings on exit
+            self.cleanup_resources()
             self.root.destroy()
+    
+    def cleanup_resources(self):
+        """Clean up file handlers and other resources"""
+        # Close logging handlers
+        if hasattr(self, 'file_handler'):
+            self.file_handler.close()
+        if hasattr(self, 'stream_handler'):
+            self.stream_handler.close()
+        
+        # Clean up OCR engine
+        if hasattr(self, 'ocr_engine') and self.ocr_engine:
+            try:
+                self.ocr_engine.cleanup()
+            except Exception as e:
+                self.logger.error(f"Error cleaning up OCR engine: {e}")
 
     def update_api_stats(self, message):
         """Update API statistics display"""
