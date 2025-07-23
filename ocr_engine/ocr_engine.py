@@ -83,6 +83,9 @@ class OCREngine:
         
         # Thread-local storage for OCR readers
         self._thread_local = threading.local()
+        # Global tracking of all created readers for proper cleanup
+        self._active_readers = {}  # thread_id -> reader mapping
+        self._readers_lock = threading.Lock()  # Lock for reader tracking
         
         # Thread safety locks
         self._cache_lock = threading.RLock()  # Reentrant lock for cache operations
@@ -181,15 +184,22 @@ class OCREngine:
         return available[0][0]
 
     def _get_easyocr_reader(self, languages: List[str] = None):
-        """Get thread-local EasyOCR reader"""
+        """Get thread-local EasyOCR reader with global tracking"""
         if not hasattr(self._thread_local, 'easyocr_reader'):
             if languages is None:
                 languages = self.config['languages']
-            self._thread_local.easyocr_reader = easyocr.Reader(
+            reader = easyocr.Reader(
                 languages, 
                 gpu=False,  # Disable GPU for compatibility
                 verbose=False
             )
+            self._thread_local.easyocr_reader = reader
+            
+            # Track reader globally for cleanup
+            thread_id = threading.get_ident()
+            with self._readers_lock:
+                self._active_readers[thread_id] = reader
+                
         return self._thread_local.easyocr_reader
 
     def _get_cache_key(self, image_path: Path, options: Dict[str, Any]) -> str:
@@ -703,15 +713,25 @@ class OCREngine:
     
     def cleanup(self):
         """Clean up OCR engine resources"""
-        # Clean up EasyOCR readers from thread local storage
-        if hasattr(self, '_thread_local'):
-            if hasattr(self._thread_local, 'easyocr_reader'):
+        # Clean up all tracked EasyOCR readers
+        with self._readers_lock:
+            for thread_id, reader in self._active_readers.items():
                 try:
                     # EasyOCR readers don't have explicit close method, 
                     # but we can delete the reference to free memory
+                    del reader
+                    self.logger.debug(f"Cleaned up EasyOCR reader for thread {thread_id}")
+                except Exception as e:
+                    self.logger.warning(f"Error cleaning up EasyOCR reader for thread {thread_id}: {e}")
+            self._active_readers.clear()
+        
+        # Clean up current thread's reader from thread local storage
+        if hasattr(self, '_thread_local'):
+            if hasattr(self._thread_local, 'easyocr_reader'):
+                try:
                     del self._thread_local.easyocr_reader
                 except Exception as e:
-                    self.logger.warning(f"Error cleaning up EasyOCR reader: {e}")
+                    self.logger.warning(f"Error cleaning up thread-local EasyOCR reader: {e}")
         
         # Clear the cache
         try:
@@ -719,4 +739,16 @@ class OCREngine:
         except Exception as e:
             self.logger.warning(f"Error clearing cache: {e}")
         
+        # Force garbage collection to free memory
+        import gc
+        gc.collect()
+        
         self.logger.info("OCR engine cleanup completed")
+    
+    def __del__(self):
+        """Destructor to ensure cleanup on object deletion"""
+        try:
+            self.cleanup()
+        except Exception as e:
+            # Use print since logger might not be available during destruction
+            print(f"Warning: Error during OCR engine destruction: {e}")

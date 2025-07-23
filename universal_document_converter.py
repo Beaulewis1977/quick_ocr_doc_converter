@@ -31,6 +31,7 @@ import json
 import subprocess
 import shutil
 from typing import Optional, Union, Dict, Any, List
+from collections import OrderedDict
 import concurrent.futures
 import time
 import hashlib
@@ -85,8 +86,9 @@ class UniversalDocumentConverter:
         self.skipped_count = 0
         self.start_time = None
         
-        # Caching system
-        self.conversion_cache = {}
+        # Caching system with LRU support
+        self.conversion_cache = OrderedDict()  # LRU cache using OrderedDict
+        self.cache_sizes = {}  # Track individual entry sizes
         self.cache_lock = Lock()
         self.max_cache_size = 100 * 1024 * 1024  # 100MB cache limit
         self.current_cache_size = 0
@@ -99,10 +101,33 @@ class UniversalDocumentConverter:
         self.config = self.load_config()
         self.setup_logging()
         
+        # Adaptive processing configuration
+        self._last_memory_check = 0
+        self._adaptive_batch_size = 4  # Default batch size
+        self._memory_check_interval = 30  # Check memory every 30 seconds
+        
         # Initialize OCR if available
         if HAS_OCR:
             try:
-                self.ocr_engine = OCREngine(config=self.config.get('ocr', {}))
+                # Enhanced OCR config with secure credential handling
+                ocr_config = self.config.get('ocr', {}).copy()
+                
+                # Set up Google Vision credentials securely
+                if self.config.get('api', {}).get('google_vision', {}).get('enabled', False):
+                    credentials_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+                    if not credentials_path:
+                        credentials_path = self.config.get('api', {}).get('google_vision', {}).get('credentials_path', '')
+                    
+                    if credentials_path and self._validate_credentials_file_init(credentials_path):
+                        # Only set if not already in environment and file is valid
+                        if 'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ:
+                            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
+                        ocr_config['google_vision_enabled'] = True
+                    else:
+                        self.logger.warning("Google Vision API credentials not found or invalid")
+                        ocr_config['google_vision_enabled'] = False
+                
+                self.ocr_engine = OCREngine(config=ocr_config)
             except Exception as e:
                 logging.warning(f"Could not initialize OCR engine: {e}")
         
@@ -472,7 +497,12 @@ class UniversalDocumentConverter:
         cred_frame = ttk.Frame(gv_frame)
         cred_frame.pack(fill=tk.X, pady=(10, 0))
         
-        ttk.Label(cred_frame, text="Credentials File:").pack(anchor=tk.W)
+        # Environment variable info
+        env_var_status = "✅ Set" if os.environ.get('GOOGLE_APPLICATION_CREDENTIALS') else "❌ Not Set"
+        ttk.Label(cred_frame, text=f"GOOGLE_APPLICATION_CREDENTIALS: {env_var_status}").pack(anchor=tk.W)
+        ttk.Label(cred_frame, text="(Environment variable preferred for security)", font=('TkDefaultFont', 8)).pack(anchor=tk.W)
+        
+        ttk.Label(cred_frame, text="Fallback Credentials File:", font=('TkDefaultFont', 9, 'bold')).pack(anchor=tk.W, pady=(10, 0))
         cred_entry_frame = ttk.Frame(cred_frame)
         cred_entry_frame.pack(fill=tk.X, pady=(5, 0))
         
@@ -782,7 +812,9 @@ class UniversalDocumentConverter:
         """Worker thread for file conversion with concurrent processing"""
         try:
             self.start_time = time.time()
-            max_workers = self.worker_threads.get()
+            # Use adaptive batch size instead of fixed worker count
+            max_workers = min(self.worker_threads.get(), self.get_adaptive_batch_size())
+            self.logger.info(f"Starting conversion with {max_workers} workers (adaptive batch sizing)")
             
             with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                 # Submit all conversion tasks
@@ -1329,28 +1361,43 @@ Output directory: {self.output_dir.get()}"""
                 self.api_status_label.config(text="❌ Google Vision not available (fallback enabled)")
             return
         
-        credentials_path = self.gv_credentials.get()
+        # Try environment variable first (more secure)
+        credentials_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
         if not credentials_path:
-            self.api_status_label.config(text="❌ No credentials file")
+            # Fall back to config file path
+            credentials_path = self.gv_credentials.get()
+        
+        if not credentials_path:
+            self.api_status_label.config(text="❌ No credentials (set GOOGLE_APPLICATION_CREDENTIALS env var or file)")
             if self.gv_fallback_enabled.get():
-                self.api_status_label.config(text="❌ No credentials file (fallback enabled)")
+                self.api_status_label.config(text="❌ No credentials (fallback enabled)")
+            return
+
+        # Validate credentials file
+        if not self._validate_credentials_file(credentials_path):
             return
         
         try:
-            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
+            # Only set if not already in environment
+            if 'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ:
+                os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
             client = vision.ImageAnnotatorClient()
             self.api_status_label.config(text="✅ Connection successful")
             
             # Update API stats
             self.update_api_stats("Connection test successful")
         except Exception as e:
+            # Sanitize error message to prevent credential disclosure
+            sanitized_error = self._sanitize_error_message(str(e))
             if self.gv_fallback_enabled.get():
-                self.api_status_label.config(text=f"❌ Connection failed (fallback enabled): {str(e)[:30]}...")
+                self.api_status_label.config(text=f"❌ Connection failed (fallback enabled): {sanitized_error[:30]}...")
             else:
-                self.api_status_label.config(text=f"❌ Connection failed: {str(e)[:30]}...")
+                self.api_status_label.config(text=f"❌ Connection failed: {sanitized_error[:30]}...")
             
-            # Update API stats
-            self.update_api_stats(f"Connection test failed: {str(e)}")
+            # Update API stats with sanitized error
+            self.update_api_stats(f"Connection test failed: {sanitized_error}")
+            # Log the full error for debugging (still sanitized)
+            self.logger.error(f"Google Vision API connection failed: {sanitized_error}")
     
     # CLI methods
     def test_cli_command(self):
@@ -1478,26 +1525,44 @@ Output directory: {self.output_dir.get()}"""
             return None
     
     def get_cached_result(self, cache_key: str) -> Optional[bytes]:
-        """Get cached conversion result"""
+        """Get cached conversion result and move to end (LRU)"""
         with self.cache_lock:
-            return self.conversion_cache.get(cache_key)
+            if cache_key in self.conversion_cache:
+                # Move to end (most recently used)
+                value = self.conversion_cache.pop(cache_key)
+                self.conversion_cache[cache_key] = value
+                return value
+            return None
     
     def cache_result(self, cache_key: str, content: bytes):
-        """Cache conversion result with size management"""
+        """Cache conversion result with LRU eviction"""
         with self.cache_lock:
             content_size = len(content)
             
-            # Clear cache if adding this would exceed limit
-            if self.current_cache_size + content_size > self.max_cache_size:
-                self.clear_cache()
+            # If entry already exists, update size tracking
+            if cache_key in self.conversion_cache:
+                old_size = self.cache_sizes[cache_key]
+                self.current_cache_size -= old_size
+                self.conversion_cache.pop(cache_key)  # Remove to add at end
             
+            # Evict LRU entries until we have enough space
+            while (self.current_cache_size + content_size > self.max_cache_size 
+                   and self.conversion_cache):
+                # Remove least recently used (first item)
+                lru_key, lru_content = self.conversion_cache.popitem(last=False)
+                lru_size = self.cache_sizes.pop(lru_key)
+                self.current_cache_size -= lru_size
+            
+            # Add new entry (most recently used at end)
             self.conversion_cache[cache_key] = content
+            self.cache_sizes[cache_key] = content_size
             self.current_cache_size += content_size
     
     def clear_cache(self):
         """Clear the conversion cache"""
         with self.cache_lock:
             self.conversion_cache.clear()
+            self.cache_sizes.clear()
             self.current_cache_size = 0
             gc.collect()
     
@@ -1532,7 +1597,11 @@ Output directory: {self.output_dir.get()}"""
 
 Cache Information:
 - Cache Size: {cache_size_mb:.2f} MB / {self.max_cache_size / 1024 / 1024:.0f} MB
-- Cached Items: {cache_entries} files"""
+- Cached Items: {cache_entries} files
+
+Processing Configuration:
+- Current Adaptive Batch Size: {self.get_adaptive_batch_size()} workers
+- Max Workers Setting: {self.worker_threads.get()} workers"""
             
             # Add memory optimization button if memory usage is high
             if memory_info.rss > 500 * 1024 * 1024:  # > 500MB
@@ -1576,6 +1645,139 @@ Cache Information:
         
         self.update_status(f"Memory optimized - {collected} objects collected")
         messagebox.showinfo("Memory Optimization", f"Memory optimization complete!\n{collected} objects collected.\nCache cleared if it was over 50MB.")
+    
+    def get_adaptive_batch_size(self) -> int:
+        """Calculate optimal batch size based on current memory usage"""
+        current_time = time.time()
+        
+        # Only check memory periodically to avoid overhead
+        if current_time - self._last_memory_check < self._memory_check_interval:
+            return self._adaptive_batch_size
+        
+        try:
+            import psutil
+            
+            # Get memory usage information
+            process = psutil.Process()
+            memory_info = process.memory_info()
+            system_memory = psutil.virtual_memory()
+            
+            # Calculate memory usage metrics
+            rss_mb = memory_info.rss / (1024 * 1024)
+            available_mb = system_memory.available / (1024 * 1024)
+            memory_percent = process.memory_percent()
+            
+            # Adaptive batch sizing logic
+            if memory_percent > 80 or rss_mb > 1000:
+                # High memory usage - reduce batch size
+                self._adaptive_batch_size = max(1, self._adaptive_batch_size // 2)
+                self.logger.warning(f"High memory usage detected ({memory_percent:.1f}%), reducing batch size to {self._adaptive_batch_size}")
+            elif memory_percent < 40 and available_mb > 2000:
+                # Low memory usage and plenty available - can increase batch size
+                self._adaptive_batch_size = min(8, self._adaptive_batch_size + 1)
+                self.logger.info(f"Memory usage low ({memory_percent:.1f}%), increasing batch size to {self._adaptive_batch_size}")
+            elif memory_percent > 60:
+                # Moderate memory usage - slightly reduce batch size
+                self._adaptive_batch_size = max(2, self._adaptive_batch_size - 1)
+                self.logger.info(f"Moderate memory usage ({memory_percent:.1f}%), adjusting batch size to {self._adaptive_batch_size}")
+            
+            # Force garbage collection if memory usage is high
+            if memory_percent > 70:
+                gc.collect()
+                
+            self._last_memory_check = current_time
+            
+        except ImportError:
+            # psutil not available, use default
+            self._adaptive_batch_size = 4
+        except Exception as e:
+            self.logger.warning(f"Error calculating adaptive batch size: {e}")
+            self._adaptive_batch_size = 4
+        
+        return self._adaptive_batch_size
+    
+    def _validate_credentials_file(self, credentials_path: str) -> bool:
+        """Validate Google Vision API credentials file with security checks"""
+        try:
+            if not credentials_path or not os.path.exists(credentials_path):
+                self.api_status_label.config(text="❌ Credentials file not found")
+                if self.gv_fallback_enabled.get():
+                    self.api_status_label.config(text="❌ Credentials file not found (fallback enabled)")
+                return False
+            
+            # Check file permissions (should not be world-readable)
+            file_stat = os.stat(credentials_path)
+            if file_stat.st_mode & 0o044:  # Check if group or others can read
+                self.logger.warning(f"Credentials file {credentials_path} has insecure permissions")
+                self.api_status_label.config(text="⚠️ Credentials file has insecure permissions")
+                # Don't fail completely, but warn the user
+            
+            # Basic validation that it's a JSON file
+            try:
+                with open(credentials_path, 'r') as f:
+                    import json
+                    cred_data = json.load(f)
+                    # Check for required fields
+                    if 'type' not in cred_data or 'client_email' not in cred_data:
+                        self.api_status_label.config(text="❌ Invalid credentials format")
+                        return False
+            except (json.JSONDecodeError, IOError) as e:
+                self.api_status_label.config(text="❌ Invalid credentials file format")
+                self.logger.error(f"Credentials file validation failed: {e}")
+                return False
+            
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Credentials validation error: {e}")
+            self.api_status_label.config(text="❌ Credentials validation failed")
+            return False
+    
+    def _validate_credentials_file_init(self, credentials_path: str) -> bool:
+        """Validate credentials file during initialization (no UI updates)"""
+        try:
+            if not credentials_path or not os.path.exists(credentials_path):
+                return False
+            
+            # Check file permissions (should not be world-readable)
+            file_stat = os.stat(credentials_path)
+            if file_stat.st_mode & 0o044:  # Check if group or others can read
+                self.logger.warning(f"Credentials file {credentials_path} has insecure permissions")
+            
+            # Basic validation that it's a JSON file
+            try:
+                with open(credentials_path, 'r') as f:
+                    import json
+                    cred_data = json.load(f)
+                    # Check for required fields
+                    if 'type' not in cred_data or 'client_email' not in cred_data:
+                        return False
+            except (json.JSONDecodeError, IOError) as e:
+                self.logger.error(f"Credentials file validation failed: {e}")
+                return False
+            
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Credentials validation error: {e}")
+            return False
+    
+    def _sanitize_error_message(self, error_msg: str) -> str:
+        """Sanitize error messages to prevent credential disclosure"""
+        import re
+        
+        # Remove potential credential file paths
+        error_msg = re.sub(r'/[^/\s]+\.json', '[CREDENTIALS_FILE]', error_msg)
+        error_msg = re.sub(r'C:\\[^\\]+\\[^\\]+\.json', '[CREDENTIALS_FILE]', error_msg)
+        
+        # Remove potential API keys or tokens
+        error_msg = re.sub(r'key["\']?\s*[:=]\s*["\']?[a-zA-Z0-9_-]{20,}["\']?', 'key="[REDACTED]"', error_msg, flags=re.IGNORECASE)
+        error_msg = re.sub(r'token["\']?\s*[:=]\s*["\']?[a-zA-Z0-9_-]{20,}["\']?', 'token="[REDACTED]"', error_msg, flags=re.IGNORECASE)
+        
+        # Remove email addresses from service account info
+        error_msg = re.sub(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', '[SERVICE_ACCOUNT_EMAIL]', error_msg)
+        
+        return error_msg
     
     def process_ocr_with_fallback(self, file_path, options):
         """Process OCR with automatic fallback to free engines if API fails"""
