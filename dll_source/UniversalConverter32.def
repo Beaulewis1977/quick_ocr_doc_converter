@@ -1,0 +1,22 @@
+; UniversalConverter32.def - Module definition file for DLL exports
+; Ensures proper export names for VB6/VFP9 compatibility
+
+LIBRARY UniversalConverter32
+
+EXPORTS
+    ConvertDocument         @1
+    TestConnection         @2
+    GetVersion             @3
+    GetLastError           @4
+    GetSupportedInputFormats    @5
+    GetSupportedOutputFormats   @6
+    ConvertPDFToText       @7
+    ConvertPDFToMarkdown   @8
+    ConvertDOCXToText      @9
+    ConvertDOCXToMarkdown  @10
+    ConvertMarkdownToHTML  @11
+    ConvertHTMLToMarkdown  @12
+    ConvertRTFToText       @13
+    ConvertRTFToMarkdown   @14
+    ConvertBatch           @15
+    GetFileInfo            @16

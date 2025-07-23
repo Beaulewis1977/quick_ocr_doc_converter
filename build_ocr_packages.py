@@ -28,12 +28,37 @@ class OCRPackageBuilder:
         self.log("Creating DLL package...")
         
         dll_files = [
-            "UniversalConverter32.dll.bat",  # DLL simulator
-            "vb6_integration_simple.vb",     # VB6 integration for simple CLI
-            "vfp9_integration_simple.prg",   # VFP9 integration for simple CLI
-            "cli.py",                        # Simple CLI without OCR
-            "requirements.txt",              # Dependencies for CLI
-            "README_DLL.md"                  # DLL package documentation
+            # Production 32-bit DLL files (if built)
+            "dist/UniversalConverter32.dll",      # Actual production DLL
+            "cli.py",                             # Simple CLI without OCR
+            
+            # DLL source code and build tools
+            "dll_source/UniversalConverter32.cpp",
+            "dll_source/UniversalConverter32.def", 
+            "dll_source/build_windows.bat",
+            "dll_source/Makefile",
+            "build_dll.bat",
+            
+            # Production VB6/VFP9 integration modules
+            "VB6_UniversalConverter_Production.bas",
+            "VFP9_UniversalConverter_Production.prg",
+            
+            # Legacy integration files (for reference)
+            "VB6_UniversalConverter.bas",
+            "UniversalConverter_VFP9.prg",
+            "UniversalConverter32.dll.bat",       # Simulator for testing
+            
+            # Installation and testing scripts
+            "install.bat",
+            "requirements.txt",
+            
+            # Documentation
+            "README_DLL_Production.md",
+            "README_DLL.md",
+            "VFP9_VB6_INTEGRATION_GUIDE.md",
+            
+            # Configuration
+            "tesseract_config.py"
         ]
         
         dll_zip_path = self.dist_dir / "UniversalConverter32.dll.zip"

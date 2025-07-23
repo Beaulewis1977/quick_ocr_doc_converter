@@ -66,11 +66,13 @@ Examples:
         parser.add_argument('output', nargs='?',
                           help='Output file or directory')
         
-        # Format options
-        parser.add_argument('--format', '-f', 
+        # Format options (DLL-compatible)
+        parser.add_argument('--format', '-f', '-t',
                           choices=['txt', 'md', 'html', 'json'],
                           default='txt',
                           help='Output format (default: txt)')
+        parser.add_argument('-o', '--output-file',
+                          help='Output file (alternative to positional argument)')
         parser.add_argument('--formats', action='store_true',
                           help='Show supported input/output formats')
         
@@ -294,12 +296,14 @@ Examples:
             print("Error: No input specified")
             return 1
         
-        if not args.output:
+        # Handle output argument (support both positional and -o)
+        output = args.output or getattr(args, 'output_file', None)
+        if not output:
             print("Error: No output specified")
             return 1
         
         input_path = Path(args.input)
-        output_path = Path(args.output)
+        output_path = Path(output)
         
         if input_path.is_file():
             # Single file conversion

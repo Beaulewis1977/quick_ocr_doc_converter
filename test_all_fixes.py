@@ -123,7 +123,7 @@ def main():
         print("\n✅ ALL TESTS PASSED!")
         print("🎉 OCR system is ready to use!")
         print("\nYou can now run:")
-        print("  - python gui_ocr.py")
+        print("  - python universal_document_converter.py")
         print("  - python universal_document_converter_ocr.py")
         print("  - Drag and drop functionality should work")
         return 0

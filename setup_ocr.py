@@ -270,7 +270,7 @@ Linux Setup:
         print("  python convert_recursive.py /path/to/folder")
         print()
         print("GUI:")
-        print("  python gui_ocr.py")
+        print("  python universal_document_converter.py")
         print()
         print("For help:")
         print("  python cli.py --help")

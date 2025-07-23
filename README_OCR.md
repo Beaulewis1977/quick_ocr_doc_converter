@@ -101,7 +101,7 @@ python cli_ocr.py --setup
 
 Launch the GUI application:
 ```bash
-python gui_ocr.py
+python universal_document_converter.py
 ```
 
 GUI Features:

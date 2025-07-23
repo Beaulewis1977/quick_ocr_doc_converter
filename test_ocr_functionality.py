@@ -121,7 +121,7 @@ def main():
     if passed == total:
         print("\n✅ OCR functionality tests passed!")
         print("The 'str' object is not a mapping error should be fixed.")
-        print("\nTry running gui_ocr.py with your image files again.")
+        print("\nTry running universal_document_converter.py with your image files again.")
     else:
         print(f"\n❌ {total - passed} tests failed")
         print("There may still be issues to resolve.")
