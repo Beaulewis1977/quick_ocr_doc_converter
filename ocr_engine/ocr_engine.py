@@ -79,7 +79,18 @@ class OCREngine:
         
         # Cache directory for OCR results
         self.cache_dir = Path.home() / ".quick_document_convertor" / "ocr_cache"
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
+        except (OSError, PermissionError) as e:
+            self.logger.warning(f"Failed to create OCR cache directory {self.cache_dir}: {e}")
+            # Fallback to temporary directory
+            import tempfile
+            self.cache_dir = Path(tempfile.gettempdir()) / "ocr_cache"
+            try:
+                self.cache_dir.mkdir(parents=True, exist_ok=True)
+            except (OSError, PermissionError):
+                self.logger.error("Failed to create fallback cache directory, disabling cache")
+                self.cache_dir = None
         
         # Initialize OCR backends
         self._initialize_backends()

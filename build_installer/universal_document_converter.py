@@ -39,6 +39,9 @@ from threading import Lock
 import webbrowser
 import gc
 
+# Configuration management
+from config.defaults import config_manager
+
 # OCR and document processing imports
 try:
     from ocr_engine.ocr_engine import OCREngine
@@ -89,7 +92,7 @@ class UniversalDocumentConverter:
         # Caching system
         self.conversion_cache = {}
         self.cache_lock = Lock()
-        self.max_cache_size = 100 * 1024 * 1024  # 100MB cache limit
+        self.max_cache_size = config_manager.get('cache.max_size_mb', 100) * 1024 * 1024  # Configurable cache limit
         self.current_cache_size = 0
         
         # OCR and conversion engines
@@ -2148,7 +2151,11 @@ MESSAGEBOX(TRANSFORM(lnConverted) + " files converted")
         """Open VB6/VFP9 integration guide"""
         guide_path = Path(__file__).parent / "VFP9_VB6_INTEGRATION_GUIDE.md"
         if guide_path.exists():
-            webbrowser.open(f"file://{guide_path}")
+            try:
+                webbrowser.open(f"file://{guide_path}")
+            except Exception as e:
+                logging.error(f"Failed to open integration guide: {e}")
+                messagebox.showerror("Error", f"Failed to open integration guide: {e}")
         else:
             messagebox.showwarning("Guide Not Found", "Integration guide not found in current directory")
     
@@ -2194,7 +2201,11 @@ MESSAGEBOX(TRANSFORM(lnConverted) + " files converted")
         """Open configuration folder"""
         config_dir = Path.home() / ".universal_converter"
         if config_dir.exists():
-            webbrowser.open(f"file://{config_dir}")
+            try:
+                webbrowser.open(f"file://{config_dir}")
+            except Exception as e:
+                logging.error(f"Failed to open configuration folder: {e}")
+                messagebox.showerror("Error", f"Failed to open configuration folder: {e}")
         else:
             messagebox.showwarning("Folder Not Found", "Configuration folder does not exist yet")
     
@@ -2311,7 +2322,7 @@ Cache Information:
 - Cached Items: {cache_entries} files"""
             
             # Add memory optimization button if memory usage is high
-            if memory_info.rss > 500 * 1024 * 1024:  # > 500MB
+            if memory_info.rss > config_manager.get('performance.memory_threshold_mb', 500) * 1024 * 1024:  # Configurable memory threshold
                 info_text += "\n\n⚠️ High memory usage detected!"
             
         except ImportError:

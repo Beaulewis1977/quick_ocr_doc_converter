@@ -39,6 +39,9 @@ from threading import Lock
 import webbrowser
 import gc
 
+# Configuration management
+from config.defaults import config_manager
+
 # Thread pool management
 from thread_pool_manager import thread_manager
 
@@ -93,7 +96,7 @@ class UniversalDocumentConverter:
         self.conversion_cache = OrderedDict()  # LRU cache using OrderedDict
         self.cache_sizes = {}  # Track individual entry sizes
         self.cache_lock = Lock()
-        self.max_cache_size = 100 * 1024 * 1024  # 100MB cache limit
+        self.max_cache_size = config_manager.get('cache.max_size_mb', 100) * 1024 * 1024  # Configurable cache limit
         self.current_cache_size = 0
         
         # OCR and conversion engines
@@ -148,7 +151,11 @@ class UniversalDocumentConverter:
         
         # Create logs directory
         log_dir = Path.home() / ".universal_converter" / "logs"
-        log_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            log_dir.mkdir(parents=True, exist_ok=True)
+        except (OSError, PermissionError) as e:
+            print(f"Warning: Could not create log directory {log_dir}: {e}")
+            log_dir = Path.home()  # Fallback to home directory
         
         # Setup file handler
         log_file = log_dir / f"converter_{datetime.datetime.now().strftime('%Y%m%d')}.log"
@@ -796,7 +803,12 @@ class UniversalDocumentConverter:
             return
         
         output_dir = Path(self.output_dir.get())
-        output_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            output_dir.mkdir(parents=True, exist_ok=True)
+        except (OSError, PermissionError) as e:
+            logging.error(f"Failed to create output directory {output_dir}: {e}")
+            messagebox.showerror("Directory Error", f"Failed to create output directory: {e}")
+            return
         
         self.is_processing = True
         self.cancel_processing = False
@@ -1453,7 +1465,7 @@ Output directory: {self.output_dir.get()}"""
             # Parse command safely - split into args
             import shlex
             args = shlex.split(command)
-            result = subprocess.run(args, capture_output=True, text=True, timeout=30)
+            result = subprocess.run(args, capture_output=True, text=True, timeout=config_manager.get('performance.timeout_seconds', 30))
             
             self.cli_output.delete(1.0, tk.END)
             self.cli_output.insert(tk.END, f"Command: {command}\n")
@@ -1510,7 +1522,11 @@ Output directory: {self.output_dir.get()}"""
         """Open configuration folder"""
         config_dir = Path.home() / ".universal_converter"
         if config_dir.exists():
-            webbrowser.open(f"file://{config_dir}")
+            try:
+                webbrowser.open(f"file://{config_dir}")
+            except Exception as e:
+                logging.error(f"Failed to open configuration folder: {e}")
+                messagebox.showerror("Error", f"Failed to open configuration folder: {e}")
         else:
             messagebox.showwarning("Folder Not Found", "Configuration folder does not exist yet")
     
@@ -1649,7 +1665,7 @@ Processing Configuration:
 - Max Workers Setting: {self.worker_threads.get()} workers"""
             
             # Add memory optimization button if memory usage is high
-            if memory_info.rss > 500 * 1024 * 1024:  # > 500MB
+            if memory_info.rss > config_manager.get('performance.memory_threshold_mb', 500) * 1024 * 1024:  # Configurable memory threshold
                 info_text += "\n\n⚠️ High memory usage detected!"
             
         except ImportError:
