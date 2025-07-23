@@ -30,6 +30,7 @@ import logging
 import datetime
 import json
 import subprocess
+import shutil
 from typing import Optional, Union, Dict, Any, List
 import concurrent.futures
 import time
@@ -394,42 +395,115 @@ class UniversalDocumentConverter:
         self.api_stats.pack(fill=tk.BOTH, expand=True)
     
     def create_legacy_tab(self):
-        """Create VB6/VFP9 legacy integration tab"""
+        """Create comprehensive VB6/VFP9 DLL integration tab"""
         legacy_frame = ttk.Frame(self.notebook)
         self.notebook.add(legacy_frame, text="🏛 Legacy Integration")
         
-        # Integration status
-        status_frame = ttk.LabelFrame(legacy_frame, text="Integration Status", padding=10)
-        status_frame.pack(fill=tk.X, pady=(0, 10))
+        # Create scrollable frame for all content
+        canvas = tk.Canvas(legacy_frame)
+        scrollbar = ttk.Scrollbar(legacy_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
         
-        self.legacy_enabled = tk.BooleanVar(value=self.config.get('legacy', {}).get('vb6_vfp9_integration', True))
-        ttk.Checkbutton(status_frame, text="Enable VB6/VFP9 Integration", variable=self.legacy_enabled).pack(anchor=tk.W)
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
         
-        # CLI testing
-        cli_frame = ttk.LabelFrame(legacy_frame, text="CLI Interface Testing", padding=10)
-        cli_frame.pack(fill=tk.X, pady=(0, 10))
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
         
-        # Test command entry
-        ttk.Label(cli_frame, text="Test Command:").pack(anchor=tk.W)
-        self.cli_command = tk.StringVar(value='python cli.py --help')
-        ttk.Entry(cli_frame, textvariable=self.cli_command, width=60).pack(fill=tk.X, pady=(5, 10))
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
         
-        ttk.Button(cli_frame, text="🧪 Test CLI Command", command=self.test_cli_command).pack(anchor=tk.W)
+        # DLL Status and Builder
+        dll_status_frame = ttk.LabelFrame(scrollable_frame, text="32-bit DLL Status", padding=10)
+        dll_status_frame.pack(fill=tk.X, pady=(0, 10))
         
-        # CLI output
-        output_frame = ttk.LabelFrame(legacy_frame, text="CLI Output", padding=10)
+        # DLL file status
+        dll_status_inner = ttk.Frame(dll_status_frame)
+        dll_status_inner.pack(fill=tk.X)
+        
+        self.dll_status_label = ttk.Label(dll_status_inner, text="⚠️ DLL not built")
+        self.dll_status_label.pack(side=tk.LEFT)
+        
+        ttk.Button(dll_status_inner, text="🔄 Check DLL Status", command=self.check_dll_status).pack(side=tk.RIGHT)
+        
+        # DLL Builder
+        builder_frame = ttk.LabelFrame(scrollable_frame, text="DLL Builder", padding=10)
+        builder_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        ttk.Label(builder_frame, text="Build the production 32-bit DLL for VB6/VFP9 integration:").pack(anchor=tk.W, pady=(0, 5))
+        
+        builder_buttons = ttk.Frame(builder_frame)
+        builder_buttons.pack(fill=tk.X, pady=(5, 0))
+        
+        ttk.Button(builder_buttons, text="🔨 Build DLL (Windows)", command=self.build_dll).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(builder_buttons, text="📁 Open DLL Source", command=self.open_dll_source).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(builder_buttons, text="📋 View Build Requirements", command=self.show_build_requirements).pack(side=tk.LEFT)
+        
+        # VB6 Integration
+        vb6_frame = ttk.LabelFrame(scrollable_frame, text="VB6 Integration", padding=10)
+        vb6_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        vb6_buttons = ttk.Frame(vb6_frame)
+        vb6_buttons.pack(fill=tk.X)
+        
+        ttk.Button(vb6_buttons, text="📄 Generate VB6 Module", command=self.generate_vb6_module).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(vb6_buttons, text="🧪 Test VB6 Integration", command=self.test_vb6_integration).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(vb6_buttons, text="📖 VB6 Examples", command=self.show_vb6_examples).pack(side=tk.LEFT)
+        
+        # VFP9 Integration  
+        vfp9_frame = ttk.LabelFrame(scrollable_frame, text="VFP9 Integration", padding=10)
+        vfp9_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        vfp9_buttons = ttk.Frame(vfp9_frame)
+        vfp9_buttons.pack(fill=tk.X)
+        
+        ttk.Button(vfp9_buttons, text="📄 Generate VFP9 Class", command=self.generate_vfp9_class).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(vfp9_buttons, text="🧪 Test VFP9 Integration", command=self.test_vfp9_integration).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(vfp9_buttons, text="📖 VFP9 Examples", command=self.show_vfp9_examples).pack(side=tk.LEFT)
+        
+        # DLL Testing
+        testing_frame = ttk.LabelFrame(scrollable_frame, text="DLL Testing", padding=10)
+        testing_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        # Test file selection
+        test_file_frame = ttk.Frame(testing_frame)
+        test_file_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        ttk.Label(test_file_frame, text="Test File:").pack(side=tk.LEFT)
+        self.test_file_path = tk.StringVar()
+        ttk.Entry(test_file_frame, textvariable=self.test_file_path, width=40).pack(side=tk.LEFT, padx=(10, 5), fill=tk.X, expand=True)
+        ttk.Button(test_file_frame, text="📁 Browse", command=self.browse_test_file).pack(side=tk.RIGHT)
+        
+        # Test conversion
+        test_buttons = ttk.Frame(testing_frame)
+        test_buttons.pack(fill=tk.X, pady=(5, 0))
+        
+        ttk.Button(test_buttons, text="🧪 Test DLL Conversion", command=self.test_dll_conversion).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(test_buttons, text="🔍 Test DLL Functions", command=self.test_dll_functions).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(test_buttons, text="📊 Performance Test", command=self.performance_test_dll).pack(side=tk.LEFT)
+        
+        # Installation and Deployment
+        deploy_frame = ttk.LabelFrame(scrollable_frame, text="Installation & Deployment", padding=10)
+        deploy_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        deploy_buttons = ttk.Frame(deploy_frame)
+        deploy_buttons.pack(fill=tk.X)
+        
+        ttk.Button(deploy_buttons, text="📦 Create Distribution Package", command=self.create_dll_package).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(deploy_buttons, text="⚙️ Install DLL System-wide", command=self.install_dll_system).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(deploy_buttons, text="📋 Copy Integration Files", command=self.copy_integration_files).pack(side=tk.LEFT)
+        
+        # Output and Logs
+        output_frame = ttk.LabelFrame(scrollable_frame, text="Output & Logs", padding=10)
         output_frame.pack(fill=tk.BOTH, expand=True)
         
-        self.cli_output = scrolledtext.ScrolledText(output_frame, height=15, font=('Consolas', 9))
-        self.cli_output.pack(fill=tk.BOTH, expand=True)
+        self.legacy_output = scrolledtext.ScrolledText(output_frame, height=12, font=('Consolas', 9))
+        self.legacy_output.pack(fill=tk.BOTH, expand=True)
         
-        # Integration examples
-        examples_frame = ttk.Frame(legacy_frame)
-        examples_frame.pack(fill=tk.X, pady=(10, 0))
-        
-        ttk.Button(examples_frame, text="📖 VB6 Examples", command=self.show_vb6_examples).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(examples_frame, text="📖 VFP9 Examples", command=self.show_vfp9_examples).pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(examples_frame, text="📁 Open Integration Guide", command=self.open_integration_guide).pack(side=tk.LEFT)
+        # Initialize DLL status check
+        self.check_dll_status()
     
     def create_settings_tab(self):
         """Create comprehensive settings tab"""
@@ -861,59 +935,654 @@ class UniversalDocumentConverter:
             self.cli_output.delete(1.0, tk.END)
             self.cli_output.insert(tk.END, f"Error running command: {e}")
     
-    def show_vb6_examples(self):
-        """Show VB6 integration examples"""
-        examples = """
-VB6 Integration Examples:
+    # === DLL INTEGRATION METHODS ===
+    
+    def check_dll_status(self):
+        """Check the status of the DLL build and installation"""
+        self.legacy_log("Checking DLL status...")
+        
+        # Check for built DLL
+        dll_paths = [
+            Path("dist/UniversalConverter32.dll"),
+            Path("dll_source/UniversalConverter32.dll"),
+            Path("UniversalConverter32.dll")
+        ]
+        
+        dll_found = False
+        dll_path = None
+        
+        for path in dll_paths:
+            if path.exists():
+                dll_found = True
+                dll_path = path
+                break
+        
+        if dll_found:
+            self.dll_status_label.config(text=f"✅ DLL found: {dll_path}")
+            self.legacy_log(f"✅ DLL found at: {dll_path}")
+            
+            # Check DLL file size and modification time
+            stat = dll_path.stat()
+            size_kb = stat.st_size / 1024
+            mod_time = datetime.datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+            self.legacy_log(f"   Size: {size_kb:.1f} KB, Modified: {mod_time}")
+        else:
+            self.dll_status_label.config(text="⚠️ DLL not built")
+            self.legacy_log("⚠️ DLL not found - use 'Build DLL' to create it")
+        
+        # Check for source files
+        source_files = [
+            "dll_source/UniversalConverter32.cpp",
+            "dll_source/UniversalConverter32.def",
+            "build_dll.bat"
+        ]
+        
+        for file in source_files:
+            if Path(file).exists():
+                self.legacy_log(f"✅ Source: {file}")
+            else:
+                self.legacy_log(f"❌ Missing: {file}")
+    
+    def build_dll(self):
+        """Build the 32-bit DLL using the build script"""
+        self.legacy_log("Building UniversalConverter32.dll...")
+        
+        try:
+            # Check if on Windows
+            import platform
+            if platform.system() != "Windows":
+                self.legacy_log("❌ DLL building requires Windows")
+                self.legacy_log("   Transfer files to Windows system and run build_dll.bat")
+                return
+            
+            # Check for build script
+            build_script = Path("build_dll.bat")
+            if not build_script.exists():
+                self.legacy_log("❌ build_dll.bat not found")
+                return
+            
+            # Run build script in a separate thread
+            def build_thread():
+                try:
+                    import subprocess
+                    process = subprocess.Popen(
+                        ["build_dll.bat"],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                        text=True,
+                        universal_newlines=True
+                    )
+                    
+                    # Read output line by line
+                    for line in process.stdout:
+                        self.legacy_log(line.strip())
+                    
+                    process.wait()
+                    
+                    if process.returncode == 0:
+                        self.legacy_log("✅ DLL build completed successfully!")
+                        self.check_dll_status()  # Refresh status
+                    else:
+                        self.legacy_log(f"❌ DLL build failed with code {process.returncode}")
+                        
+                except Exception as e:
+                    self.legacy_log(f"❌ Build error: {str(e)}")
+            
+            # Start build in background
+            import threading
+            threading.Thread(target=build_thread, daemon=True).start()
+            
+        except Exception as e:
+            self.legacy_log(f"❌ Error starting build: {str(e)}")
+    
+    def open_dll_source(self):
+        """Open the DLL source directory"""
+        try:
+            source_dir = Path("dll_source")
+            if source_dir.exists():
+                import subprocess
+                import platform
+                
+                if platform.system() == "Windows":
+                    subprocess.Popen(f'explorer "{source_dir.absolute()}"')
+                elif platform.system() == "Darwin":  # macOS
+                    subprocess.Popen(["open", str(source_dir.absolute())])
+                else:  # Linux
+                    subprocess.Popen(["xdg-open", str(source_dir.absolute())])
+                
+                self.legacy_log(f"📁 Opened source directory: {source_dir.absolute()}")
+            else:
+                self.legacy_log("❌ DLL source directory not found")
+        except Exception as e:
+            self.legacy_log(f"❌ Error opening directory: {str(e)}")
+    
+    def show_build_requirements(self):
+        """Show DLL build requirements"""
+        requirements = """
+DLL Build Requirements:
 
-1. Simple conversion:
-Shell "python cli.py input.docx -o output.txt", vbNormalFocus
+SYSTEM REQUIREMENTS:
+• Windows operating system
+• 32-bit or 64-bit architecture
 
-2. With error checking:
-Dim result As Long
-result = Shell("python cli.py input.pdf -o output.md --quiet", vbHide)
-If result = 0 Then
-    MsgBox "Conversion successful"
-Else
-    MsgBox "Conversion failed"
-End If
+COMPILER OPTIONS (choose one):
+1. Microsoft Visual Studio Build Tools
+   - Download from: https://visualstudio.microsoft.com/downloads/
+   - Install C++ build tools
+   
+2. MinGW-w64 Compiler
+   - Download from: https://www.mingw-w64.org/
+   - Or install via MSYS2: pacman -S mingw-w64-i686-gcc
 
-3. OCR processing:
-Shell "python cli.py image.jpg -o text.txt --ocr", vbNormalFocus
+BUILD PROCESS:
+1. Open Command Prompt as Administrator
+2. Navigate to the project directory
+3. Run: build_dll.bat
+4. Result: UniversalConverter32.dll
+
+VERIFICATION:
+• DLL should be ~50-200 KB in size
+• Test with: test_dll_integration.py
+• Import into VB6/VFP9 projects
+
+DEPENDENCIES:
+• Python 3.7+ must be installed
+• cli.py must be in same directory as DLL
+• requirements.txt packages must be installed
 """
         
-        self.cli_output.delete(1.0, tk.END)
-        self.cli_output.insert(tk.END, examples)
+        self.legacy_log(requirements)
+    
+    def generate_vb6_module(self):
+        """Generate customized VB6 integration module"""
+        self.legacy_log("Generating VB6 integration module...")
+        
+        try:
+            # Read the production VB6 module
+            vb6_source = Path("VB6_UniversalConverter_Production.bas")
+            if not vb6_source.exists():
+                self.legacy_log("❌ VB6 production module not found")
+                return
+            
+            content = vb6_source.read_text()
+            
+            # Save to user's desktop or current directory
+            import os
+            desktop = Path.home() / "Desktop"
+            if desktop.exists():
+                output_path = desktop / "UniversalConverter_VB6.bas"
+            else:
+                output_path = Path("UniversalConverter_VB6.bas")
+            
+            output_path.write_text(content)
+            self.legacy_log(f"✅ VB6 module generated: {output_path}")
+            self.legacy_log("   Add this .bas file to your VB6 project")
+            
+        except Exception as e:
+            self.legacy_log(f"❌ Error generating VB6 module: {str(e)}")
+    
+    def generate_vfp9_class(self):
+        """Generate customized VFP9 integration class"""
+        self.legacy_log("Generating VFP9 integration class...")
+        
+        try:
+            # Read the production VFP9 class
+            vfp9_source = Path("VFP9_UniversalConverter_Production.prg")
+            if not vfp9_source.exists():
+                self.legacy_log("❌ VFP9 production class not found")
+                return
+            
+            content = vfp9_source.read_text()
+            
+            # Save to user's desktop or current directory
+            import os
+            desktop = Path.home() / "Desktop"
+            if desktop.exists():
+                output_path = desktop / "UniversalConverter_VFP9.prg"
+            else:
+                output_path = Path("UniversalConverter_VFP9.prg")
+            
+            output_path.write_text(content)
+            self.legacy_log(f"✅ VFP9 class generated: {output_path}")
+            self.legacy_log("   Include this .prg file in your VFP9 project")
+            
+        except Exception as e:
+            self.legacy_log(f"❌ Error generating VFP9 class: {str(e)}")
+    
+    def test_vb6_integration(self):
+        """Test VB6 DLL integration"""
+        self.legacy_log("Testing VB6 DLL integration...")
+        
+        vb6_test = '''
+' VB6 Test Code for UniversalConverter32.dll
+Private Declare Function ConvertDocument Lib "UniversalConverter32.dll" _
+    (ByVal inputFile As String, ByVal outputFile As String, _
+     ByVal inputFormat As String, ByVal outputFormat As String) As Long
+
+Private Declare Function TestConnection Lib "UniversalConverter32.dll" () As Long
+
+Sub TestDLL()
+    Dim result As Long
+    
+    ' Test if DLL is available
+    result = TestConnection()
+    If result = 1 Then
+        MsgBox "✅ DLL is available and working!"
+    Else
+        MsgBox "❌ DLL test failed"
+    End If
+    
+    ' Test conversion (modify paths as needed)
+    result = ConvertDocument("C:\\temp\\test.txt", "C:\\temp\\test.md", "txt", "md")
+    If result = 1 Then
+        MsgBox "✅ Conversion successful!"
+    Else
+        MsgBox "❌ Conversion failed"
+    End If
+End Sub
+'''
+        
+        self.legacy_log("VB6 Test Code:")
+        self.legacy_log(vb6_test)
+        self.legacy_log("Copy this code to a VB6 form and run TestDLL()")
+    
+    def test_vfp9_integration(self):
+        """Test VFP9 DLL integration"""
+        self.legacy_log("Testing VFP9 DLL integration...")
+        
+        vfp9_test = '''
+*!* VFP9 Test Code for UniversalConverter32.dll
+DECLARE INTEGER ConvertDocument IN UniversalConverter32.dll ;
+    STRING inputFile, STRING outputFile, ;
+    STRING inputFormat, STRING outputFormat
+
+DECLARE INTEGER TestConnection IN UniversalConverter32.dll
+
+PROCEDURE TestDLL()
+    LOCAL lnResult
+    
+    *-- Test if DLL is available
+    lnResult = TestConnection()
+    IF lnResult = 1
+        MESSAGEBOX("✅ DLL is available and working!")
+    ELSE
+        MESSAGEBOX("❌ DLL test failed")
+    ENDIF
+    
+    *-- Test conversion (modify paths as needed)
+    lnResult = ConvertDocument("C:\\temp\\test.txt", "C:\\temp\\test.md", "txt", "md")
+    IF lnResult = 1
+        MESSAGEBOX("✅ Conversion successful!")
+    ELSE
+        MESSAGEBOX("❌ Conversion failed")
+    ENDIF
+ENDPROC
+'''
+        
+        self.legacy_log("VFP9 Test Code:")
+        self.legacy_log(vfp9_test)
+        self.legacy_log("Copy this code to a VFP9 program and run TestDLL")
+    
+    def browse_test_file(self):
+        """Browse for a test file"""
+        from tkinter import filedialog
+        
+        filename = filedialog.askopenfilename(
+            title="Select Test File",
+            filetypes=[
+                ("All Supported", "*.pdf;*.docx;*.txt;*.html;*.md;*.rtf"),
+                ("PDF files", "*.pdf"),
+                ("Word documents", "*.docx"),
+                ("Text files", "*.txt"),
+                ("HTML files", "*.html"),
+                ("Markdown files", "*.md"),
+                ("RTF files", "*.rtf"),
+                ("All files", "*.*")
+            ]
+        )
+        
+        if filename:
+            self.test_file_path.set(filename)
+            self.legacy_log(f"📁 Selected test file: {filename}")
+    
+    def test_dll_conversion(self):
+        """Test DLL conversion functionality"""
+        test_file = self.test_file_path.get()
+        if not test_file:
+            self.legacy_log("❌ No test file selected")
+            return
+        
+        if not Path(test_file).exists():
+            self.legacy_log("❌ Test file does not exist")
+            return
+        
+        self.legacy_log(f"🧪 Testing DLL conversion: {test_file}")
+        
+        try:
+            # Test CLI backend (which the DLL uses)
+            import subprocess
+            import tempfile
+            
+            with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as tmp:
+                output_file = tmp.name
+            
+            cmd = [
+                sys.executable, "cli.py", 
+                test_file, 
+                "-o", output_file, 
+                "-t", "txt"
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            
+            if result.returncode == 0:
+                if Path(output_file).exists():
+                    # Read first few lines of output
+                    content = Path(output_file).read_text()[:200]
+                    self.legacy_log("✅ Conversion successful!")
+                    self.legacy_log(f"   Output preview: {content}...")
+                    
+                    # Clean up
+                    Path(output_file).unlink()
+                else:
+                    self.legacy_log("❌ Conversion completed but no output file")
+            else:
+                self.legacy_log(f"❌ Conversion failed: {result.stderr}")
+                
+        except Exception as e:
+            self.legacy_log(f"❌ Test error: {str(e)}")
+    
+    def test_dll_functions(self):
+        """Test individual DLL functions"""
+        self.legacy_log("🔍 Testing DLL functions...")
+        
+        # Test the CLI backend that powers the DLL
+        try:
+            import subprocess
+            
+            # Test 1: CLI help
+            result = subprocess.run([sys.executable, "cli.py", "--help"], 
+                                  capture_output=True, text=True, timeout=10)
+            
+            if result.returncode == 0:
+                self.legacy_log("✅ CLI help function working")
+            else:
+                self.legacy_log("❌ CLI help function failed")
+            
+            # Test 2: Format support
+            result = subprocess.run([sys.executable, "cli.py", "--formats"], 
+                                  capture_output=True, text=True, timeout=10)
+            
+            if result.returncode == 0:
+                self.legacy_log("✅ Format detection working")
+                self.legacy_log(f"   Supported formats: {result.stdout.strip()}")
+            else:
+                self.legacy_log("❌ Format detection failed")
+            
+            # Test 3: Version
+            result = subprocess.run([sys.executable, "cli.py", "--version"], 
+                                  capture_output=True, text=True, timeout=10)
+            
+            if result.returncode == 0:
+                self.legacy_log("✅ Version function working")
+                self.legacy_log(f"   Version: {result.stdout.strip()}")
+            else:
+                self.legacy_log("❌ Version function failed")
+            
+        except Exception as e:
+            self.legacy_log(f"❌ Function test error: {str(e)}")
+    
+    def performance_test_dll(self):
+        """Run performance test on DLL"""
+        self.legacy_log("📊 Running performance test...")
+        
+        test_file = self.test_file_path.get()
+        if not test_file or not Path(test_file).exists():
+            self.legacy_log("❌ Need a valid test file for performance testing")
+            return
+        
+        try:
+            import subprocess
+            import tempfile
+            import time
+            
+            # Run multiple conversions and time them
+            times = []
+            for i in range(3):
+                with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as tmp:
+                    output_file = tmp.name
+                
+                start_time = time.time()
+                
+                cmd = [sys.executable, "cli.py", test_file, "-o", output_file, "-t", "txt", "--quiet"]
+                result = subprocess.run(cmd, capture_output=True, timeout=30)
+                
+                end_time = time.time()
+                duration = end_time - start_time
+                times.append(duration)
+                
+                if result.returncode == 0:
+                    self.legacy_log(f"✅ Test {i+1}: {duration:.2f} seconds")
+                    Path(output_file).unlink()  # Clean up
+                else:
+                    self.legacy_log(f"❌ Test {i+1}: Failed")
+            
+            if times:
+                avg_time = sum(times) / len(times)
+                self.legacy_log(f"📊 Average conversion time: {avg_time:.2f} seconds")
+                self.legacy_log(f"📊 Fastest: {min(times):.2f}s, Slowest: {max(times):.2f}s")
+            
+        except Exception as e:
+            self.legacy_log(f"❌ Performance test error: {str(e)}")
+    
+    def create_dll_package(self):
+        """Create distribution package for DLL"""
+        self.legacy_log("📦 Creating DLL distribution package...")
+        
+        try:
+            # Use the existing package builder
+            import subprocess
+            
+            result = subprocess.run([sys.executable, "build_ocr_packages.py"], 
+                                  capture_output=True, text=True, timeout=60)
+            
+            if result.returncode == 0:
+                self.legacy_log("✅ Distribution package created successfully!")
+                self.legacy_log(result.stdout)
+                
+                # Check if package was created
+                package_path = Path("dist/UniversalConverter32.dll.zip")
+                if package_path.exists():
+                    size_kb = package_path.stat().st_size / 1024
+                    self.legacy_log(f"📦 Package: {package_path} ({size_kb:.1f} KB)")
+            else:
+                self.legacy_log("❌ Package creation failed")
+                self.legacy_log(result.stderr)
+                
+        except Exception as e:
+            self.legacy_log(f"❌ Package creation error: {str(e)}")
+    
+    def install_dll_system(self):
+        """Install DLL system-wide"""
+        self.legacy_log("⚙️ Installing DLL system-wide...")
+        
+        try:
+            dll_path = None
+            for path in [Path("dist/UniversalConverter32.dll"), Path("UniversalConverter32.dll")]:
+                if path.exists():
+                    dll_path = path
+                    break
+            
+            if not dll_path:
+                self.legacy_log("❌ DLL not found - build it first")
+                return
+            
+            import platform
+            import shutil
+            
+            if platform.system() != "Windows":
+                self.legacy_log("❌ System-wide installation requires Windows")
+                return
+            
+            # Copy DLL to System32 (requires admin rights)
+            system32 = Path(os.environ["WINDIR"]) / "System32"
+            target = system32 / "UniversalConverter32.dll"
+            
+            try:
+                shutil.copy2(dll_path, target)
+                self.legacy_log(f"✅ DLL installed to: {target}")
+                self.legacy_log("   DLL is now available system-wide")
+            except PermissionError:
+                self.legacy_log("❌ Installation failed - run as Administrator")
+            except Exception as e:
+                self.legacy_log(f"❌ Installation error: {str(e)}")
+                
+        except Exception as e:
+            self.legacy_log(f"❌ System installation error: {str(e)}")
+    
+    def copy_integration_files(self):
+        """Copy integration files to desktop"""
+        self.legacy_log("📋 Copying integration files...")
+        
+        try:
+            desktop = Path.home() / "Desktop"
+            if not desktop.exists():
+                desktop = Path(".")
+            
+            files_to_copy = [
+                ("VB6_UniversalConverter_Production.bas", "VB6 Integration Module"),
+                ("VFP9_UniversalConverter_Production.prg", "VFP9 Integration Class"),
+                ("cli.py", "CLI Backend"),
+                ("requirements.txt", "Python Dependencies"),
+                ("README_DLL_Production.md", "Documentation")
+            ]
+            
+            copied = 0
+            for filename, description in files_to_copy:
+                source = Path(filename)
+                if source.exists():
+                    target = desktop / filename
+                    shutil.copy2(source, target)
+                    self.legacy_log(f"✅ {description}: {target}")
+                    copied += 1
+                else:
+                    self.legacy_log(f"❌ Missing: {filename}")
+            
+            self.legacy_log(f"📋 Copied {copied} files to {desktop}")
+            
+        except Exception as e:
+            self.legacy_log(f"❌ Copy error: {str(e)}")
+    
+    def legacy_log(self, message):
+        """Log message to legacy output area"""
+        if hasattr(self, 'legacy_output'):
+            timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+            self.legacy_output.insert(tk.END, f"[{timestamp}] {message}\n")
+            self.legacy_output.see(tk.END)
+        else:
+            print(f"[LEGACY] {message}")
+    
+    def show_vb6_examples(self):
+        """Show real VB6 DLL integration examples"""
+        examples = """
+REAL VB6 DLL INTEGRATION EXAMPLES:
+
+1. BASIC DLL USAGE:
+' Declare the DLL functions
+Private Declare Function ConvertDocument Lib "UniversalConverter32.dll" _
+    (ByVal inputFile As String, ByVal outputFile As String, _
+     ByVal inputFormat As String, ByVal outputFormat As String) As Long
+
+Private Declare Function TestConnection Lib "UniversalConverter32.dll" () As Long
+
+' Test if DLL is available
+Private Sub cmdTest_Click()
+    Dim result As Long
+    result = TestConnection()
+    If result = 1 Then
+        MsgBox "DLL is working!"
+    Else
+        MsgBox "DLL not available"
+    End If
+End Sub
+
+2. DOCUMENT CONVERSION:
+Private Sub cmdConvert_Click()
+    Dim result As Long
+    result = ConvertDocument("C:\\docs\\file.pdf", "C:\\docs\\file.txt", "pdf", "txt")
+    If result = 1 Then
+        MsgBox "Conversion successful!"
+    Else
+        MsgBox "Conversion failed!"
+    End If
+End Sub
+
+3. USING THE PRODUCTION MODULE:
+' Add VB6_UniversalConverter_Production.bas to your project
+Private Sub cmdAdvanced_Click()
+    If InitializeConverter() Then
+        If PDFToText("C:\\temp\\document.pdf", "C:\\temp\\output.txt") Then
+            MsgBox "PDF converted to text successfully!"
+        Else
+            MsgBox "Error: " & GetLastErrorMessage()
+        End If
+    End If
+End Sub
+"""
+        
+        self.legacy_log(examples)
     
     def show_vfp9_examples(self):
-        """Show VFP9 integration examples"""
+        """Show real VFP9 DLL integration examples"""
         examples = """
-VFP9 Integration Examples:
+REAL VFP9 DLL INTEGRATION EXAMPLES:
 
-1. Simple conversion:
-RUN /N python cli.py input.docx -o output.txt
+1. BASIC DLL USAGE:
+*-- Declare the DLL functions
+DECLARE INTEGER ConvertDocument IN UniversalConverter32.dll ;
+    STRING inputFile, STRING outputFile, ;
+    STRING inputFormat, STRING outputFormat
 
-2. Function-based approach:
-FUNCTION ConvertDocument(tcInput, tcOutput)
-    LOCAL lcCommand
-    lcCommand = 'python cli.py "' + tcInput + '" -o "' + tcOutput + '"'
-    RUN /N (lcCommand)
-ENDFUNC
+DECLARE INTEGER TestConnection IN UniversalConverter32.dll
 
-3. OCR with error handling:
-LOCAL lcCommand, lnResult
-lcCommand = 'python cli.py image.png -o text.txt --ocr --quiet'
-lnResult = 0
-RUN /N7 (lcCommand) TO lnResult
-IF lnResult = 0
-    MESSAGEBOX("OCR completed successfully")
+*-- Test if DLL is available
+lnResult = TestConnection()
+IF lnResult = 1
+    MESSAGEBOX("DLL is working!")
 ELSE
-    MESSAGEBOX("OCR failed")
+    MESSAGEBOX("DLL not available")
 ENDIF
+
+2. DOCUMENT CONVERSION:
+lnResult = ConvertDocument("C:\\docs\\file.pdf", "C:\\docs\\file.txt", "pdf", "txt")
+IF lnResult = 1
+    MESSAGEBOX("Conversion successful!")
+ELSE
+    MESSAGEBOX("Conversion failed!")
+ENDIF
+
+3. USING THE PRODUCTION CLASS:
+*-- Include VFP9_UniversalConverter_Production.prg in your project
+loConverter = CREATEOBJECT("UniversalConverter")
+
+IF loConverter.lInitialized
+    llSuccess = loConverter.PDFToText("C:\\temp\\document.pdf", "C:\\temp\\output.txt")
+    IF llSuccess
+        MESSAGEBOX("PDF converted successfully!")
+    ELSE
+        MESSAGEBOX("Error: " + loConverter.cLastError)
+    ENDIF
+ELSE
+    MESSAGEBOX("Converter not available")
+ENDIF
+
+4. BATCH CONVERSION:
+loConverter = CREATEOBJECT("UniversalConverter")
+lnConverted = loConverter.ConvertDirectory("C:\\PDFs", "C:\\Text", "pdf", "txt")
+MESSAGEBOX(TRANSFORM(lnConverted) + " files converted")
 """
         
-        self.cli_output.delete(1.0, tk.END)
-        self.cli_output.insert(tk.END, examples)
+        self.legacy_log(examples)
     
     def open_integration_guide(self):
         """Open VB6/VFP9 integration guide"""
