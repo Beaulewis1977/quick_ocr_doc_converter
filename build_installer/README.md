@@ -267,22 +267,22 @@ For advanced users and automation:
 
 ```bash
 # Single file conversion
-python cli.py document.docx -o output.md
+python dll_builder_cli.py document.docx -o output.md
 
 # Batch processing
-python cli.py *.txt -o output_dir/ --workers 8
+python dll_builder_cli.py *.txt -o output_dir/ --workers 8
 
 # Directory conversion
-python cli.py input_dir/ -o output_dir/ --recursive
+python dll_builder_cli.py input_dir/ -o output_dir/ --recursive
 
 # Auto-detect input format
-python cli.py file.pdf -f auto -t html --workers 4
+python dll_builder_cli.py file.pdf -f auto -t html --workers 4
 
 # List supported formats
-python cli.py --list-formats
+python dll_builder_cli.py --list-formats
 
 # Batch conversion from JSON config
-python cli.py --batch config.json
+python dll_builder_cli.py --batch config.json
 ```
 
 ### 🔧 **Python API**

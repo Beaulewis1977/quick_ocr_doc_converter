@@ -155,8 +155,8 @@ Verification:
 • Import into VB6/VFP9 projects
 
 Notes:
-• Requires Python CLI (cli.py) in same directory
-• cli.py must be in same directory as DLL
+• Requires Python CLI (document_converter_cli.py) in same directory
+• document_converter_cli.py must be in same directory as DLL
 """
         return requirements
     

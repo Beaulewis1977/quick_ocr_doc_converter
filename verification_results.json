@@ -42,11 +42,11 @@
       "success": true,
       "message": "Valid"
     },
-    "./cli.py": {
+    "./build_ocr_packages.py": {
       "success": true,
       "message": "Valid"
     },
-    "./cli_ocr.py": {
+    "./check_syntax_errors.py": {
       "success": true,
       "message": "Valid"
     },
@@ -98,10 +98,6 @@
       "success": true,
       "message": "Valid"
     },
-    "./fix_tesseract_config.py": {
-      "success": true,
-      "message": "Valid"
-    },
     "./gui_ocr.py": {
       "success": true,
       "message": "Valid"
@@ -118,7 +114,7 @@
       "success": true,
       "message": "Valid"
     },
-    "./main_app.py": {
+    "./launch_ocr.py": {
       "success": true,
       "message": "Valid"
     },
@@ -138,7 +134,19 @@
       "success": true,
       "message": "Valid"
     },
+    "./run_benchmarks.py": {
+      "success": true,
+      "message": "Valid"
+    },
     "./run_converter.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./security_scan_dependencies.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./setup.py": {
       "success": true,
       "message": "Valid"
     },
@@ -158,11 +166,19 @@
       "success": true,
       "message": "Valid"
     },
+    "./syntax_check.py": {
+      "success": true,
+      "message": "Valid"
+    },
     "./tesseract_config.py": {
       "success": true,
       "message": "Valid"
     },
     "./test_all_fixes.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./test_basic_imports.py": {
       "success": true,
       "message": "Valid"
     },
@@ -174,7 +190,19 @@
       "success": true,
       "message": "Valid"
     },
+    "./test_dll_integration.py": {
+      "success": true,
+      "message": "Valid"
+    },
     "./test_gui.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./test_gui_dll_integration.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./test_main_import.py": {
       "success": true,
       "message": "Valid"
     },
@@ -194,19 +222,31 @@
       "success": true,
       "message": "Valid"
     },
+    "./test_thread_pool_manager.py": {
+      "success": true,
+      "message": "Valid"
+    },
     "./test_unified_app.py": {
       "success": true,
       "message": "Valid"
     },
+    "./thread_pool_manager.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./thread_pool_manager_full.py": {
+      "success": true,
+      "message": "Valid"
+    },
     "./universal_document_converter.py": {
       "success": true,
       "message": "Valid"
     },
-    "./universal_document_converter_enhanced.py": {
+    "./update_dependencies_secure.py": {
       "success": true,
       "message": "Valid"
     },
-    "./universal_document_converter.py": {
+    "./update_launchers.py": {
       "success": true,
       "message": "Valid"
     },
@@ -218,6 +258,22 @@
       "success": true,
       "message": "Valid"
     },
+    "./verify_fixes.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./verify_package_updates.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./verify_setup.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./dll_builder_cli.py": {
+      "success": true,
+      "message": "Valid"
+    },
     "./build_installer/tray_app.py": {
       "success": true,
       "message": "Valid"
@@ -226,19 +282,15 @@
       "success": true,
       "message": "Valid"
     },
-    "./build_tools/build_linux.py": {
+    "./config/__init__.py": {
       "success": true,
       "message": "Valid"
     },
-    "./build_tools/build_macos.py": {
+    "./config/defaults.py": {
       "success": true,
       "message": "Valid"
     },
-    "./build_tools/build_windows.py": {
-      "success": true,
-      "message": "Valid"
-    },
-    "./build_tools/__init__.py": {
+    "./cross_platform/__init__.py": {
       "success": true,
       "message": "Valid"
     },
@@ -254,7 +306,35 @@
       "success": true,
       "message": "Valid"
     },
-    "./cross_platform/__init__.py": {
+    "./document_converter/main.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./legacy_dll_builder/document_converter_cli.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./legacy_dll_builder/dll_builder_advanced_cli.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./legacy_dll_builder/src/cli.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./legacy_dll_builder/src/commands/build.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./legacy_dll_builder/src/commands/integration.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./legacy_dll_builder/src/commands/testing.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./ocr_engine/__init__.py": {
       "success": true,
       "message": "Valid"
     },
@@ -286,11 +366,35 @@
       "success": true,
       "message": "Valid"
     },
+    "./ocr_engine/secure_config.py": {
+      "success": true,
+      "message": "Valid"
+    },
     "./ocr_engine/security.py": {
       "success": true,
       "message": "Valid"
     },
-    "./ocr_engine/__init__.py": {
+    "./tests/test_base.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./tests/test_fixtures.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./tests/test_integration_legacy.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./tests/test_integration_main.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./tests/test_performance.py": {
+      "success": true,
+      "message": "Valid"
+    },
+    "./tests/test_security.py": {
       "success": true,
       "message": "Valid"
     }

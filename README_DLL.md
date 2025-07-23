@@ -8,7 +8,7 @@ This package provides a simple document converter specifically designed for VB6 
 
 ### What's Included
 
-- **cli.py** - Simple command-line interface for document conversion
+- **dll_builder_cli.py** - Simple command-line interface for document conversion
 - **vb6_integration_simple.vb** - VB6 class for easy integration
 - **vfp9_integration_simple.prg** - Visual FoxPro 9 class for easy integration
 - **requirements.txt** - Python dependencies
@@ -52,19 +52,19 @@ This package provides a simple document converter specifically designed for VB6 
 
 ```bash
 # Convert PDF to text
-python cli.py document.pdf output.txt
+python dll_builder_cli.py document.pdf output.txt
 
 # Convert DOCX to Markdown
-python cli.py report.docx report.md --format md
+python dll_builder_cli.py report.docx report.md --format md
 
 # Convert directory recursively
-python cli.py input_folder/ output_folder/ --recursive --format txt
+python dll_builder_cli.py input_folder/ output_folder/ --recursive --format txt
 
 # Show supported formats
-python cli.py --formats
+python dll_builder_cli.py --formats
 
 # Get help
-python cli.py --help
+python dll_builder_cli.py --help
 ```
 
 #### VB6 Integration

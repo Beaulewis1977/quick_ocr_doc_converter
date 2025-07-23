@@ -36,7 +36,7 @@ def verify_fixes():
     
     # 4. Check PyMuPDF context managers
     print("\n4. Checking PyMuPDF context managers...")
-    files_to_check = ['cli.py', 'gui_ocr.py', 'ocr_engine.py']
+    files_to_check = ['dll_builder_cli.py', 'gui_ocr.py', 'ocr_engine.py']
     for file in files_to_check:
         if Path(file).exists():
             with open(file, 'r') as f:

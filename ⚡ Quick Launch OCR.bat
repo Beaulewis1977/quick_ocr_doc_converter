@@ -1,4 +1,4 @@
 @echo off
 cd /d "%~dp0"
-python launch_ocr.py
+python3 launch_ocr.py
 pause

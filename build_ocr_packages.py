@@ -29,8 +29,8 @@ class OCRPackageBuilder:
         
         dll_files = [
             # Legacy DLL builder files
-            "legacy_dll_builder/cli.py",          # DLL builder CLI
-            "legacy_dll_builder/cli_new.py",      # Enhanced Click CLI
+            "legacy_dll_builder/document_converter_cli.py",          # DLL builder CLI
+            "legacy_dll_builder/dll_builder_advanced_cli.py",      # Enhanced Click CLI
             "legacy_dll_builder/requirements.txt",
             "legacy_dll_builder/config.json.example",
             "legacy_dll_builder/README.md",
@@ -109,7 +109,7 @@ class OCRPackageBuilder:
             "⚡ Quick Launch OCR.bat",
             
             # Simple CLI for VB6/VFP9 DLL system (without OCR)
-            "cli.py",
+            "dll_builder_cli.py",
             
             # VB6/VFP9 integration files
             "vb6_integration_simple.vb",
