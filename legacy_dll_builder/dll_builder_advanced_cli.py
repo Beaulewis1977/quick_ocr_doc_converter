@@ -454,27 +454,29 @@ def test(dll, test_file):
     # Basic DLL load test (Windows only)
     if sys.platform == "win32":
         dll_handle = secure_dll_load(dll_path)
-        if dll_handle:
-            click.echo(click.style("✅ DLL loads successfully", fg='green'))
-            
-            # Test GetVersion
-            try:
-                get_version = dll_handle.GetVersion
-                get_version.restype = ctypes.c_char_p
-                version = get_version().decode('utf-8')
-                click.echo(f"   Version: {version}")
-            except (AttributeError, OSError, UnicodeDecodeError, Exception):
-                click.echo(click.style("⚠️  Could not get version", fg='yellow'))
-            
-            # Test GetSupportedInputFormats
-            try:
-                get_formats = dll_handle.GetSupportedInputFormats
-                get_formats.restype = ctypes.c_char_p
-                formats = get_formats().decode('utf-8')
-                click.echo(f"   Input formats: {formats}")
-            except (AttributeError, OSError, UnicodeDecodeError, Exception):
-                click.echo(click.style("⚠️  Could not get formats", fg='yellow'))
+        try:
+            if dll_handle:
+                click.echo(click.style("✅ DLL loads successfully", fg='green'))
                 
+                # Test GetVersion
+                try:
+                    get_version = dll_handle.GetVersion
+                    get_version.restype = ctypes.c_char_p
+                    version = get_version().decode('utf-8')
+                    click.echo(f"   Version: {version}")
+                except (AttributeError, OSError, UnicodeDecodeError, Exception):
+                    click.echo(click.style("⚠️  Could not get version", fg='yellow'))
+                
+                # Test GetSupportedInputFormats  
+                try:
+                    get_formats = dll_handle.GetSupportedInputFormats
+                    get_formats.restype = ctypes.c_char_p
+                    formats = get_formats().decode('utf-8')
+                    click.echo(f"   Input formats: {formats}")
+                except (AttributeError, OSError, UnicodeDecodeError, Exception):
+                    click.echo(click.style("⚠️  Could not get formats", fg='yellow'))
+            else:
+                click.echo(click.style("❌ DLL failed to load", fg='red'))
         except Exception as e:
             click.echo(click.style(f"❌ DLL load failed: {e}", fg='red'))
     else:

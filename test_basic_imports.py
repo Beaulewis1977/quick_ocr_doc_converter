@@ -28,7 +28,7 @@ def main():
         "ocr_engine/ocr_engine.py", 
         "ocr_engine/security.py",
         "document_converter_gui.py",
-        "cli.py"
+        "dll_builder_cli.py"
     ]
     
     all_good = True
