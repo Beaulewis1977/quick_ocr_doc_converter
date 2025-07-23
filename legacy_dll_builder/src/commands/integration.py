@@ -34,7 +34,7 @@ class VB6VFP9Integration:
             try:
                 desktop = Path.home() / "Desktop"
                 output_path = desktop / "UniversalConverter_VB6.bas"
-            except:
+            except (OSError, AttributeError):
                 output_path = Path("UniversalConverter_VB6.bas")
             
             output_path.write_text(content)
@@ -63,7 +63,7 @@ class VB6VFP9Integration:
             try:
                 desktop = Path.home() / "Desktop"
                 output_path = desktop / "UniversalConverter_VFP9.prg"
-            except:
+            except (OSError, AttributeError):
                 output_path = Path("UniversalConverter_VFP9.prg")
             
             output_path.write_text(content)

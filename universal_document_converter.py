@@ -50,7 +50,8 @@ try:
     from ocr_engine.ocr_engine import OCREngine
     from ocr_engine.ocr_integration import OCRIntegration
     from ocr_engine.format_detector import OCRFormatDetector
-    from ocr_engine.security import SecurityError, validate_file_path
+    from ocr_engine.security import SecurityError, validate_file_path, validate_output_path, sanitize_error_message, sanitize_path_for_logging
+    from ocr_engine.secure_config import SecureConfigManager, SecureConfigurationError
     HAS_OCR = True
 except ImportError:
     HAS_OCR = False
@@ -177,8 +178,9 @@ class UniversalDocumentConverter:
         self.logger.info("Universal Document Converter started")
     
     def load_config(self) -> dict:
-        """Load configuration from file"""
+        """Load configuration from file using secure configuration manager"""
         config_dir = Path.home() / ".universal_converter"
+        config_dir.mkdir(exist_ok=True)
         config_file = config_dir / "config.json"
         
         default_config = {
@@ -214,25 +216,29 @@ class UniversalDocumentConverter:
         }
         
         try:
-            if config_file.exists():
-                with open(config_file, 'r') as f:
-                    user_config = json.load(f)
-                # Merge with defaults
-                return {**default_config, **user_config}
+            # Use secure configuration manager
+            secure_config = SecureConfigManager(str(config_file), encrypt_sensitive=True)
+            config = secure_config.load_config(default_config)
+            return config
+        except SecureConfigurationError as e:
+            logging.error(f"Secure configuration error: {e}")
+            return default_config
         except Exception as e:
             logging.warning(f"Could not load config: {e}")
-        
-        return default_config
+            return default_config
     
     def save_config(self):
-        """Save configuration to file"""
+        """Save configuration to file using secure configuration manager"""
         try:
             config_dir = Path.home() / ".universal_converter"
             config_dir.mkdir(parents=True, exist_ok=True)
             config_file = config_dir / "config.json"
             
-            with open(config_file, 'w') as f:
-                json.dump(self.config, f, indent=2)
+            # Use secure configuration manager
+            secure_config = SecureConfigManager(str(config_file), encrypt_sensitive=True)
+            secure_config.save_config(self.config)
+        except SecureConfigurationError as e:
+            logging.error(f"Secure configuration save error: {e}")
         except Exception as e:
             logging.error(f"Could not save config: {e}")
     
@@ -806,7 +812,9 @@ class UniversalDocumentConverter:
         try:
             output_dir.mkdir(parents=True, exist_ok=True)
         except (OSError, PermissionError) as e:
-            logging.error(f"Failed to create output directory {output_dir}: {e}")
+            sanitized_dir = sanitize_path_for_logging(str(output_dir))
+            sanitized_msg = sanitize_error_message(str(e))
+            logging.error(f"Failed to create output directory {sanitized_dir}: {sanitized_msg}")
             messagebox.showerror("Directory Error", f"Failed to create output directory: {e}")
             return
         
@@ -867,7 +875,9 @@ class UniversalDocumentConverter:
                         else:
                             self.failed_count += 1
                     except Exception as e:
-                        self.logger.error(f"Error processing {file_path}: {e}")
+                        sanitized_path = sanitize_path_for_logging(file_path)
+                        sanitized_msg = sanitize_error_message(str(e), file_path)
+                        self.logger.error(f"Error processing {sanitized_path}: {sanitized_msg}")
                         self.failed_count += 1
                     
                     # Update progress with ETA
@@ -884,7 +894,9 @@ class UniversalDocumentConverter:
             self.update_status(f"Processing {Path(file_path).name}...")
             return self.convert_single_file(file_path, output_dir)
         except Exception as e:
-            self.logger.error(f"Error converting {file_path}: {e}")
+            sanitized_path = sanitize_path_for_logging(file_path)
+            sanitized_msg = sanitize_error_message(str(e), file_path)
+            self.logger.error(f"Error converting {sanitized_path}: {sanitized_msg}")
             return False, 'error'
     
     def convert_single_file(self, input_path, output_dir):
@@ -920,6 +932,14 @@ class UniversalDocumentConverter:
             cache_key = self.get_cache_key(input_path, output_format)
             cached_result = self.get_cached_result(cache_key)
             if cached_result:
+                # Validate output path for security
+                try:
+                    validate_output_path(output_file)
+                except SecurityError as e:
+                    sanitized_msg = sanitize_error_message(str(e))
+                    self.logger.error(f"Output path validation failed: {sanitized_msg}")
+                    return False, 'security_error'
+                
                 # Write cached result
                 with open(output_file, 'wb') as f:
                     f.write(cached_result)
@@ -933,12 +953,28 @@ class UniversalDocumentConverter:
                 # Move the generated markdown file to output directory
                 md_file = input_file.with_suffix('.md')
                 if md_file.exists():
+                    # Validate output path for security
+                    try:
+                        validate_output_path(str(output_file))
+                    except SecurityError as e:
+                        sanitized_msg = sanitize_error_message(str(e))
+                        self.logger.error(f"Output path validation failed: {sanitized_msg}")
+                        return False, 'security_error'
+                    
                     shutil.move(str(md_file), str(output_file))
             elif input_file.suffix.lower() == '.pdf':
                 convert_pdf_to_markdown(str(input_file))
                 # Move the generated markdown file to output directory
                 md_file = input_file.with_suffix('.md')
                 if md_file.exists():
+                    # Validate output path for security
+                    try:
+                        validate_output_path(str(output_file))
+                    except SecurityError as e:
+                        sanitized_msg = sanitize_error_message(str(e))
+                        self.logger.error(f"Output path validation failed: {sanitized_msg}")
+                        return False, 'security_error'
+                    
                     shutil.move(str(md_file), str(output_file))
         else:
             # Basic conversion (placeholder - would need full implementation)
