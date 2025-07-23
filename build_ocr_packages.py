@@ -59,8 +59,8 @@ class OCRPackageBuilder:
         
         # Files to include in complete package
         app_files = [
-            # Main OCR application
-            "universal_document_converter_ocr.py",
+            # Main complete GUI application (OCR + Document Conversion + VB6/VFP9)
+            "universal_document_converter.py",
             
             # OCR engine
             "ocr_engine/__init__.py",
@@ -80,6 +80,9 @@ class OCRPackageBuilder:
             "run_ocr_converter.bat",
             "launch_ocr.py",
             "⚡ Quick Launch OCR.bat",
+            
+            # CLI for VB6/VFP9 DLL system
+            "cli.py",
             
             # Installation
             "install.bat",

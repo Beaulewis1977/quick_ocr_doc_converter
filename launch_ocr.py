@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-OCR Document Converter Launcher
-Smart launcher that detects and runs the appropriate version
+Universal Document Converter Launcher
+Launches the complete GUI application with OCR and document conversion
 """
 
 import os
@@ -11,10 +11,8 @@ from pathlib import Path
 
 def find_main_app():
     """Find the main application file"""
-    # Check for OCR version first (preferred)
+    # The unified GUI application
     app_files = [
-        'universal_document_converter_ocr.py',
-        'main_app.py',
         'universal_document_converter.py'
     ]
     

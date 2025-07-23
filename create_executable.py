@@ -42,9 +42,8 @@ def create_executable():
     """Create standalone executable"""
     app_dir = Path(__file__).parent
     
-    # Look for the OCR-enabled version first, then fall back to basic version
+    # Look for the unified complete GUI application
     potential_main_scripts = [
-        app_dir / "universal_document_converter_ocr.py",
         app_dir / "universal_document_converter.py"
     ]
     
@@ -57,11 +56,11 @@ def create_executable():
     
     if not main_script:
         print("❌ No main application script found!")
-        print("   Looking for: universal_document_converter_ocr.py or universal_document_converter.py")
+        print("   Looking for: universal_document_converter.py")
         return False
     
-    # Determine executable name based on script
-    exe_name = "OCR Document Converter" if "ocr" in main_script.name.lower() else "Quick Document Convertor"
+    # Executable name for the unified application
+    exe_name = "Universal Document Converter"
     
     # PyInstaller command
     cmd = [

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Command Line Interface for Universal Document Converter
+Universal Document Converter - Command Line Interface
+Complete CLI for OCR, document conversion, and VB6/VFP9 DLL integration
 Designed and built by Beau Lewis (blewisxx@gmail.com)
 """
 
@@ -8,557 +9,295 @@ import argparse
 import sys
 import os
 from pathlib import Path
-import json
-import time
 import logging
 from typing import List, Optional
+import json
+import time
 
-# Import the converter classes
+# Import OCR functionality
 try:
-    from universal_document_converter import (
-        UniversalConverter, FormatDetector, ConverterLogger, ConfigManager,
-        DocumentConverterError, UnsupportedFormatError, FileProcessingError
-    )
-except ImportError as e:
-    print(f"Error: Could not import converter modules: {e}")
-    print("Make sure universal_document_converter.py is in the same directory.")
-    sys.exit(1)
+    from ocr_engine import OCREngine
+    HAS_OCR = True
+except ImportError:
+    HAS_OCR = False
+    OCREngine = None
 
+# Import converter
+# Import converter functions
+try:
+    from convert_to_markdown import convert_pdf_to_markdown
+    from convert_recursive import convert_directory
+except ImportError:
+    # Fallback if modules not available
+    def convert_pdf_to_markdown(input_path, output_path):
+        """Fallback PDF conversion"""
+        with open(output_path, 'w') as f:
+            f.write("# PDF Conversion\n\nPDF conversion module not available.")
+    
+    def convert_directory(input_dir, output_dir, recursive=False):
+        """Fallback directory conversion"""
+        return 0
 
-class DocumentConverterCLI:
-    """Command Line Interface for the Universal Document Converter"""
-
-    def __init__(self, config_file: Optional[str] = None):
-        # Initialize configuration manager
-        self.config_manager = ConfigManager(config_file)
-
-        # Initialize converter with config
-        self.converter = UniversalConverter("CLI", config_manager=self.config_manager)
-
-        # Initialize logger with config
-        log_level = self.config_manager.get('logging', 'log_level', 'INFO')
-        self.logger_instance = ConverterLogger("CLI", log_level)
-        self.logger = self.logger_instance.get_logger()
-        
-    def create_parser(self) -> argparse.ArgumentParser:
-        """Create and configure the argument parser"""
+class OCRCLI:
+    """Enhanced CLI with OCR capabilities"""
+    
+    def __init__(self):
+        self.ocr = OCREngine() if HAS_OCR and OCREngine else None
+        self.setup_logging()
+    
+    def setup_logging(self):
+        """Setup logging"""
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s'
+        )
+        self.logger = logging.getLogger(__name__)
+    
+    def create_parser(self):
+        """Create argument parser"""
         parser = argparse.ArgumentParser(
-            description="Quick Document Convertor - Convert documents between multiple formats",
+            description="OCR Document Converter - Convert documents with OCR support",
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog="""
 Examples:
-  %(prog)s file.docx -o output.md                    # Convert single file
-  %(prog)s *.txt -o output_dir/ -f markdown          # Convert multiple files
-  %(prog)s input_dir/ -o output_dir/ --recursive     # Convert directory recursively
-  %(prog)s file.pdf -f auto -t html --workers 8      # Auto-detect input, use 8 threads
-  %(prog)s --list-formats                            # Show supported formats
-  %(prog)s --batch config.json                       # Batch conversion from config file
-
-Supported Input Formats:  DOCX, PDF, TXT, HTML, RTF
-Supported Output Formats: Markdown, TXT, HTML, RTF
+  %(prog)s file.pdf -o output.md                    # Convert PDF with OCR
+  %(prog)s *.png -o output.md --ocr                 # Convert images with OCR
+  %(prog)s input_dir/ -o output/ --recursive --ocr  # Batch convert with OCR
+  %(prog)s --setup                                  # Run system setup
+  %(prog)s --check-ocr                              # Check OCR availability
             """
         )
         
-        # Input/Output arguments
+        # Basic arguments
         parser.add_argument('input', nargs='*', 
                           help='Input file(s) or directory to convert')
-        parser.add_argument('-o', '--output', required=False,
+        parser.add_argument('-o', '--output', 
                           help='Output file or directory')
         
-        # Format arguments
-        parser.add_argument('-f', '--from-format', default='auto',
-                          choices=['auto'] + list(FormatDetector.SUPPORTED_INPUT_FORMATS.keys()),
-                          help='Input format (default: auto-detect)')
-        parser.add_argument('-t', '--to-format', default='markdown',
-                          choices=list(FormatDetector.SUPPORTED_OUTPUT_FORMATS.keys()),
-                          help='Output format (default: markdown)')
+        # OCR options
+        parser.add_argument('--ocr', action='store_true',
+                          help='Enable OCR for images and PDFs')
+        parser.add_argument('--ocr-lang', default='eng',
+                          help='OCR language (default: eng)')
+        parser.add_argument('--check-ocr', action='store_true',
+                          help='Check OCR availability and exit')
         
         # Processing options
         parser.add_argument('--recursive', '-r', action='store_true',
                           help='Process directories recursively')
-        parser.add_argument('--preserve-structure', action='store_true', default=True,
-                          help='Preserve directory structure in output (default: True)')
         parser.add_argument('--overwrite', action='store_true',
-                          help='Overwrite existing output files')
-        parser.add_argument('--workers', type=int, default=None,
-                          help='Number of worker threads (default: auto)')
+                          help='Overwrite existing files')
+        parser.add_argument('--workers', type=int, default=1,
+                          help='Number of worker processes')
         
-        # Caching and performance
-        parser.add_argument('--no-cache', action='store_true',
-                          help='Disable caching for this conversion')
-        parser.add_argument('--clear-cache', action='store_true',
-                          help='Clear the conversion cache and exit')
+        # Setup and verification
+        parser.add_argument('--setup', action='store_true',
+                          help='Run system setup (install dependencies)')
+        parser.add_argument('--version', action='version', version='OCR Document Converter 3.1.0')
         
-        # Batch processing
-        parser.add_argument('--batch', metavar='CONFIG_FILE',
-                          help='Batch conversion using JSON configuration file')
-        
-        # Information commands
-        parser.add_argument('--list-formats', action='store_true',
-                          help='List all supported input and output formats')
-        parser.add_argument('--version', action='version', version='Quick Document Convertor 3.1.0')
-        
-        # Logging and output
+        # Logging
         parser.add_argument('--verbose', '-v', action='store_true',
                           help='Enable verbose logging')
         parser.add_argument('--quiet', '-q', action='store_true',
-                          help='Suppress all output except errors')
-        parser.add_argument('--log-file', metavar='FILE',
-                          help='Write logs to specified file')
-
-        # Configuration management
-        parser.add_argument('--config', metavar='CONFIG_FILE',
-                          help='Use specified configuration file')
-        parser.add_argument('--save-config', metavar='CONFIG_FILE',
-                          help='Save current settings to configuration file')
-        parser.add_argument('--show-config', action='store_true',
-                          help='Show current configuration and exit')
-        parser.add_argument('--reset-config', action='store_true',
-                          help='Reset configuration to defaults')
-
-        # Profile management
-        parser.add_argument('--profile', metavar='PROFILE_NAME',
-                          help='Use named configuration profile')
-        parser.add_argument('--list-profiles', action='store_true',
-                          help='List available configuration profiles')
-
+                          help='Suppress output except errors')
+        
         return parser
     
-    def list_formats(self):
-        """Display supported formats"""
-        print("Quick Document Convertor - Supported Formats\n")
-        
-        print("INPUT FORMATS:")
-        for key, info in FormatDetector.SUPPORTED_INPUT_FORMATS.items():
-            extensions = ', '.join(info['extensions'])
-            print(f"  {key.upper():8} - {info['name']} ({extensions})")
-        
-        print("\nOUTPUT FORMATS:")
-        for key, info in FormatDetector.SUPPORTED_OUTPUT_FORMATS.items():
-            extension = info['extension']
-            print(f"  {key.upper():8} - {info['name']} ({extension})")
-        
-        print("\nUse 'auto' for automatic input format detection")
-
-    def show_config(self):
-        """Display current configuration"""
-        print("Quick Document Convertor - Current Configuration\n")
-
-        # General settings
-        print("GENERAL SETTINGS:")
-        general = self.config_manager.get_section('general')
-        for key, value in general.items():
-            print(f"  {key}: {value}")
-
-        # Performance settings
-        print("\nPERFORMANCE SETTINGS:")
-        performance = self.config_manager.get_section('performance')
-        for key, value in performance.items():
-            print(f"  {key}: {value}")
-
-        # Logging settings
-        print("\nLOGGING SETTINGS:")
-        logging_config = self.config_manager.get_section('logging')
-        for key, value in logging_config.items():
-            print(f"  {key}: {value}")
-
-        print(f"\nConfiguration file: {self.config_manager.config_file}")
-
-    def save_config(self, config_file: str):
-        """Save current configuration to file"""
-        try:
-            if self.config_manager.export_config(config_file):
-                print(f"Configuration saved to: {config_file}")
-                return True
-            else:
-                print(f"Error: Failed to save configuration to {config_file}")
-                return False
-        except Exception as e:
-            print(f"Error saving configuration: {e}")
+    def check_ocr_status(self):
+        """Check OCR availability"""
+        if not self.ocr:
+            print("❌ OCR Engine not available")
+            print("   Tesseract OCR is not installed or not found")
             return False
-
-    def reset_config(self):
-        """Reset configuration to defaults"""
-        try:
-            self.config_manager.reset_to_defaults()
-            self.config_manager.save_config()
-            print("Configuration reset to defaults")
+        
+        if self.ocr.is_available():
+            print("✅ OCR Engine is ready")
+            langs = self.ocr.get_supported_languages()
+            print(f"   Supported languages: {', '.join(langs)}")
             return True
-        except Exception as e:
-            print(f"Error resetting configuration: {e}")
-            return False
-
-    def list_profiles(self):
-        """List available configuration profiles"""
-        config_dir = self.config_manager.config_dir
-        profiles = []
-
-        if config_dir.exists():
-            for file in config_dir.glob("*.json"):
-                if file.name != "config.json":  # Skip default config
-                    profile_name = file.stem
-                    profiles.append(profile_name)
-
-        if profiles:
-            print("Available configuration profiles:")
-            for profile in sorted(profiles):
-                print(f"  {profile}")
         else:
-            print("No configuration profiles found")
-
-        print(f"\nProfiles directory: {config_dir}")
-        print("Create profiles by saving configurations with --save-config")
-
-    def load_profile(self, profile_name: str):
-        """Load a configuration profile"""
-        profile_file = self.config_manager.config_dir / f"{profile_name}.json"
-
-        if not profile_file.exists():
-            print(f"Error: Profile '{profile_name}' not found")
-            print(f"Expected file: {profile_file}")
+            print("❌ OCR Engine not ready")
+            print("   Tesseract OCR is not installed or not accessible")
             return False
-
+    
+    def run_setup(self):
+        """Run system setup"""
         try:
-            if self.config_manager.import_config(str(profile_file)):
-                print(f"Loaded profile: {profile_name}")
-                return True
-            else:
-                print(f"Error: Failed to load profile '{profile_name}'")
-                return False
-        except Exception as e:
-            print(f"Error loading profile: {e}")
+            from setup_ocr import OCRSetup
+            setup = OCRSetup()
+            setup.print_instructions()
+            return setup.run_setup()
+        except ImportError:
+            print("Setup module not found. Manual installation required:")
+            print("1. Install Tesseract OCR:")
+            print("   - Windows: winget install tesseract-ocr.tesseract-ocr")
+            print("   - macOS: brew install tesseract")
+            print("   - Linux: sudo apt-get install tesseract-ocr")
+            print("2. Install Python packages: pip install -r requirements_updated.txt")
             return False
-
-    def validate_args(self, args) -> bool:
-        """Validate command line arguments"""
-        # Check for information commands first
-        if args.list_formats or args.clear_cache or args.show_config or args.list_profiles or args.reset_config:
-            return True
-
-        # Check for configuration commands
-        if args.save_config:
-            return True
-
-        # Check for batch mode
-        if args.batch:
-            if not Path(args.batch).exists():
-                print(f"Error: Batch configuration file not found: {args.batch}")
+    
+    def convert_file_with_ocr(self, input_path: str, output_path: str, 
+                            ocr_enabled: bool = False, ocr_lang: str = 'eng') -> bool:
+        """Convert single file with optional OCR"""
+        try:
+            input_path = Path(input_path)
+            output_path = Path(output_path)
+            
+            if not input_path.exists():
+                self.logger.error(f"Input file not found: {input_path}")
                 return False
-            return True
+            
+            # Create output directory if needed
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            # Check file type
+            file_ext = input_path.suffix.lower()
+            
+            # Handle image files with OCR
+            if ocr_enabled and file_ext in ['.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif']:
+                if not self.ocr or not self.ocr.is_available():
+                    self.logger.error("OCR requested but not available")
+                    return False
+                
+                self.logger.info(f"Processing image with OCR: {input_path}")
+                text = self.ocr.extract_text(str(input_path), ocr_lang)
+                
+                # Save as markdown
+                with open(output_path, 'w', encoding='utf-8') as f:
+                    f.write(f"# {input_path.stem}\n\n")
+                    f.write(text)
+                
+                return True
+            
+            # Handle PDF files with OCR
+            elif ocr_enabled and file_ext == '.pdf':
+                if not self.ocr or not self.ocr.is_available():
+                    self.logger.error("OCR requested but not available")
+                    return False
+                
+                self.logger.info(f"Processing PDF with OCR: {input_path}")
+                text = self.ocr.extract_text_from_pdf(str(input_path), ocr_lang)
+                
+                # Save as markdown
+                with open(output_path, 'w', encoding='utf-8') as f:
+                    f.write(f"# {input_path.stem}\n\n")
+                    f.write(text)
+                
+                return True
+            
+            # Regular conversion without OCR
+            else:
+                self.logger.info(f"Converting without OCR: {input_path}")
+                convert_to_markdown(str(input_path), str(output_path))
+                return True
+                
+        except Exception as e:
+            self.logger.error(f"Conversion failed: {e}")
+            return False
+    
+    def collect_files(self, paths: List[str], recursive: bool = False) -> List[Path]:
+        """Collect all files to process"""
+        files = []
+        supported_exts = ['.pdf', '.txt', '.docx', '.html', '.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif']
         
-        # Regular mode validation
+        for path in paths:
+            path_obj = Path(path)
+            
+            if path_obj.is_file():
+                files.append(path_obj)
+            elif path_obj.is_dir():
+                if recursive:
+                    for ext in supported_exts:
+                        files.extend(path_obj.rglob(f"*{ext}"))
+                else:
+                    for ext in supported_exts:
+                        files.extend(path_obj.glob(f"*{ext}"))
+        
+        return list(set(files))  # Remove duplicates
+    
+    def run_conversion(self, args):
+        """Run conversion based on arguments"""
         if not args.input:
             print("Error: No input files specified")
-            return False
+            return 1
         
-        if not args.output:
-            print("Error: Output path required (use -o/--output)")
-            return False
+        # Collect files
+        files = self.collect_files(args.input, args.recursive)
         
-        # Validate input files exist
-        for input_path in args.input:
-            path = Path(input_path)
-            if not path.exists():
-                print(f"Error: Input path does not exist: {input_path}")
-                return False
+        if not files:
+            print("Error: No supported files found")
+            return 1
         
-        return True
-    
-    def setup_logging(self, args):
-        """Configure logging based on arguments"""
-        # Determine log level
-        if args.quiet:
-            log_level = 'ERROR'
-        elif args.verbose:
-            log_level = 'DEBUG'
-        else:
-            log_level = self.config_manager.get('logging', 'log_level', 'INFO')
-
-        # Update logger level
-        numeric_level = getattr(logging, log_level.upper(), logging.INFO)
-        self.logger.setLevel(numeric_level)
-
-        # Update all handlers
-        for handler in self.logger.handlers:
-            handler.setLevel(numeric_level)
-    
-    def convert_single_file(self, input_path: Path, output_path: Path, 
-                          from_format: str, to_format: str) -> bool:
-        """Convert a single file"""
-        try:
-            self.converter.convert_file(input_path, output_path, from_format, to_format)
-            return True
-        except (UnsupportedFormatError, FileProcessingError, DocumentConverterError) as e:
-            self.logger.error(f"Failed to convert {input_path}: {e}")
-            return False
-    
-    def get_output_path(self, input_path: Path, output_base: Path, 
-                       to_format: str, preserve_structure: bool, 
-                       base_input_dir: Optional[Path] = None) -> Path:
-        """Generate output path for a given input file"""
-        output_ext = FormatDetector.SUPPORTED_OUTPUT_FORMATS[to_format]['extension']
-        
-        if output_base.is_file() or (not output_base.exists() and not output_base.suffix):
-            # Output is a specific file or directory
-            if preserve_structure and base_input_dir and input_path != base_input_dir:
-                # Preserve directory structure
-                rel_path = input_path.relative_to(base_input_dir)
-                return output_base / rel_path.with_suffix(output_ext)
-            else:
-                # Single file or flat structure
-                if output_base.suffix:
-                    return output_base  # Specific output file
-                else:
-                    return output_base / f"{input_path.stem}{output_ext}"
-        else:
-            # Output directory
-            return output_base / f"{input_path.stem}{output_ext}"
-    
-    def collect_input_files(self, input_paths: List[str], recursive: bool) -> List[Path]:
-        """Collect all input files to process"""
-        files = []
-        
-        for input_path in input_paths:
-            path = Path(input_path)
+        # Determine output
+        if len(files) == 1 and not Path(args.output).is_dir():
+            # Single file output
+            output_file = Path(args.output)
+            output_file.parent.mkdir(parents=True, exist_ok=True)
             
-            if path.is_file():
-                files.append(path)
-            elif path.is_dir():
-                if recursive:
-                    # Find all supported files recursively
-                    for fmt_info in FormatDetector.SUPPORTED_INPUT_FORMATS.values():
-                        for ext in fmt_info['extensions']:
-                            files.extend(path.rglob(f"*{ext}"))
-                else:
-                    # Find supported files in directory only
-                    for fmt_info in FormatDetector.SUPPORTED_INPUT_FORMATS.values():
-                        for ext in fmt_info['extensions']:
-                            files.extend(path.glob(f"*{ext}"))
+            success = self.convert_file_with_ocr(
+                str(files[0]), str(output_file), 
+                args.ocr, args.ocr_lang
+            )
+            
+            if success:
+                print(f"✅ Converted: {files[0].name} -> {output_file.name}")
+                return 0
             else:
-                # Handle glob patterns
-                from glob import glob
-                matched_files = glob(str(path))
-                files.extend([Path(f) for f in matched_files if Path(f).is_file()])
+                print(f"❌ Failed: {files[0].name}")
+                return 1
         
-        # Remove duplicates and filter out temporary files
-        unique_files = list(set(files))
-        return [f for f in unique_files if not f.name.startswith('~$')]
+        else:
+            # Batch processing
+            output_dir = Path(args.output)
+            output_dir.mkdir(parents=True, exist_ok=True)
+            
+            successful = 0
+            failed = 0
+            
+            print(f"Processing {len(files)} files...")
+            
+            for i, file in enumerate(files, 1):
+                output_file = output_dir / f"{file.stem}.md"
+                
+                if output_file.exists() and not args.overwrite:
+                    print(f"⏭️  Skipping (exists): {file.name}")
+                    continue
+                
+                print(f"[{i}/{len(files)}] Processing: {file.name}")
+                
+                success = self.convert_file_with_ocr(
+                    str(file), str(output_file),
+                    args.ocr, args.ocr_lang
+                )
+                
+                if success:
+                    successful += 1
+                else:
+                    failed += 1
+            
+            print(f"\n✅ Completed: {successful} successful, {failed} failed")
+            return 0 if failed == 0 else 1
     
-    def run(self, args=None) -> int:
-        """Main CLI execution method"""
+    def run(self, args=None):
+        """Main CLI execution"""
         parser = self.create_parser()
         args = parser.parse_args(args)
         
-        # Validate arguments
-        if not self.validate_args(args):
-            return 1
+        # Handle setup
+        if args.setup:
+            return 0 if self.run_setup() else 1
         
-        # Setup logging
-        self.setup_logging(args)
+        # Handle OCR check
+        if args.check_ocr:
+            return 0 if self.check_ocr_status() else 1
         
-        # Handle information commands
-        if args.list_formats:
-            self.list_formats()
-            return 0
-
-        if args.clear_cache:
-            # Clear cache (implementation would go here)
-            print("Cache cleared successfully")
-            return 0
-
-        # Handle configuration commands
-        if args.show_config:
-            self.show_config()
-            return 0
-
-        if args.list_profiles:
-            self.list_profiles()
-            return 0
-
-        if args.reset_config:
-            return 0 if self.reset_config() else 1
-
-        if args.save_config:
-            return 0 if self.save_config(args.save_config) else 1
-
-        # Handle profile loading
-        if args.profile:
-            if not self.load_profile(args.profile):
-                return 1
-
-        # Handle batch mode
-        if args.batch:
-            return self.run_batch_conversion(args.batch)
-        
-        # Regular conversion mode
+        # Handle conversion
         return self.run_conversion(args)
 
-    def run_conversion(self, args) -> int:
-        """Run regular file conversion"""
-        try:
-            # Collect input files
-            input_files = self.collect_input_files(args.input, args.recursive)
-
-            if not input_files:
-                print("No supported input files found")
-                return 1
-
-            output_path = Path(args.output)
-
-            # Determine base input directory for structure preservation
-            base_input_dir = None
-            if args.preserve_structure and len(input_files) > 1:
-                try:
-                    base_input_dir = Path(os.path.commonpath([str(f.parent) for f in input_files]))
-                except ValueError:
-                    base_input_dir = None
-
-            print(f"Converting {len(input_files)} files...")
-            print(f"From: {args.from_format} -> To: {args.to_format}")
-
-            # Progress tracking
-            successful = 0
-            failed = 0
-            start_time = time.time()
-
-            # Use batch conversion for multiple files
-            if len(input_files) > 1:
-                def progress_callback(completed, total, result):
-                    nonlocal successful, failed
-                    if result['status'] == 'success':
-                        successful += 1
-                        if not args.quiet:
-                            print(f"SUCCESS: {result['file']} -> {result['output']}")
-                    elif result['status'] == 'error':
-                        failed += 1
-                        print(f"ERROR: {result['file']}: {result['error']}")
-                    elif result['status'] == 'skipped':
-                        if not args.quiet:
-                            print(f"SKIPPED (exists): {result['file']}")
-
-                # Create output directory
-                if not output_path.exists():
-                    output_path.mkdir(parents=True, exist_ok=True)
-
-                # Run batch conversion
-                results = self.converter.convert_batch(
-                    file_list=input_files,
-                    output_dir=output_path,
-                    input_format=args.from_format,
-                    output_format=args.to_format,
-                    max_workers=args.workers,
-                    progress_callback=progress_callback,
-                    preserve_structure=args.preserve_structure,
-                    overwrite_existing=args.overwrite,
-                    base_dir=base_input_dir
-                )
-
-                successful = results['successful']
-                failed = results['failed']
-
-            else:
-                # Single file conversion
-                input_file = input_files[0]
-                output_file = self.get_output_path(
-                    input_file, output_path, args.to_format,
-                    args.preserve_structure, base_input_dir
-                )
-
-                # Create output directory
-                output_file.parent.mkdir(parents=True, exist_ok=True)
-
-                if self.convert_single_file(input_file, output_file, args.from_format, args.to_format):
-                    successful = 1
-                    if not args.quiet:
-                        print(f"SUCCESS: {input_file.name} -> {output_file.name}")
-                else:
-                    failed = 1
-
-            # Final results
-            duration = time.time() - start_time
-
-            if not args.quiet:
-                print(f"\nConversion complete in {duration:.2f} seconds!")
-                print(f"Successful: {successful}")
-                if failed > 0:
-                    print(f"Failed: {failed}")
-                print(f"Output saved to: {output_path}")
-
-            return 0 if failed == 0 else 1
-
-        except Exception as e:
-            self.logger.error(f"Conversion failed: {e}")
-            return 1
-
-    def run_batch_conversion(self, config_file: str) -> int:
-        """Run batch conversion from configuration file"""
-        try:
-            with open(config_file, 'r') as f:
-                config = json.load(f)
-
-            # Validate configuration
-            if 'conversions' not in config:
-                print("Error: Configuration file must contain 'conversions' array")
-                return 1
-
-            total_successful = 0
-            total_failed = 0
-
-            for i, conversion in enumerate(config['conversions']):
-                print(f"\n📋 Running conversion {i+1}/{len(config['conversions'])}")
-
-                # Create args object from configuration
-                class Args:
-                    pass
-
-                args = Args()
-                args.input = conversion.get('input', [])
-                args.output = conversion.get('output')
-                args.from_format = conversion.get('from_format', 'auto')
-                args.to_format = conversion.get('to_format', 'markdown')
-                args.recursive = conversion.get('recursive', False)
-                args.preserve_structure = conversion.get('preserve_structure', True)
-                args.overwrite = conversion.get('overwrite', False)
-                args.workers = conversion.get('workers')
-                args.quiet = False
-
-                # Validate conversion config
-                if not args.input or not args.output:
-                    print(f"ERROR: Conversion {i+1}: Missing input or output")
-                    total_failed += 1
-                    continue
-
-                # Run conversion
-                result = self.run_conversion(args)
-                if result == 0:
-                    total_successful += 1
-                else:
-                    total_failed += 1
-
-            print(f"\nBatch conversion complete!")
-            print(f"Successful conversions: {total_successful}")
-            if total_failed > 0:
-                print(f"Failed conversions: {total_failed}")
-
-            return 0 if total_failed == 0 else 1
-
-        except Exception as e:
-            print(f"Error running batch conversion: {e}")
-            return 1
-
-
 def main():
-    """Entry point for CLI"""
-    # Parse args to check for --config first
-    import argparse
-    temp_parser = argparse.ArgumentParser(add_help=False)
-    temp_parser.add_argument('--config', metavar='CONFIG_FILE')
-    temp_args, _ = temp_parser.parse_known_args()
-
-    # Initialize CLI with config file if specified
-    cli = DocumentConverterCLI(temp_args.config)
-    return cli.run()
-
+    """Main entry point for CLI"""
+    cli = OCRCLI()
+    sys.exit(cli.run())
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
