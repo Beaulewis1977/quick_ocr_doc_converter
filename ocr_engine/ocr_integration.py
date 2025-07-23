@@ -8,8 +8,13 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 import logging
 from concurrent.futures import as_completed
-from .ocr_engine import OCREngine
-from .format_detector import OCRFormatDetector
+# Handle both relative and absolute imports
+try:
+    from .ocr_engine import OCREngine
+    from .format_detector import OCRFormatDetector
+except ImportError:
+    from ocr_engine import OCREngine
+    from format_detector import OCRFormatDetector
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

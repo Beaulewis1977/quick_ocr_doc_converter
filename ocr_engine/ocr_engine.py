@@ -36,8 +36,26 @@ try:
 except ImportError:
     EASYOCR_AVAILABLE = False
 
-from .image_processor import ImageProcessor
-from .format_detector import OCRFormatDetector
+# Handle both relative and absolute imports
+try:
+    from .image_processor import ImageProcessor
+    from .format_detector import OCRFormatDetector
+except ImportError:
+    # If relative imports fail, try absolute imports
+    try:
+        from image_processor import ImageProcessor
+        from format_detector import OCRFormatDetector
+    except ImportError:
+        # If both fail, create simple fallback classes
+        class ImageProcessor:
+            def __init__(self, logger=None):
+                self.logger = logger or logging.getLogger("ImageProcessor")
+            def process_image(self, image_path, config=None):
+                return image_path
+        
+        class OCRFormatDetector:
+            def detect_format(self, file_path):
+                return "image"
 
 import tesseract_config  # Auto-configure Tesseract
 class OCREngineError(Exception):
@@ -77,6 +95,16 @@ class OCREngine:
         self.image_processor = ImageProcessor(self.logger)
         self.format_detector = OCRFormatDetector()
         
+        # Initialize thread safety locks FIRST
+        self._active_readers = {}  # thread_id -> reader mapping
+        self._readers_lock = threading.Lock()  # Lock for reader tracking
+        self._cache_lock = threading.RLock()  # Reentrant lock for cache operations
+        self._config_lock = threading.RLock()  # Lock for configuration changes
+        self._backend_lock = threading.Lock()  # Lock for backend initialization
+        
+        # Thread-local storage for OCR readers
+        self._thread_local = threading.local()
+        
         # Cache directory for OCR results
         self.cache_dir = Path.home() / ".quick_document_convertor" / "ocr_cache"
         try:
@@ -91,20 +119,6 @@ class OCREngine:
             except (OSError, PermissionError):
                 self.logger.error("Failed to create fallback cache directory, disabling cache")
                 self.cache_dir = None
-        
-        # Initialize OCR backends
-        self._initialize_backends()
-        
-        # Thread-local storage for OCR readers
-        self._thread_local = threading.local()
-        # Global tracking of all created readers for proper cleanup
-        self._active_readers = {}  # thread_id -> reader mapping
-        self._readers_lock = threading.Lock()  # Lock for reader tracking
-        
-        # Thread safety locks
-        self._cache_lock = threading.RLock()  # Reentrant lock for cache operations
-        self._config_lock = threading.RLock()  # Lock for configuration changes
-        self._backend_lock = threading.Lock()  # Lock for backend initialization
         
         # Configuration defaults
         self.default_config = {
@@ -127,6 +141,9 @@ class OCREngine:
         
         # Merge user config with defaults
         self.config = {**self.default_config, **self.config}
+        
+        # Initialize OCR backends (after locks and config are set up)
+        self._initialize_backends()
 
     def _initialize_backends(self):
         """Initialize available OCR backends"""

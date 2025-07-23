@@ -142,6 +142,10 @@ class UniversalDocumentConverter:
         self.setup_ui()
         self.setup_drag_drop()
         
+        # Apply saved theme
+        saved_theme = self.config.get('gui', {}).get('theme', 'default')
+        self.apply_theme(saved_theme)
+        
         # Setup event handlers
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         
@@ -642,6 +646,7 @@ class UniversalDocumentConverter:
         ttk.Label(theme_frame, text="Theme:").grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
         self.theme_var = ttk.Combobox(theme_frame, values=["default", "clam", "alt", "classic"], state="readonly")
         self.theme_var.set(self.config.get('gui', {}).get('theme', 'default'))
+        self.theme_var.bind('<<ComboboxSelected>>', self.on_theme_change)
         self.theme_var.grid(row=0, column=1, sticky=tk.W)
         
         # File handling
@@ -795,7 +800,10 @@ class UniversalDocumentConverter:
         """Browse for output directory"""
         directory = filedialog.askdirectory(title="Select output directory")
         if directory:
-            self.output_dir.set(directory)
+            # Normalize the path and ensure it's displayed properly
+            normalized_dir = str(Path(directory).resolve())
+            self.output_dir.set(normalized_dir)
+            self.logger.info(f"Output directory set to: {normalized_dir}")
     
     # Conversion methods
     def start_conversion(self):
@@ -1174,7 +1182,10 @@ Output directory: {self.output_dir.get()}"""
         """Browse for OCR output directory"""
         directory = filedialog.askdirectory(title="Select OCR output directory")
         if directory:
-            self.ocr_output_dir.set(directory)
+            # Normalize the path and ensure it's displayed properly
+            normalized_dir = str(Path(directory).resolve())
+            self.ocr_output_dir.set(normalized_dir)
+            self.logger.info(f"OCR output directory set to: {normalized_dir}")
     
     def process_batch_ocr(self):
         """Process batch OCR on multiple files"""
@@ -1566,6 +1577,27 @@ Output directory: {self.output_dir.get()}"""
         else:
             messagebox.showwarning("Folder Not Found", "Configuration folder does not exist yet")
     
+    # Theme methods
+    def on_theme_change(self, event=None):
+        """Handle theme change event"""
+        self.apply_theme(self.theme_var.get())
+    
+    def apply_theme(self, theme_name):
+        """Apply the selected theme to the GUI"""
+        try:
+            style = ttk.Style()
+            style.theme_use(theme_name)
+            self.logger.info(f"Applied theme: {theme_name}")
+        except tk.TclError as e:
+            self.logger.warning(f"Failed to apply theme '{theme_name}': {e}")
+            # Fallback to default theme
+            try:
+                style = ttk.Style()
+                style.theme_use('default')
+                self.theme_var.set('default')
+            except tk.TclError:
+                pass
+    
     # Utility methods
     def update_status(self, message: str):
         """Update status label (thread-safe)"""
@@ -1661,6 +1693,15 @@ Output directory: {self.output_dir.get()}"""
             self.conversion_cache.clear()
             self.cache_sizes.clear()
             self.current_cache_size = 0
+            
+            # Also clear OCR file cache if available
+            if hasattr(self, 'ocr') and self.ocr and hasattr(self.ocr, 'clear_cache'):
+                try:
+                    self.ocr.clear_cache()
+                    self.logger.info("OCR file cache cleared")
+                except Exception as e:
+                    self.logger.warning(f"Failed to clear OCR cache: {e}")
+            
             gc.collect()
     
     def refresh_thread_info(self):
@@ -2028,14 +2069,12 @@ Cache Information:
 
 def main():
     """Main application entry point"""
-    root = tk.Tk()
-    
-    # Enable drag and drop
+    # Enable drag and drop by creating the right root window type from the start
     try:
         from tkinterdnd2 import TkinterDnD
         root = TkinterDnD.Tk()
     except ImportError:
-        pass
+        root = tk.Tk()
     
     app = UniversalDocumentConverter(root)
     root.mainloop()

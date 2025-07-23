@@ -172,7 +172,7 @@ print(f"Tesseract path: {tesseract_path}")
 print(f"Tessdata path: {tessdata_dir}")
 '''
             
-            with open("tesseract_config.py", "w") as f:
+            with open("tesseract_config.py", "w", encoding='utf-8') as f:
                 f.write(config_content)
             
             print("✅ Created tesseract_config.py")
@@ -200,7 +200,7 @@ except Exception as e:
     print(f"❌ Tesseract configuration test failed: {e}")
 '''
             
-            with open("test_tesseract_config.py", "w") as f:
+            with open("test_tesseract_config.py", "w", encoding='utf-8') as f:
                 f.write(test_script)
             
             print("✅ Created test_tesseract_config.py")
@@ -275,7 +275,7 @@ else:
         configure_tesseract_windows()
 '''
         
-        with open("ocr_engine_fix.py", "w") as f:
+        with open("ocr_engine_fix.py", "w", encoding='utf-8') as f:
             f.write(fix_content)
         
         print("✅ Created ocr_engine_fix.py for Windows")
