@@ -454,7 +454,7 @@ exe = EXE(
 '''
         
         # Write spec files
-        main_spec_file = self.build_dir / "main_app.spec"
+        main_spec_file = self.build_dir / "universal_document_converter.spec"
         tray_spec_file = self.build_dir / "tray_app.spec"
         
         with open(main_spec_file, 'w') as f:

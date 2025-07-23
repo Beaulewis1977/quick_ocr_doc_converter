@@ -70,7 +70,7 @@ def create_start_menu_shortcut():
         
         # Copy necessary files
         files_to_copy = [
-            "document_converter_gui.py",
+            "universal_document_converter.py",
             "run_converter.bat"
         ]
         
@@ -107,7 +107,7 @@ def main():
     print("\n🎉 Installation complete!")
     print("\nTo use the converter:")
     print("  • Double-click 'run_converter.bat'")
-    print("  • Or run: python document_converter_gui.py")
+    print("  • Or run: python universal_document_converter.py")
     if os.name == 'nt':
         print("  • Or use the desktop/start menu shortcut")
     

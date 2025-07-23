@@ -33,9 +33,7 @@ def main():
     if not app_file:
         print("ERROR: No application file found!")
         print("Looking for:")
-        print("  - universal_document_converter_ocr.py")
-        print("  - main_app.py")
-        print("  - universal_document_converter.py")
+        print("  - universal_document_converter.py (Complete GUI)")
         input("\nPress Enter to exit...")
         return 1
     

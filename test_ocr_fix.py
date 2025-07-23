@@ -84,29 +84,29 @@ def test_ocr_engine_patches():
 def test_gui_ocr_compatibility():
     """Test that GUI OCR has the right return type handling"""
     try:
-        gui_ocr_path = Path("gui_ocr.py")
+        gui_ocr_path = Path("universal_document_converter.py")
         if gui_ocr_path.exists():
             with open(gui_ocr_path, "r") as f:
                 content = f.read()
             
             # Check for the fix we applied
             if "isinstance(ocr_result, dict)" in content:
-                print("✅ gui_ocr.py has dictionary return type handling")
+                print("✅ universal_document_converter.py has dictionary return type handling")
             else:
-                print("❌ gui_ocr.py missing dictionary return type handling")
+                print("❌ universal_document_converter.py missing dictionary return type handling")
                 return False
             
             # Check for the proper OCR call format
             if "{'language': self.language_var.get()}" in content:
-                print("✅ gui_ocr.py has proper OCR call format")
+                print("✅ universal_document_converter.py has proper OCR call format")
             else:
-                print("❌ gui_ocr.py missing proper OCR call format")
+                print("❌ universal_document_converter.py missing proper OCR call format")
                 return False
         else:
-            print("⚠️  gui_ocr.py not found")
+            print("⚠️  universal_document_converter.py not found")
             return False
     except Exception as e:
-        print(f"❌ Error checking gui_ocr.py: {e}")
+        print(f"❌ Error checking universal_document_converter.py: {e}")
         return False
     
     return True

@@ -313,7 +313,7 @@ def main():
         print("✅ OCR system should now be ready!")
         print("\nNext steps:")
         print("1. Test the installation: python3 test_all_fixes.py")
-        print("2. Run OCR GUI: python3 gui_ocr.py")
+        print("2. Run Complete GUI: python3 universal_document_converter.py")
         print("3. Run Universal Converter: python3 universal_document_converter_ocr.py")
     else:
         print(f"❌ {total_steps - success_count} steps failed")

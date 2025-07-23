@@ -14,7 +14,7 @@ A simple, user-friendly desktop application for converting documents (DOCX, PDF,
 
 ### Option 3: Python Direct
 ```bash
-python document_converter_gui.py
+python universal_document_converter.py
 ```
 
 ## 📦 Installation & Setup
@@ -93,7 +93,7 @@ Found 89 files to convert:
 ## 🛠️ Technical Details
 
 ### Files in This Package
-- **`document_converter_gui.py`** - Main GUI application
+- **`universal_document_converter.py`** - Complete GUI application with all features
 - **`run_converter.bat`** - Simple Windows launcher
 - **`run_converter.ps1`** - PowerShell launcher with error handling
 - **`install_converter.py`** - One-time setup installer
