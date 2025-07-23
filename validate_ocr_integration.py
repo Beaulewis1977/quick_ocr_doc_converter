@@ -91,7 +91,8 @@ class OCRIntegrationValidator:
             try:
                 font = ImageFont.load_default()
                 draw.text((10, 10), "TEST", fill='black', font=font)
-            except:
+            except (IOError, AttributeError) as e:
+                logger.debug(f"Could not load font: {e}")
                 draw.text((10, 10), "TEST", fill='black')
             
             test_image = os.path.join(self.temp_dir, 'test_ocr.png')

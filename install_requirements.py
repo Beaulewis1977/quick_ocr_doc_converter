@@ -10,7 +10,11 @@ import os
 def run_command(cmd):
     """Run a command and return success status"""
     try:
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        # Convert string command to list for safer execution
+        if isinstance(cmd, str):
+            import shlex
+            cmd = shlex.split(cmd)
+        result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode == 0:
             print(f"✅ {cmd}")
             return True

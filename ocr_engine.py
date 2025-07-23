@@ -161,35 +161,34 @@ class OCREngine:
             # Try to extract text with PyMuPDF first (faster)
             try:
                 import fitz  # PyMuPDF
-                doc = fitz.open(str(pdf_path))
-                text = ""
-                
-                for page_num in range(len(doc)):
-                    page = doc[page_num]
-                    page_text = page.get_text()
+                with fitz.open(str(pdf_path)) as doc:
+                    text = ""
                     
-                    # If page has no text or very little text, use OCR
-                    if not page_text.strip() or len(page_text.strip()) < 50:
-                        # Convert page to image and OCR
-                        pix = page.get_pixmap()
-                        img_data = pix.tobytes("png")
+                    for page_num in range(len(doc)):
+                        page = doc[page_num]
+                        page_text = page.get_text()
                         
-                        # Save temporary image
-                        temp_image = pdf_path.parent / f"temp_page_{page_num}.png"
-                        with open(temp_image, 'wb') as f:
-                            f.write(img_data)
-                        
-                        # OCR the image
-                        ocr_text = self.extract_text(temp_image, language)
-                        text += f"\n--- Page {page_num + 1} ---\n{ocr_text}\n"
-                        
-                        # Clean up
-                        temp_image.unlink(missing_ok=True)
-                    else:
-                        text += f"\n--- Page {page_num + 1} ---\n{page_text}\n"
-                
-                doc.close()
-                return text.strip()
+                        # If page has no text or very little text, use OCR
+                        if not page_text.strip() or len(page_text.strip()) < 50:
+                            # Convert page to image and OCR
+                            pix = page.get_pixmap()
+                            img_data = pix.tobytes("png")
+                            
+                            # Save temporary image
+                            temp_image = pdf_path.parent / f"temp_page_{page_num}.png"
+                            with open(temp_image, 'wb') as f:
+                                f.write(img_data)
+                            
+                            # OCR the image
+                            ocr_text = self.extract_text(temp_image, language)
+                            text += f"\n--- Page {page_num + 1} ---\n{ocr_text}\n"
+                            
+                            # Clean up
+                            temp_image.unlink(missing_ok=True)
+                        else:
+                            text += f"\n--- Page {page_num + 1} ---\n{page_text}\n"
+                    
+                    return text.strip()
                 
             except ImportError:
                 # Fallback: Convert PDF to images and OCR each page

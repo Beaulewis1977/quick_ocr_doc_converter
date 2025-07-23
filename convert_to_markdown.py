@@ -8,6 +8,7 @@ import os
 import sys
 from pathlib import Path
 import argparse
+import subprocess
 
 def install_requirements():
     """Install required packages"""
@@ -23,7 +24,7 @@ def install_requirements():
             print(f"✓ {package} already installed")
         except ImportError:
             print(f"Installing {package}...")
-            os.system(f'pip install {package}')
+            subprocess.run([sys.executable, '-m', 'pip', 'install', package], capture_output=True)
 
 def convert_docx_to_markdown(file_path):
     """Convert DOCX file to Markdown"""

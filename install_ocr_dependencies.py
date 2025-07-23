@@ -17,7 +17,11 @@ def run_command(command, description=""):
         print(f"  {description}")
     
     try:
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        # Convert string command to list for safer execution
+        if isinstance(command, str):
+            import shlex
+            command = shlex.split(command)
+        result = subprocess.run(command, capture_output=True, text=True)
         if result.returncode == 0:
             print(f"✅ Success: {description}")
             return True

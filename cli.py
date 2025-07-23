@@ -117,16 +117,15 @@ Examples:
             if not HAS_CONVERTERS:
                 raise ImportError("PDF conversion libraries not available")
             
-            doc = fitz.open(pdf_path)
-            text = ""
-            
-            for page_num in range(doc.page_count):
-                page = doc[page_num]
-                text += page.get_text()
-                text += "\n\n"
-            
-            doc.close()
-            return text.strip()
+            with fitz.open(pdf_path) as doc:
+                text = ""
+                
+                for page_num in range(doc.page_count):
+                    page = doc[page_num]
+                    text += page.get_text()
+                    text += "\n\n"
+                
+                return text.strip()
             
         except Exception as e:
             self.logger.error(f"PDF conversion failed: {e}")

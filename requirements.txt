@@ -35,6 +35,7 @@ cryptography>=3.4.0
 
 # PDF processing
 PyMuPDF>=1.23.0
+PyPDF2>=3.0.1
 
 # Cloud API integrations (optional)
 google-cloud-vision>=3.0.0

@@ -700,3 +700,23 @@ class OCREngine:
         except Exception as e:
             self.logger.error(f"PDF OCR extraction failed: {e}")
             return ""
+    
+    def cleanup(self):
+        """Clean up OCR engine resources"""
+        # Clean up EasyOCR readers from thread local storage
+        if hasattr(self, '_thread_local'):
+            if hasattr(self._thread_local, 'easyocr_reader'):
+                try:
+                    # EasyOCR readers don't have explicit close method, 
+                    # but we can delete the reference to free memory
+                    del self._thread_local.easyocr_reader
+                except Exception as e:
+                    self.logger.warning(f"Error cleaning up EasyOCR reader: {e}")
+        
+        # Clear the cache
+        try:
+            self.clear_cache()
+        except Exception as e:
+            self.logger.warning(f"Error clearing cache: {e}")
+        
+        self.logger.info("OCR engine cleanup completed")

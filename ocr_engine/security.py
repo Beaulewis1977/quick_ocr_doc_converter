@@ -43,12 +43,19 @@ class OCRSecurityValidator:
             SecurityError: If path contains security risks
         """
         try:
+            # Check for directory traversal attempts in the original path
+            if '..' in path or path.startswith('~'):
+                raise SecurityError("Potential directory traversal detected")
+            
             # Normalize and resolve path
             path_obj = Path(path).resolve()
             
-            # Check for directory traversal attacks
-            if '..' in str(path_obj) or str(path_obj).startswith('..'):
-                raise SecurityError("Directory traversal detected")
+            # Additional security check: ensure the resolved path doesn't escape allowed directories
+            # This prevents symlink-based attacks
+            if self.config.get('allowed_directories'):
+                allowed_dirs = [Path(d).resolve() for d in self.config['allowed_directories']]
+                if not any(path_obj.is_relative_to(allowed_dir) for allowed_dir in allowed_dirs):
+                    raise SecurityError("Path is outside allowed directories")
             
             # Ensure file exists and is actually a file
             if not path_obj.exists():
@@ -91,11 +98,17 @@ class OCRSecurityValidator:
             SecurityError: If path is insecure or not writable
         """
         try:
+            # Check for directory traversal attempts in the original path
+            if '..' in path or path.startswith('~'):
+                raise SecurityError("Potential directory traversal detected in output path")
+            
             path_obj = Path(path).resolve()
             
-            # Prevent directory traversal
-            if '..' in str(path_obj):
-                raise SecurityError("Directory traversal detected in output path")
+            # Additional security check for allowed directories
+            if self.config.get('allowed_directories'):
+                allowed_dirs = [Path(d).resolve() for d in self.config['allowed_directories']]
+                if not any(path_obj.is_relative_to(allowed_dir) for allowed_dir in allowed_dirs):
+                    raise SecurityError("Output path is outside allowed directories")
             
             # Check directory permissions
             parent_dir = path_obj.parent

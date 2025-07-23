@@ -10,6 +10,7 @@ import threading
 import os
 from pathlib import Path
 import sys
+import subprocess
 
 class DocumentConverterGUI:
     def __init__(self, root):
@@ -321,7 +322,7 @@ class DocumentConverterGUI:
                 __import__(package.replace('-', '_'))
             except ImportError:
                 self.log_message(f"📦 Installing {package}...")
-                os.system(f'pip install {package}')
+                subprocess.run([sys.executable, '-m', 'pip', 'install', package], capture_output=True, text=True)
     
     def convert_docx_to_markdown(self, file_path):
         """Convert DOCX file to Markdown"""
