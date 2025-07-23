@@ -46,7 +46,7 @@ def test_gui_ocr_import():
 def test_universal_converter_import():
     """Test importing Universal Document Converter"""
     try:
-        from universal_document_converter_ocr import DocumentConverterApp
+        from universal_document_converter import UniversalDocumentConverter
         print("✅ Universal Document Converter import successful")
         return True
         
@@ -124,7 +124,7 @@ def main():
         print("🎉 OCR system is ready to use!")
         print("\nYou can now run:")
         print("  - python universal_document_converter.py")
-        print("  - python universal_document_converter_ocr.py")
+        print("  - python universal_document_converter.py")
         print("  - Drag and drop functionality should work")
         return 0
     else:

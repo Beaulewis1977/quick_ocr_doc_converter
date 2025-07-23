@@ -29,7 +29,7 @@ class CodeVerifier:
         print("\n=== Verifying File Structure ===")
         
         essential_files = [
-            'universal_document_converter_ocr.py',
+            'universal_document_converter.py',
             'ocr_engine/__init__.py',
             'ocr_engine/ocr_engine.py',
             'ocr_engine/ocr_integration.py',
@@ -76,7 +76,7 @@ class CodeVerifier:
         print("\n=== Verifying Internal Imports ===")
         
         # Check main application imports
-        main_app = 'universal_document_converter_ocr.py'
+        main_app = 'universal_document_converter.py'
         if os.path.exists(main_app):
             with open(main_app, 'r') as f:
                 content = f.read()
@@ -97,7 +97,7 @@ class CodeVerifier:
         print("\n=== Verifying Class Structure ===")
         
         class_checks = {
-            'universal_document_converter_ocr.py': ['DocumentConverterApp'],
+            'universal_document_converter.py': ['UniversalDocumentConverter'],
             'ocr_engine/ocr_engine.py': ['OCREngine'],
             'ocr_engine/ocr_integration.py': ['OCRIntegration'],
             'ocr_engine/format_detector.py': ['OCRFormatDetector'],

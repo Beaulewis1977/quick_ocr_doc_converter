@@ -32,7 +32,7 @@ def main():
         
         # Import the application
         print("Loading application...")
-        from universal_document_converter_ocr import DocumentConverterApp
+        from universal_document_converter import UniversalDocumentConverter
         
         # Configure the main window
         root.title("OCR Document Converter")
@@ -44,7 +44,7 @@ def main():
         
         # Create the application
         print("Starting GUI...")
-        app = DocumentConverterApp(root)
+        app = UniversalDocumentConverter(root)
         
         # Center window on screen
         root.update_idletasks()

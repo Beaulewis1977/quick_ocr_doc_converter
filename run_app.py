@@ -94,10 +94,10 @@ def main():
         sys.path.insert(0, str(Path(__file__).parent))
         # Try OCR version first
         try:
-            from universal_document_converter_ocr import DocumentConverterApp
+            from universal_document_converter import UniversalDocumentConverter
             import tkinter as tk
             root = tk.Tk()
-            app = DocumentConverterApp(root)
+            app = UniversalDocumentConverter(root)
             root.mainloop()
         except ImportError:
             # Fallback to non-OCR version

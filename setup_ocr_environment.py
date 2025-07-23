@@ -225,7 +225,7 @@ class OCRSetup:
         logger.info("\n" + "=" * 60)
         logger.info("✅ Setup completed successfully!")
         logger.info("=" * 60)
-        logger.info("You can now run: python universal_document_converter_ocr.py")
+        logger.info("You can now run: python universal_document_converter.py")
         
         return True
 

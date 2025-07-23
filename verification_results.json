@@ -1,6 +1,6 @@
 {
   "File Structure": {
-    "universal_document_converter_ocr.py": {
+    "universal_document_converter.py": {
       "success": true,
       "message": "Found"
     },
@@ -206,7 +206,7 @@
       "success": true,
       "message": "Valid"
     },
-    "./universal_document_converter_ocr.py": {
+    "./universal_document_converter.py": {
       "success": true,
       "message": "Valid"
     },
@@ -306,7 +306,7 @@
     }
   },
   "Classes": {
-    "universal_document_converter_ocr.py::DocumentConverterApp": {
+    "universal_document_converter.py::UniversalDocumentConverter": {
       "success": true,
       "message": "Found"
     },

@@ -87,10 +87,10 @@ def main():
     print("🚀 Starting Universal Document Converter...")
     try:
         # Import and run the main application
-        from universal_document_converter_ocr import DocumentConverterApp
+        from universal_document_converter import UniversalDocumentConverter
         import tkinter as tk
         root = tk.Tk()
-        app = DocumentConverterApp(root)
+        app = UniversalDocumentConverter(root)
         root.mainloop()
     except ImportError as e:
         print(f"❌ Error: Could not start converter: {e}")

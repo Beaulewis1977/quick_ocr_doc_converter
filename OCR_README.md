@@ -58,7 +58,7 @@ pip install docx2txt python-docx  # Document processing
 ### 1. Basic Usage
 ```python
 # Run the enhanced converter
-python universal_document_converter_ocr.py
+python universal_document_converter.py
 
 # Or use the CLI version
 python -m ocr_engine.ocr_integration input.jpg --output output.txt
@@ -117,7 +117,7 @@ export TESSDATA_PREFIX=/usr/share/tesseract-ocr/4.00/tessdata/
 ## 📋 Usage Examples
 
 ### GUI Application
-1. **Launch**: Run `python universal_document_converter_ocr.py`
+1. **Launch**: Run `python universal_document_converter.py`
 2. **Add Files**: Click "Add Files" or drag & drop files
 3. **Configure**: Enable/disable OCR, select output format
 4. **Convert**: Click "Start Conversion"

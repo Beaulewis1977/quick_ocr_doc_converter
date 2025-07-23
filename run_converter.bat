@@ -20,7 +20,7 @@ if %errorlevel% neq 0 (
 )
 
 :: Verify main script exists
-if not exist "universal_document_converter_ocr.py" (
+if not exist "universal_document_converter.py" (
     echo.
     echo ###########################################################
     echo # APPLICATION FILES MISSING                               #
@@ -38,10 +38,10 @@ if not exist "universal_document_converter_ocr.py" (
 :: Run the application
 echo.
 echo ###########################################################
-echo # STARTING OCR DOCUMENT CONVERTER v3.1.0                  #
+echo # STARTING UNIVERSAL DOCUMENT CONVERTER v3.1.0            #
 echo ###########################################################
 echo.
-python -X utf8 universal_document_converter_ocr.py %*
+python -X utf8 universal_document_converter.py %*
 
 :: Pause if launched by double-click
 if "%1" == "" pause
