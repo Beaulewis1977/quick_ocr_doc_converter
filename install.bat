@@ -19,7 +19,7 @@ if %errorlevel% neq 0 (
 
 :: Check Python installation
 echo Checking Python installation...
-python --version >nul 2>&1
+python3 --version >nul 2>&1
 if %errorlevel% neq 0 (
     echo.
     echo ERROR: Python is not installed or not in PATH
@@ -32,7 +32,7 @@ if %errorlevel% neq 0 (
 :: Run the setup script
 echo.
 echo Running OCR environment setup...
-python setup_ocr_environment.py
+python3 setup_ocr_environment.py
 if %errorlevel% neq 0 (
     echo.
     echo ERROR: Setup failed. Please check the error messages above.

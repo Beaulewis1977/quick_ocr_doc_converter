@@ -16,15 +16,15 @@ The simplest and most reliable method for VFP9/VB6 integration. This method work
 ```foxpro
 * Simple conversion
 LOCAL lcCommand, lnResult
-lcCommand = 'python cli.py input.md -o output.rtf -t rtf --quiet'
+lcCommand = 'python dll_builder_cli.py input.md -o output.rtf -t rtf --quiet'
 RUN /N (lcCommand)
 
 * Advanced conversion with error checking
 FUNCTION ConvertMarkdownToRTF(tcInputFile, tcOutputFile)
     LOCAL lcCommand, lnExitCode
     
-    * Note: This uses the main converter's cli.py, not the legacy DLL builder
-    lcCommand = 'python cli.py "' + tcInputFile + '" -o "' + tcOutputFile + '" -t rtf --quiet'
+    * Note: This uses the main converter's dll_builder_cli.py, not the legacy DLL builder
+    lcCommand = 'python dll_builder_cli.py "' + tcInputFile + '" -o "' + tcOutputFile + '" -t rtf --quiet'
     
     RUN /N7 (lcCommand) TO lnExitCode
     
@@ -36,7 +36,7 @@ ENDFUNC
 ```vb
 ' Simple conversion
 Dim cmd As String
-cmd = "python cli.py input.md -o output.rtf -t rtf --quiet"
+cmd = "python dll_builder_cli.py input.md -o output.rtf -t rtf --quiet"
 Shell cmd, vbHide
 
 ' Advanced conversion with error checking
@@ -44,7 +44,7 @@ Public Function ConvertMarkdownToRTF(inputFile As String, outputFile As String) 
     Dim cmd As String
     Dim taskId As Double
     
-    cmd = "python cli.py """ & inputFile & """ -o """ & outputFile & """ -t rtf --quiet"
+    cmd = "python dll_builder_cli.py """ & inputFile & """ -o """ & outputFile & """ -t rtf --quiet"
     taskId = Shell(cmd, vbHide)
     
     ' Wait for completion (basic approach)
@@ -100,7 +100,7 @@ FUNCTION BatchConvertViaJSON(taConversions)
     STRTOFILE(lcJSON, lcConfigFile)
     
     * Execute batch conversion
-    lcCommand = 'python cli.py --batch "' + lcConfigFile + '"'
+    lcCommand = 'python dll_builder_cli.py --batch "' + lcConfigFile + '"'
     RUN /N (lcCommand)
     
     * Cleanup
@@ -140,7 +140,7 @@ Public Function BatchConvertViaJSON(conversions As Collection) As Boolean
     Close #1
     
     ' Execute batch conversion
-    cmd = "python cli.py --batch """ & configFile & """"
+    cmd = "python dll_builder_cli.py --batch """ & configFile & """"
     Shell cmd, vbHide
     
     ' Cleanup
@@ -233,10 +233,10 @@ End If
 #### Building the DLL:
 ```cmd
 cd legacy_dll_builder
-python cli.py build
+python document_converter_cli.py build
 
 # Or use the enhanced CLI with better error handling:
-python cli_new.py build --source dll_source --output UniversalConverter32.dll
+python dll_builder_advanced_cli.py build --source dll_source --output UniversalConverter32.dll
 ```
 
 #### VFP9 DLL Implementation:
@@ -329,13 +329,13 @@ pip install pyinstaller
 ### Multi-threading Support:
 ```bash
 # Use multiple worker threads for better performance
-python cli.py input/ -o output/ --workers 8 --recursive
+python dll_builder_cli.py input/ -o output/ --workers 8 --recursive
 ```
 
 ### Batch Processing:
 ```bash
 # Process multiple files efficiently
-python cli.py *.md -o converted/ -t rtf
+python dll_builder_cli.py *.md -o converted/ -t rtf
 ```
 
 ### Caching:
@@ -348,17 +348,17 @@ python cli.py *.md -o converted/ -t rtf
 ### Convert Single File (Any Method):
 ```bash
 # Command line
-python cli.py document.md -o document.rtf -t rtf
+python dll_builder_cli.py document.md -o document.rtf -t rtf
 
 # JSON IPC
 echo '{"conversions":[{"input":["document.md"],"output":"document.rtf","from_format":"markdown","to_format":"rtf"}]}' > config.json
-python cli.py --batch config.json
+python dll_builder_cli.py --batch config.json
 ```
 
 ### VFP9 Quick Start:
 ```foxpro
 * Simple command line conversion
-lcCommand = 'python cli.py "mydoc.md" -o "mydoc.rtf" -t rtf'
+lcCommand = 'python dll_builder_cli.py "mydoc.md" -o "mydoc.rtf" -t rtf'
 RUN (lcCommand)
 
 * Check if conversion succeeded
@@ -371,7 +371,7 @@ ENDIF
 ```vb
 ' Simple command line conversion
 Dim cmd As String
-cmd = "python cli.py mydoc.md -o mydoc.rtf -t rtf"
+cmd = "python dll_builder_cli.py mydoc.md -o mydoc.rtf -t rtf"
 Shell cmd, vbHide
 
 ' Check if conversion succeeded (after delay)

@@ -273,7 +273,7 @@ Linux Setup:
         print("  python universal_document_converter.py")
         print()
         print("For help:")
-        print("  python cli.py --help")
+        print("  python dll_builder_cli.py --help")
 
 if __name__ == "__main__":
     setup = OCRSetup()

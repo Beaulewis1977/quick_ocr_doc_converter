@@ -7,13 +7,13 @@ This CLI provides all DLL building, testing, and integration functionality
 that was previously embedded in the main GUI application.
 
 Usage:
-    python cli.py build              # Build the DLL
-    python cli.py status             # Check DLL status
-    python cli.py test               # Run comprehensive tests
-    python cli.py vb6 generate       # Generate VB6 integration module
-    python cli.py vfp9 generate      # Generate VFP9 integration class
-    python cli.py package            # Create distribution package
-    python cli.py install           # Install DLL system-wide
+    python3 dll_builder_cli.py build              # Build the DLL
+    python3 dll_builder_cli.py status             # Check DLL status
+    python3 dll_builder_cli.py test               # Run comprehensive tests
+    python3 dll_builder_cli.py vb6 generate       # Generate VB6 integration module
+    python3 dll_builder_cli.py vfp9 generate      # Generate VFP9 integration class
+    python3 dll_builder_cli.py package            # Create distribution package
+    python3 dll_builder_cli.py install           # Install DLL system-wide
 """
 
 import argparse
@@ -23,8 +23,8 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-# Add src directory to path
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+# Add legacy_dll_builder/src directory to path
+sys.path.insert(0, str(Path(__file__).parent / "legacy_dll_builder" / "src"))
 
 from commands.build import DLLBuilder
 from commands.integration import VB6VFP9Integration

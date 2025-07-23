@@ -8,7 +8,7 @@ This package provides a production-ready 32-bit DLL (`UniversalConverter32.dll`)
 
 #### Core Components
 - **UniversalConverter32.dll** - The main 32-bit DLL for Windows
-- **cli.py** - Python CLI backend that powers the conversion
+- **dll_builder_cli.py** - Python CLI backend that powers the conversion
 - **requirements.txt** - Python dependencies
 
 #### Integration Modules
@@ -46,7 +46,7 @@ This package provides a production-ready 32-bit DLL (`UniversalConverter32.dll`)
 
 #### Manual Installation
 1. Copy `UniversalConverter32.dll` to your project directory
-2. Copy `cli.py` and `requirements.txt` to the same directory
+2. Copy `dll_builder_cli.py` and `requirements.txt` to the same directory
 3. Install Python dependencies: `pip install -r requirements.txt`
 4. Add the VB6 or VFP9 integration module to your project
 
@@ -54,7 +54,7 @@ This package provides a production-ready 32-bit DLL (`UniversalConverter32.dll`)
 ```cmd
 REM Copy DLL and supporting files to your project
 copy UniversalConverter32.dll "C:\Your\Project\Directory\"
-copy cli.py "C:\Your\Project\Directory\"
+copy dll_builder_cli.py "C:\Your\Project\Directory\"
 copy requirements.txt "C:\Your\Project\Directory\"
 
 REM Install Python dependencies
@@ -211,7 +211,7 @@ LONG GetFileInfo(const char* filePath, char* infoBuffer, int bufferSize);
 
 #### Common Errors
 - **Python not available** - Install Python 3.7+
-- **CLI script not found** - Ensure `cli.py` is in the DLL directory
+- **CLI script not found** - Ensure `dll_builder_cli.py` is in the DLL directory
 - **Input file not found** - Verify file path and permissions
 - **Permission denied** - Run with appropriate file permissions
 
@@ -277,7 +277,7 @@ cl /LD /O2 /DWIN32 /D_WIN32 /DNDEBUG UniversalConverter32.cpp ^
 #### Python Issues
 1. Ensure Python is in the system PATH
 2. Install required packages: `pip install -r requirements.txt`
-3. Test CLI directly: `python cli.py --help`
+3. Test CLI directly: `python dll_builder_cli.py --help`
 
 ### Technical Details
 

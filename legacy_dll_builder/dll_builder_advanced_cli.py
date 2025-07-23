@@ -243,7 +243,7 @@ class ErrorReporter:
             "message": "Python CLI not accessible from DLL",
             "fixes": [
                 "Ensure Python is in system PATH",
-                "Copy cli.py to the same directory as the DLL",
+                "Copy document_converter_cli.py to the same directory as the DLL",
                 "Use absolute paths in DLL configuration"
             ]
         }
@@ -427,7 +427,7 @@ def show_config():
         },
         "python": {
             "executable": "python",
-            "cli_path": "cli.py"
+            "cli_path": "document_converter_cli.py"
         }
     }
     

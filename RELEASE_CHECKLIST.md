@@ -21,7 +21,7 @@
 Contains:
 - [x] `universal_document_converter.py` - Main GUI application
 - [x] `cli_ocr.py` - OCR command-line interface
-- [x] `cli.py` - Document conversion CLI
+- [x] `dll_builder_cli.py` - Document conversion CLI
 - [x] `ocr_engine/` - Complete OCR engine directory
 - [x] `run_ocr_converter.bat` - Windows launcher
 - [x] `install.bat` - Windows installer
@@ -39,7 +39,7 @@ Contains:
 - [x] `VB6_PipeClient.bas` - VB6 pipe client
 - [x] `VFP9_VB6_INTEGRATION_GUIDE.md` - Integration guide
 - [x] `vfp9_config.json` - Configuration
-- [x] `cli.py` - CLI interface (required for DLL)
+- [x] `dll_builder_cli.py` - CLI interface (required for DLL)
 
 ## 🚀 Release Process
 

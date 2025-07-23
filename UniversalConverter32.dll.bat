@@ -12,7 +12,7 @@ if "%INPUT%"=="" goto usage
 if "%OUTPUT%"=="" goto usage
 
 REM Call the Python CLI
-python cli.py "%INPUT%" -o "%OUTPUT%" -t "%OUTPUT_FORMAT%" --quiet
+python3 dll_builder_cli.py "%INPUT%" -o "%OUTPUT%" -t "%OUTPUT_FORMAT%" --quiet
 
 REM Return appropriate exit code
 if %errorlevel%==0 (

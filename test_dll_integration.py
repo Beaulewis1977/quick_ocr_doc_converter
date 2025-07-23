@@ -18,15 +18,15 @@ def test_cli_functionality():
     print()
     
     # Test 1: Check if CLI script exists
-    cli_path = Path("cli.py")
+    cli_path = Path("dll_builder_cli.py")
     if not cli_path.exists():
-        print("❌ FAIL: cli.py not found")
+        print("❌ FAIL: dll_builder_cli.py not found")
         return False
-    print("✅ PASS: cli.py found")
+    print("✅ PASS: dll_builder_cli.py found")
     
     # Test 2: Test CLI help
     try:
-        result = subprocess.run([sys.executable, "cli.py", "--help"], 
+        result = subprocess.run([sys.executable, "dll_builder_cli.py", "--help"], 
                                capture_output=True, text=True, timeout=10)
         if result.returncode == 0:
             print("✅ PASS: CLI help command works")
@@ -62,7 +62,7 @@ This file tests the conversion functionality that will be used by the DLL.
         
         # Test 4: Test conversion
         try:
-            cmd = [sys.executable, "cli.py", str(test_input), "-o", str(test_output), "-t", "txt"]
+            cmd = [sys.executable, "dll_builder_cli.py", str(test_input), "-o", str(test_output), "-t", "txt"]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
             
             if result.returncode == 0:
@@ -101,7 +101,7 @@ This file tests the conversion functionality that will be used by the DLL.
         test_input.write_text(test_content)
         
         try:
-            cmd = [sys.executable, "cli.py", str(test_input), "-o", str(test_output), "-t", "html"]
+            cmd = [sys.executable, "dll_builder_cli.py", str(test_input), "-o", str(test_output), "-t", "html"]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
             
             if result.returncode == 0 and test_output.exists():

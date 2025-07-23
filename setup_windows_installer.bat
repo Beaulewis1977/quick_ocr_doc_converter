@@ -5,7 +5,7 @@ echo ========================================
 echo.
 
 REM Check if Python is available
-python --version >nul 2>&1
+python3 --version >nul 2>&1
 if %errorlevel% neq 0 (
     echo ERROR: Python is not installed or not in PATH
     echo Please install Python 3.6+ from https://python.org
@@ -14,14 +14,14 @@ if %errorlevel% neq 0 (
 )
 
 echo Python found. Checking version...
-python -c "import sys; print(f'Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')"
+python3 -c "import sys; print(f'Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')"
 
 REM Install required dependencies
 echo.
 echo Installing required dependencies...
 echo This may take a few minutes...
-python -m pip install --upgrade pip
-python -m pip install -r requirements_installer.txt
+python3 -m pip install --upgrade pip
+python3 -m pip install -r requirements_installer.txt
 
 if %errorlevel% neq 0 (
     echo.
@@ -37,7 +37,7 @@ echo Dependencies installed successfully!
 REM Create the installer
 echo.
 echo Creating Windows installer...
-python create_windows_installer.py
+python3 create_windows_installer.py
 
 if %errorlevel% neq 0 (
     echo.

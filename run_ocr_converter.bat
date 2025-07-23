@@ -3,7 +3,7 @@ title OCR Document Converter
 color 0A
 
 :: Check for Python installation
-where python >nul 2>nul
+where python3 >nul 2>nul
 if %errorlevel% neq 0 (
     echo.
     echo ###########################################################
@@ -41,7 +41,7 @@ echo ###########################################################
 echo # STARTING UNIVERSAL DOCUMENT CONVERTER v3.1.0            #
 echo ###########################################################
 echo.
-python -X utf8 universal_document_converter.py %*
+python3 -X utf8 universal_document_converter.py %*
 
 :: Pause if launched by double-click
 if "%1" == "" pause

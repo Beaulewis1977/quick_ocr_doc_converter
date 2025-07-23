@@ -9,7 +9,7 @@ echo.
 
 cd /d "%~dp0"
 
-python direct_launch.py
+python3 direct_launch.py
 
 echo.
 echo Press any key to exit...

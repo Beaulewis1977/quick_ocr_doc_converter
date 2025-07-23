@@ -58,8 +58,8 @@ class LegacyDLLBuilderIntegrationTest(BaseTestCase):
     def setUpClass(cls):
         """Set up test environment"""
         cls.legacy_dir = Path(__file__).parent.parent / "legacy_dll_builder"
-        cls.cli_path = cls.legacy_dir / "cli.py"
-        cls.cli_new_path = cls.legacy_dir / "cli_new.py"
+        cls.cli_path = cls.legacy_dir / "document_converter_cli.py"
+        cls.cli_new_path = cls.legacy_dir / "dll_builder_advanced_cli.py"
         
         # Verify CLI exists
         if not cls.cli_path.exists():

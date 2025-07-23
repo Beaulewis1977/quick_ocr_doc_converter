@@ -202,16 +202,16 @@ The 32-bit DLL integration for VB6 and VFP9 has been moved to a dedicated module
 
 3. **Build the 32-bit DLL**:
    ```bash
-   python cli.py build
+   python dll_builder_cli.py build
    ```
 
 4. **Generate integration templates**:
    ```bash
    # For VB6
-   python cli.py vb6 generate
+   python dll_builder_cli.py vb6 generate
    
    # For VFP9
-   python cli.py vfp9 generate
+   python dll_builder_cli.py vfp9 generate
    ```
 
 **Requirements:**

@@ -267,7 +267,7 @@ def test_dll_integration_methods():
         import subprocess
         
         # Test CLI help
-        result = subprocess.run([sys.executable, "cli.py", "--help"], 
+        result = subprocess.run([sys.executable, "dll_builder_cli.py", "--help"], 
                               capture_output=True, text=True, timeout=10)
         
         if result.returncode == 0:
@@ -276,7 +276,7 @@ def test_dll_integration_methods():
             print("❌ CLI backend test failed")
             
         # Test formats
-        result = subprocess.run([sys.executable, "cli.py", "--formats"], 
+        result = subprocess.run([sys.executable, "dll_builder_cli.py", "--formats"], 
                               capture_output=True, text=True, timeout=10)
         
         if result.returncode == 0:

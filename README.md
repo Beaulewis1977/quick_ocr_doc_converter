@@ -65,7 +65,7 @@ OCR Document Converter is a **professional-grade, enterprise-ready OCR applicati
    Or use one of the launchers:
    - **Windows**: Double-click `run_converter.bat` or `Quick Document Convertor.bat`
    - **Cross-platform**: `python launch_ocr.py`
-   - **CLI**: `python cli.py input.pdf -o output.txt -t txt --ocr`
+   - **CLI**: `python dll_builder_cli.py input.pdf -o output.txt -t txt --ocr`
 
 ### 🔧 **Manual Installation**
 
@@ -267,16 +267,16 @@ The OCR Document Converter includes a powerful CLI for automation and integratio
 #### Basic Usage
 ```bash
 # Single file OCR
-python cli.py document.jpg -o result.txt -t txt --ocr
+python dll_builder_cli.py document.jpg -o result.txt -t txt --ocr
 
 # Convert without OCR
-python cli.py document.pdf -o document.md -t md
+python dll_builder_cli.py document.pdf -o document.md -t md
 
 # Batch processing
-python cli.py *.jpg -o converted/ -t txt --ocr
+python dll_builder_cli.py *.jpg -o converted/ -t txt --ocr
 
 # Specify OCR language
-python cli.py scan.png -o text.txt --ocr --language fra
+python dll_builder_cli.py scan.png -o text.txt --ocr --language fra
 ```
 
 #### VFP9/VB6 Integration
@@ -286,11 +286,11 @@ Legacy VB6 and VFP9 integration has been moved to a dedicated module:
 cd legacy_dll_builder
 
 # Build 32-bit DLL
-python cli.py build
+python dll_builder_cli.py build
 
 # Generate integration templates
-python cli.py vb6 generate   # For VB6
-python cli.py vfp9 generate  # For VFP9
+python dll_builder_cli.py vb6 generate   # For VB6
+python dll_builder_cli.py vfp9 generate  # For VFP9
 ```
 
 See `legacy_dll_builder/README.md` for detailed VB6/VFP9 integration instructions.
@@ -406,8 +406,8 @@ ocr_document_converter/
 │
 ├── 📁 legacy_dll_builder/            # VB6/VFP9 Integration (Separated)
 │   ├── README.md                     # Legacy system documentation
-│   ├── cli.py                        # DLL builder CLI
-│   ├── cli_new.py                    # Enhanced Click-based CLI
+│   ├── document_converter_cli.py     # DLL builder CLI
+│   ├── dll_builder_advanced_cli.py   # Enhanced Click-based CLI
 │   ├── dll_source/                   # C++ DLL source code
 │   ├── templates/                    # VB6/VFP9 templates
 │   └── src/commands/                 # Build system components
@@ -498,7 +498,7 @@ python test_ocr_integration.py --category performance
 
 Contains EVERYTHING including:
 - ✅ Full GUI application with OCR
-- ✅ CLI interface (`cli.py`)
+- ✅ CLI interface (`dll_builder_cli.py`)
 - ✅ OCR engines (Tesseract & EasyOCR support)
 - ✅ VFP9/VB6 integration (via legacy_dll_builder module)
 - ✅ All documentation
@@ -523,7 +523,7 @@ For VFP9/VB6 integration:
 ```bash
 # Build DLL for VFP9/VB6
 cd legacy_dll_builder
-python cli.py build
+python dll_builder_cli.py build
 
 # Or download pre-built DLL package
 https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/UniversalConverter32.dll.zip

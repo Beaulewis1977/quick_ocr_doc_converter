@@ -18,10 +18,10 @@ echo   1. Navigate to the legacy module:
 echo      cd legacy_dll_builder
 echo.
 echo   2. Build the DLL:
-echo      python cli.py build
+echo      python3 document_converter_cli.py build
 echo.
 echo   3. Or use the enhanced CLI with better error handling:
-echo      python cli_new.py build --source dll_source --output UniversalConverter32.dll
+echo      python3 dll_builder_advanced_cli.py build --source dll_source --output UniversalConverter32.dll
 echo.
 echo For more information, see:
 echo   - legacy_dll_builder\README.md

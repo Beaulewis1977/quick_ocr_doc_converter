@@ -38,21 +38,21 @@ The Legacy DLL Builder provides:
 
 #### Check DLL Status
 ```bash
-python cli.py status
+python document_converter_cli.py status
 ```
 
 #### Build the DLL
 ```bash
-python cli.py build
+python document_converter_cli.py build
 ```
 
 #### Generate Integration Templates
 ```bash
 # For VB6
-python cli.py vb6 generate
+python document_converter_cli.py vb6 generate
 
 # For VFP9
-python cli.py vfp9 generate
+python document_converter_cli.py vfp9 generate
 ```
 
 ## Advanced CLI (Click-based)
@@ -61,23 +61,23 @@ A new enhanced CLI with better error handling and configuration support is avail
 
 ### Verify Build Tools
 ```bash
-python cli_new.py verify-tools
+python dll_builder_advanced_cli.py verify-tools
 ```
 
 ### Build with Configuration
 ```bash
-python cli_new.py build --source dll_source --output UniversalConverter32.dll --timeout 300
+python dll_builder_advanced_cli.py build --source dll_source --output UniversalConverter32.dll --timeout 300
 ```
 
 ### Generate Templates
 ```bash
-python cli_new.py generate-template vb6 --output MyProject.bas
-python cli_new.py generate-template vfp9 --output MyProject.prg
+python dll_builder_advanced_cli.py generate-template vb6 --output MyProject.bas
+python dll_builder_advanced_cli.py generate-template vfp9 --output MyProject.prg
 ```
 
 ### Show Configuration Options
 ```bash
-python cli_new.py show-config
+python dll_builder_advanced_cli.py show-config
 ```
 
 ## Configuration
@@ -101,7 +101,7 @@ Create a `config.json` file for custom settings:
   },
   "python": {
     "executable": "python",
-    "cli_path": "cli.py"
+    "cli_path": "document_converter_cli.py"
   }
 }
 ```
@@ -176,14 +176,14 @@ ENDIF
 
 ### Run DLL Tests
 ```bash
-python cli.py test all
+python document_converter_cli.py test all
 ```
 
 ### Test Specific Functions
 ```bash
-python cli.py test functions
-python cli.py test conversion --file test.pdf
-python cli.py test performance --file test.pdf --iterations 10
+python document_converter_cli.py test functions
+python document_converter_cli.py test conversion --file test.pdf
+python document_converter_cli.py test performance --file test.pdf --iterations 10
 ```
 
 ## Troubleshooting
@@ -203,19 +203,19 @@ If you get a "No compiler found" error:
 
 ### DLL Not Loading in VB6/VFP9
 1. Ensure the DLL is 32-bit (use `dumpbin /headers UniversalConverter32.dll`)
-2. Place `cli.py` in the same directory as the DLL
+2. Place `document_converter_cli.py` in the same directory as the DLL
 3. Ensure Python is in system PATH
 4. Check Windows Defender hasn't quarantined the DLL
 
 ### Python CLI Not Found
-The DLL requires the Python CLI script (`cli.py`) to be in the same directory. This is the simple document converter that the DLL calls.
+The DLL requires the Python CLI script (`document_converter_cli.py`) to be in the same directory. This is the simple document converter that the DLL calls.
 
 ## Architecture
 
 ```
 legacy_dll_builder/
-├── cli.py                    # Main CLI interface
-├── cli_new.py               # Enhanced Click-based CLI
+├── document_converter_cli.py # Main CLI interface
+├── dll_builder_advanced_cli.py # Enhanced Click-based CLI
 ├── requirements.txt         # Python dependencies
 ├── config.json.example      # Configuration template
 ├── dll_source/              # C++ DLL source code
