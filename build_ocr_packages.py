@@ -29,14 +29,11 @@ class OCRPackageBuilder:
         
         dll_files = [
             "UniversalConverter32.dll.bat",  # DLL simulator
-            "UniversalConverter_VFP9.prg",
-            "VB6_UniversalConverter.bas",
-            "VB6_ConverterForm.frm",
-            "VFP9_PipeClient.prg",
-            "VB6_PipeClient.bas",
-            "VFP9_VB6_INTEGRATION_GUIDE.md",
-            "vfp9_config.json",
-            "cli.py"  # CLI interface needed for DLL simulator
+            "vb6_integration_simple.vb",     # VB6 integration for simple CLI
+            "vfp9_integration_simple.prg",   # VFP9 integration for simple CLI
+            "cli.py",                        # Simple CLI without OCR
+            "requirements.txt",              # Dependencies for CLI
+            "README_DLL.md"                  # DLL package documentation
         ]
         
         dll_zip_path = self.dist_dir / "UniversalConverter32.dll.zip"
@@ -81,8 +78,12 @@ class OCRPackageBuilder:
             "launch_ocr.py",
             "⚡ Quick Launch OCR.bat",
             
-            # CLI for VB6/VFP9 DLL system
+            # Simple CLI for VB6/VFP9 DLL system (without OCR)
             "cli.py",
+            
+            # VB6/VFP9 integration files
+            "vb6_integration_simple.vb",
+            "vfp9_integration_simple.prg",
             
             # Installation
             "install.bat",
