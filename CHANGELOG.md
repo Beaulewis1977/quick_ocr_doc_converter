@@ -7,8 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0] - 2025-07-23
+
 ### Added
-- Initial project setup and documentation
+- Enhanced Click-based CLI for legacy DLL builder with better error handling
+- Compiler auto-detection for Visual Studio 2017/2019/2022 and MinGW
+- Configurable build timeout and cross-platform path resolution
+- Comprehensive test suite with shared utilities and fixtures
+- Performance benchmarking framework with detailed reporting
+- Security-focused tests for path traversal and injection attacks
+- Type hints throughout the codebase for better IDE support
+- Dedicated README for legacy_dll_builder module
+
+### Changed
+- **BREAKING**: Moved legacy DLL builder to dedicated `legacy_dll_builder/` directory
+- Replaced all `os.system()` calls with secure `subprocess.run()`
+- Improved error reporting with suggested fixes for common issues
+- Updated all documentation to reflect separated legacy system
+- Enhanced build configuration with JSON support
+
+### Fixed
+- Build timeout issues during DLL compilation
+- Cross-platform path handling inconsistencies
+- Security vulnerabilities in file path handling
+
+### Security
+- Added protection against path traversal attacks
+- Implemented secure subprocess execution without shell injection
+- Added input validation and sanitization throughout
+
+### Developer Experience
+- Created reusable test base classes and fixtures
+- Added integration tests for both main app and legacy system
+- Implemented performance benchmarking tools
+- Added comprehensive security testing framework
 
 ## [2.0.0] - 2024-12-11
 

@@ -1,5 +1,7 @@
 # Universal Document Converter - DLL Package
 
+> **📦 Important Update**: The DLL builder and VB6/VFP9 integration system has been moved to the `legacy_dll_builder/` directory for better organization and maintenance. This document describes the legacy approach. For the current implementation, please see `legacy_dll_builder/README.md`.
+
 ## Simple Document Conversion for VB6/VFP9 Integration
 
 This package provides a simple document converter specifically designed for VB6 and Visual FoxPro 9 legacy system integration. **This version does NOT include OCR functionality** - it focuses on basic document conversion only.

@@ -33,9 +33,10 @@ from commands.testing import DLLTester
 class LegacyDLLBuilderCLI:
     """Main CLI for Legacy DLL Builder system"""
     
-    def __init__(self):
+    def __init__(self, config=None):
         self.setup_logging()
-        self.builder = DLLBuilder(self.logger)
+        self.config = config or {}
+        self.builder = DLLBuilder(self.logger, self.config)
         self.integration = VB6VFP9Integration(self.logger)
         self.tester = DLLTester(self.logger)
     

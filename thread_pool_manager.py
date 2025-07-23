@@ -26,14 +26,14 @@ class ThreadPoolManager:
     _instance = None
     _lock = threading.Lock()
     
-    def __new__(cls):
+    def __new__(cls) -> 'ThreadPoolManager':
         if not cls._instance:
             with cls._lock:
                 if not cls._instance:
                     cls._instance = super().__new__(cls)
         return cls._instance
     
-    def __init__(self):
+    def __init__(self) -> None:
         if hasattr(self, '_initialized'):
             return
             
@@ -162,7 +162,7 @@ class ThreadPoolManager:
             return pool
     
     @contextmanager
-    def managed_pool(self, pool_name: str = "default", max_workers: Optional[int] = None):
+    def managed_pool(self, pool_name: str = "default", max_workers: Optional[int] = None) -> ThreadPoolExecutor:
         """
         Context manager for automatic pool cleanup
         
@@ -219,7 +219,7 @@ class ThreadPoolManager:
         
         return pool.submit(wrapped_fn, *args, **kwargs)
     
-    def shutdown_pool(self, pool_name: str, wait: bool = True, timeout: Optional[float] = None):
+    def shutdown_pool(self, pool_name: str, wait: bool = True, timeout: Optional[float] = None) -> None:
         """
         Shutdown a specific thread pool
         
@@ -245,7 +245,7 @@ class ThreadPoolManager:
                     )
                     del self._pool_stats[pool_name]
     
-    def shutdown_all(self, wait: bool = True, timeout: float = 30):
+    def shutdown_all(self, wait: bool = True, timeout: float = 30) -> None:
         """
         Shutdown all thread pools
         

@@ -182,12 +182,54 @@ chmod +x setup_shortcuts.py
 
 ---
 
+## 🔌 Legacy System Integration (VB6/VFP9)
+
+### For Visual Basic 6 and Visual FoxPro 9 Users
+
+The 32-bit DLL integration for VB6 and VFP9 has been moved to a dedicated module for better maintenance.
+
+**Installation Steps:**
+
+1. **Navigate to the legacy module**:
+   ```bash
+   cd legacy_dll_builder
+   ```
+
+2. **Install requirements**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Build the 32-bit DLL**:
+   ```bash
+   python cli.py build
+   ```
+
+4. **Generate integration templates**:
+   ```bash
+   # For VB6
+   python cli.py vb6 generate
+   
+   # For VFP9
+   python cli.py vfp9 generate
+   ```
+
+**Requirements:**
+- Windows OS (for DLL building)
+- Visual Studio Build Tools or MinGW compiler
+- Python 3.8+
+
+For detailed instructions, see `legacy_dll_builder/README.md`
+
+---
+
 ## 💡 Tips
 
 - **First time users**: Start with `run_app.py`
 - **Want desktop shortcut**: Use `setup_shortcuts.py`
 - **Distributing to others**: Use `create_executable.py`
 - **Development**: Use virtual environment setup
+- **VB6/VFP9 users**: See legacy_dll_builder directory
 - **Having issues**: Check the troubleshooting section above
 
 The application is designed to be as easy as possible to run - just double-click and go!

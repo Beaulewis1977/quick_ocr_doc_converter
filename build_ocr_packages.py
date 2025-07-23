@@ -2,7 +2,7 @@
 """
 Build OCR Document Converter Packages
 Creates the two distribution packages as specified in README:
-1. UniversalConverter32.dll.zip - DLL package for VFP9/VB6
+1. UniversalConverter32.dll.zip - Legacy DLL builder package for VFP9/VB6
 2. Universal-Document-Converter-v3.1.0-Windows-Complete.zip - Complete application
 """
 
@@ -24,24 +24,29 @@ class OCRPackageBuilder:
         print(f"[BUILD] {message}")
         
     def create_dll_package(self):
-        """Create the DLL package for VFP9/VB6 integration"""
-        self.log("Creating DLL package...")
+        """Create the Legacy DLL builder package for VFP9/VB6 integration"""
+        self.log("Creating Legacy DLL builder package...")
         
         dll_files = [
-            # Production 32-bit DLL files (if built)
-            "dist/UniversalConverter32.dll",      # Actual production DLL
-            "cli.py",                             # Simple CLI without OCR
+            # Legacy DLL builder files
+            "legacy_dll_builder/cli.py",          # DLL builder CLI
+            "legacy_dll_builder/cli_new.py",      # Enhanced Click CLI
+            "legacy_dll_builder/requirements.txt",
+            "legacy_dll_builder/config.json.example",
+            "legacy_dll_builder/README.md",
             
             # DLL source code and build tools
-            "dll_source/UniversalConverter32.cpp",
-            "dll_source/UniversalConverter32.def", 
-            "dll_source/build_windows.bat",
-            "dll_source/Makefile",
-            "build_dll.bat",
+            "legacy_dll_builder/dll_source/UniversalConverter32.cpp",
+            "legacy_dll_builder/dll_source/UniversalConverter32.def", 
+            "legacy_dll_builder/dll_source/build_windows.bat",
+            "legacy_dll_builder/dll_source/Makefile",
+            
+            # Simple CLI for conversions
+            "legacy_dll_builder/src/cli.py",
             
             # Production VB6/VFP9 integration modules
-            "VB6_UniversalConverter_Production.bas",
-            "VFP9_UniversalConverter_Production.prg",
+            "legacy_dll_builder/templates/VB6_UniversalConverter_Production.bas",
+            "legacy_dll_builder/templates/VFP9_UniversalConverter_Production.prg",
             
             # Legacy integration files (for reference)
             "VB6_UniversalConverter.bas",

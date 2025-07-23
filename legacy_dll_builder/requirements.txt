@@ -9,6 +9,7 @@ beautifulsoup4>=4.11.0
 markdown>=3.4.0
 
 # CLI and utilities
+click>=8.0.0
 argparse-color-formatter>=1.2.2
 colorlog>=6.6.0
 

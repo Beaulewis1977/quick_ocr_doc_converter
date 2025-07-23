@@ -3,6 +3,7 @@ import sys
 import logging
 from pathlib import Path
 import subprocess
+from typing import Optional, List
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -15,7 +16,7 @@ class OCREngine:
     Handles both image and PDF OCR with configurable settings
     """
     
-    def __init__(self, logger=None):
+    def __init__(self, logger: Optional[logging.Logger] = None) -> None:
         """
         Initialize OCR Engine
         
@@ -27,7 +28,7 @@ class OCREngine:
         self.tesseract_path = None
         self._setup_tesseract()
         
-    def _setup_tesseract(self):
+    def _setup_tesseract(self) -> None:
         """Setup Tesseract with cross-platform support"""
         try:
             # Try to find Tesseract in common locations
@@ -66,11 +67,11 @@ class OCREngine:
             self.logger.error(f"Error setting up Tesseract: {e}")
             self.backend = None
     
-    def is_available(self):
+    def is_available(self) -> bool:
         """Check if OCR backend is available"""
         return self.backend is not None
     
-    def get_supported_languages(self):
+    def get_supported_languages(self) -> List[str]:
         """Get list of supported languages"""
         if not self.is_available():
             return ['eng']
@@ -89,7 +90,7 @@ class OCREngine:
         
         return ['eng']
     
-    def extract_text(self, image_path, language='eng'):
+    def extract_text(self, image_path: str, language: str = 'eng') -> str:
         """
         Extract text from image using Tesseract CLI
         
@@ -137,7 +138,7 @@ class OCREngine:
         
         return ""
 
-    def extract_text_from_pdf(self, pdf_path, language='eng'):
+    def extract_text_from_pdf(self, pdf_path: str, language: str = 'eng') -> str:
         """
         Extract text from PDF using OCR
         

@@ -8,20 +8,26 @@ import os
 import sys
 import subprocess
 import shutil
+import platform
+import json
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple, List
 import logging
+import time
 
 class DLLBuilder:
-    """Handles DLL building and compilation"""
+    """Handles DLL building and compilation with improved subprocess management"""
     
-    def __init__(self, logger: Optional[logging.Logger] = None):
+    def __init__(self, logger: Optional[logging.Logger] = None, config: Optional[Dict[str, Any]] = None):
         self.logger = logger or logging.getLogger(__name__)
+        self.config = config or {}
+        self.timeout = self.config.get('build_timeout', 300)  # 5 minutes default
         self.dll_paths = [
-            Path("dist/UniversalConverter32.dll"),
-            Path("dll_source/UniversalConverter32.dll"),
+            Path("dist") / "UniversalConverter32.dll",
+            Path("dll_source") / "UniversalConverter32.dll",
             Path("UniversalConverter32.dll")
         ]
+        self.compiler_info = None
         
     def check_dll_status(self) -> Dict[str, Any]:
         """Check the status of the DLL build and installation"""
@@ -84,38 +90,23 @@ class DLLBuilder:
                 self.logger.error("❌ build_dll.bat not found")
                 return False
             
-            # Run build script
-            def build_thread():
-                try:
-                    process = subprocess.Popen(
-                        ["build_dll.bat"],
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        text=True,
-                        shell=True
-                    )
-                    
-                    # Stream output
-                    while True:
-                        output = process.stdout.readline()
-                        if output == '' and process.poll() is not None:
-                            break
-                        if output:
-                            self.logger.info(output.strip())
-                    
-                    # Check result
-                    if process.returncode == 0:
-                        self.logger.info("✅ DLL build completed successfully!")
-                        return True
-                    else:
-                        self.logger.error(f"❌ DLL build failed with code {process.returncode}")
-                        return False
-                        
-                except Exception as e:
-                    self.logger.error(f"❌ Build error: {str(e)}")
+            # Detect compiler if not already done
+            if not self.compiler_info:
+                compiler_found, message = self._detect_compiler()
+                if not compiler_found:
+                    self.logger.error(f"❌ {message}")
+                    self._show_compiler_help()
                     return False
+                self.logger.info(f"✅ {message}")
             
-            return build_thread()
+            # Build based on detected compiler
+            if self.compiler_info.get('type') == 'visual_studio':
+                return self._build_with_visual_studio()
+            elif self.compiler_info.get('type') == 'build_script':
+                return self._build_with_script()
+            else:
+                self.logger.error("❌ No supported build method found")
+                return False
             
         except Exception as e:
             self.logger.error(f"❌ Error starting build: {str(e)}")
@@ -127,11 +118,11 @@ class DLLBuilder:
             source_dir = Path("dll_source")
             if source_dir.exists():
                 if sys.platform == "win32":
-                    os.startfile(source_dir)
+                    subprocess.run(["explorer", str(source_dir)], check=False)
                 elif sys.platform == "darwin":
-                    subprocess.run(["open", source_dir])
+                    subprocess.run(["open", str(source_dir)], check=False)
                 else:
-                    subprocess.run(["xdg-open", source_dir])
+                    subprocess.run(["xdg-open", str(source_dir)], check=False)
                 
                 self.logger.info(f"📁 Opened source directory: {source_dir.absolute()}")
                 return True
@@ -241,3 +232,161 @@ Notes:
         except Exception as e:
             self.logger.error(f"❌ System installation error: {str(e)}")
             return False
+    
+    def _detect_compiler(self) -> Tuple[bool, str]:
+        """Detect available compiler with improved checks"""
+        # Check for Visual Studio
+        vs_info = self._find_visual_studio()
+        if vs_info:
+            self.compiler_info = {'type': 'visual_studio', **vs_info}
+            return True, f"Found Visual Studio {vs_info['version']}"
+        
+        # Check for build script
+        if Path("build_dll.bat").exists():
+            self.compiler_info = {'type': 'build_script'}
+            return True, "Found build_dll.bat script"
+        
+        # Check for MinGW
+        if self._check_mingw():
+            self.compiler_info = {'type': 'mingw'}
+            return True, "Found MinGW compiler"
+        
+        return False, "No compatible compiler found"
+    
+    def _find_visual_studio(self) -> Optional[Dict[str, str]]:
+        """Find Visual Studio installation"""
+        vs_paths = [
+            Path(r"C:\Program Files (x86)\Microsoft Visual Studio"),
+            Path(r"C:\Program Files\Microsoft Visual Studio")
+        ]
+        
+        for base_path in vs_paths:
+            if not base_path.exists():
+                continue
+            
+            for year in ["2022", "2019", "2017"]:
+                vs_path = base_path / year
+                if vs_path.exists():
+                    # Find vcvarsall.bat
+                    for edition in ["Community", "Professional", "Enterprise"]:
+                        vcvars = vs_path / edition / "VC" / "Auxiliary" / "Build" / "vcvarsall.bat"
+                        if vcvars.exists():
+                            return {
+                                "version": year,
+                                "edition": edition,
+                                "path": str(vs_path),
+                                "vcvarsall": str(vcvars)
+                            }
+        return None
+    
+    def _check_mingw(self) -> bool:
+        """Check if MinGW is available"""
+        try:
+            result = subprocess.run(
+                ["gcc", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            return result.returncode == 0
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            return False
+    
+    def _build_with_visual_studio(self) -> bool:
+        """Build using Visual Studio with proper error handling"""
+        self.logger.info("Building with Visual Studio...")
+        
+        vcvarsall = self.compiler_info['vcvarsall']
+        source_dir = Path("dll_source")
+        
+        # Build command with proper escaping
+        build_cmd = [
+            "cmd", "/c",
+            f'"{vcvarsall}" x86 && cl /LD /Fe"UniversalConverter32.dll" "UniversalConverter32.cpp" /DEF:"UniversalConverter32.def"'
+        ]
+        
+        try:
+            # Run build with timeout
+            start_time = time.time()
+            process = subprocess.run(
+                build_cmd,
+                capture_output=True,
+                text=True,
+                timeout=self.timeout,
+                cwd=source_dir
+            )
+            
+            elapsed = time.time() - start_time
+            
+            if process.returncode == 0:
+                self.logger.info(f"✅ Build completed in {elapsed:.1f}s")
+                
+                # Copy DLL to expected locations
+                dll_source = source_dir / "UniversalConverter32.dll"
+                if dll_source.exists():
+                    for dest in [Path("."), Path("dist")]:
+                        dest.mkdir(exist_ok=True)
+                        shutil.copy2(dll_source, dest / "UniversalConverter32.dll")
+                return True
+            else:
+                self.logger.error("❌ Build failed")
+                if process.stdout:
+                    self.logger.error(f"Output: {process.stdout}")
+                if process.stderr:
+                    self.logger.error(f"Error: {process.stderr}")
+                return False
+                
+        except subprocess.TimeoutExpired:
+            self.logger.error(f"❌ Build timeout exceeded ({self.timeout}s)")
+            return False
+        except Exception as e:
+            self.logger.error(f"❌ Build error: {str(e)}")
+            return False
+    
+    def _build_with_script(self) -> bool:
+        """Build using build_dll.bat script with improved handling"""
+        self.logger.info("Building with build_dll.bat script...")
+        
+        try:
+            # Run build script with proper subprocess handling
+            process = subprocess.run(
+                ["cmd", "/c", "build_dll.bat"],
+                capture_output=True,
+                text=True,
+                timeout=self.timeout
+            )
+            
+            # Log output
+            if process.stdout:
+                for line in process.stdout.splitlines():
+                    self.logger.info(line)
+            
+            if process.returncode == 0:
+                self.logger.info("✅ Build completed successfully")
+                return True
+            else:
+                self.logger.error(f"❌ Build failed with code {process.returncode}")
+                if process.stderr:
+                    self.logger.error(f"Error: {process.stderr}")
+                return False
+                
+        except subprocess.TimeoutExpired:
+            self.logger.error(f"❌ Build timeout exceeded ({self.timeout}s)")
+            return False
+        except Exception as e:
+            self.logger.error(f"❌ Build error: {str(e)}")
+            return False
+    
+    def _show_compiler_help(self):
+        """Show helpful compiler installation instructions"""
+        self.logger.info("\n📋 Compiler Installation Help:")
+        self.logger.info("\nOption 1: Visual Studio Build Tools")
+        self.logger.info("  1. Download from: https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022")
+        self.logger.info("  2. Install with 'Desktop development with C++' workload")
+        self.logger.info("  3. Include 'MSVC v143 - VS 2022 C++ x64/x86 build tools'")
+        self.logger.info("\nOption 2: MinGW-w64")
+        self.logger.info("  1. Download from: https://www.mingw-w64.org/downloads/")
+        self.logger.info("  2. Install with i686 (32-bit) support")
+        self.logger.info("  3. Add to PATH")
+        self.logger.info("\nOption 3: Use existing build_dll.bat")
+        self.logger.info("  Ensure build_dll.bat is in the current directory")
