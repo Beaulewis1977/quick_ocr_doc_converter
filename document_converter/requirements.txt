@@ -1,0 +1,47 @@
+# Document Converter GUI Requirements
+# Complete GUI application with OCR, document conversion, markdown tools, and API management
+
+# GUI Framework
+tkinter-tooltip>=2.2.0
+
+# OCR Dependencies
+pytesseract>=0.3.10
+Pillow>=9.5.0
+opencv-python>=4.7.0
+easyocr>=1.7.0
+numpy>=1.24.0
+
+# Document Processing
+python-docx>=0.8.11
+PyPDF2>=3.0.0
+PyMuPDF>=1.20.0
+beautifulsoup4>=4.11.0
+markdown>=3.4.0
+pypandoc>=1.11
+reportlab>=4.0.0
+ebooklib>=0.18
+
+# Cloud APIs
+google-cloud-vision>=3.4.0
+google-auth>=2.17.0
+requests>=2.28.0
+
+# File Processing
+pathlib2>=2.3.7
+mimetypes
+hashlib
+
+# Utilities
+concurrent.futures
+threading
+logging
+json
+time
+webbrowser
+gc
+
+# Optional: Enhanced features
+lxml>=4.9.0
+html5lib>=1.1
+chardet>=5.1.0
+python-magic>=0.4.27
