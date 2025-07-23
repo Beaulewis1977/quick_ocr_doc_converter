@@ -118,6 +118,8 @@ OCR Document Converter is a **professional-grade, enterprise-ready OCR applicati
 - **Professional GUI**: Modern, intuitive interface with tabbed design
 - **Drag & Drop**: Easy file handling
 - **Batch Processing**: Multiple file selection and processing
+- **Input Format Selection**: NEW - Choose input format explicitly for better processing
+- **OCR Engine Selection**: Real-time switching between Tesseract, EasyOCR, and Google Vision API
 - **Settings Panel**: Comprehensive configuration options with 4 dedicated tabs
 - **Preview Mode**: View processed results before saving
 - **Export Options**: Multiple output formats and destinations
@@ -147,8 +149,11 @@ OCR Document Converter is a **professional-grade, enterprise-ready OCR applicati
 - **Rich Text** (`.rtf`) - Formatted text with styling
 - **Microsoft Word** (`.docx`) - Professional documents
 - **PDF** (`.pdf`) - Searchable PDF with OCR layer
+- **Markdown** (`.md`) - GitHub-flavored markdown format
+- **HTML** (`.html`) - Web-ready formatted documents
 - **JSON** (`.json`) - Structured data with metadata
 - **CSV** (`.csv`) - Tabular data extraction
+- **EPUB** (`.epub`) - E-book format
 
 ---
 
@@ -196,12 +201,20 @@ OCR Document Converter is a **professional-grade, enterprise-ready OCR applicati
     "confidence_threshold": 0.8,
     "features": ["TEXT_DETECTION", "DOCUMENT_TEXT_DETECTION"],
     "language_hints": ["en", "fr", "de"],
+    "fallback_enabled": true,           # NEW: Auto-fallback to free OCR
+    "fallback_engines": ["tesseract", "easyocr"],  # Fallback order
     "encryption": {
         "enabled": true,
         "encrypt_api_keys": true
     }
 }
 ```
+
+**🔄 Intelligent Fallback System:**
+- Automatically falls back to Tesseract/EasyOCR if Google Vision API fails
+- Real-time status updates in GUI showing current OCR engine
+- No service interruption - seamless transition between engines
+- Preserves OCR quality with cost optimization
 
 **🔑 Google Vision API Setup:**
 
