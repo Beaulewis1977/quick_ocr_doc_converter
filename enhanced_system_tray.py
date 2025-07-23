@@ -61,8 +61,8 @@ class QuickConverterTray:
                     # Merge with defaults
                     default_config.update(config)
                     return default_config
-            except Exception:
-                pass
+            except Exception as e:
+                self.logger.warning(f"Failed to load tray configuration from {self.config_file}: {e}")
         
         return default_config
     
@@ -71,8 +71,8 @@ class QuickConverterTray:
         try:
             with open(self.config_file, 'w') as f:
                 json.dump(self.config, f, indent=2)
-        except Exception:
-            pass
+        except Exception as e:
+            self.logger.error(f"Failed to save tray configuration to {self.config_file}: {e}")
     
     def create_icon_image(self) -> Image.Image:
         """Create a professional icon for the system tray"""
