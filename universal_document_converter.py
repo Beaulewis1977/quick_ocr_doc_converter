@@ -39,6 +39,9 @@ from threading import Lock
 import webbrowser
 import gc
 
+# Thread pool management
+from thread_pool_manager import thread_manager
+
 # OCR and document processing imports
 try:
     from ocr_engine.ocr_engine import OCREngine
@@ -812,24 +815,33 @@ class UniversalDocumentConverter:
         """Worker thread for file conversion with concurrent processing"""
         try:
             self.start_time = time.time()
-            # Use adaptive batch size instead of fixed worker count
-            max_workers = min(self.worker_threads.get(), self.get_adaptive_batch_size())
-            self.logger.info(f"Starting conversion with {max_workers} workers (adaptive batch sizing)")
+            # Use thread pool manager with resource validation
+            requested_workers = min(self.worker_threads.get(), self.get_adaptive_batch_size())
             
-            with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-                # Submit all conversion tasks
+            # Use managed pool with automatic cleanup
+            with thread_manager.managed_pool("conversion", max_workers=requested_workers) as pool:
+                self.logger.info(f"Starting conversion with validated worker pool")
+                
+                # Submit all conversion tasks with backpressure handling
                 futures = {}
                 for i, file_path in enumerate(files):
                     if self.cancel_processing:
                         break
                     
-                    future = executor.submit(self.convert_single_file_safe, file_path, output_dir, i)
+                    # Use backpressure-aware submission
+                    future = thread_manager.submit_with_backpressure(
+                        "conversion", 
+                        self.convert_single_file_safe, 
+                        file_path, 
+                        output_dir, 
+                        i
+                    )
                     futures[future] = file_path
                 
                 # Process completed futures
                 for future in concurrent.futures.as_completed(futures):
                     if self.cancel_processing:
-                        executor.shutdown(wait=False)
+                        # Thread manager handles proper cleanup
                         break
                     
                     file_path = futures[future]
@@ -1136,14 +1148,19 @@ Output directory: {self.output_dir.get()}"""
         threading.Thread(target=self.batch_ocr_worker, args=(files, output_dir), daemon=True).start()
     
     def batch_ocr_worker(self, files, output_dir):
-        """Worker thread for batch OCR processing"""
+        """Worker thread for batch OCR processing with parallel execution"""
         total_files = len(files)
         processed = 0
         failed = 0
+        completed = 0
         
         self.update_status(f"Processing {total_files} images for OCR...")
         
-        for i, file_path in enumerate(files):
+        # Determine optimal worker count for OCR (more conservative than conversion)
+        requested_workers = min(4, self.worker_threads.get() // 2)  # OCR is more resource intensive
+        
+        def process_single_ocr_file(file_path, index):
+            """Process a single OCR file and save result"""
             try:
                 # Process OCR
                 result = self.process_ocr_file_batch(file_path)
@@ -1167,17 +1184,45 @@ Output directory: {self.output_dir.get()}"""
                         with open(output_file, 'w', encoding='utf-8') as f:
                             f.write(result.get('text', ''))
                     
-                    processed += 1
+                    return True, file_path
                 else:
-                    failed += 1
+                    return False, file_path
                     
             except Exception as e:
                 self.logger.error(f"Batch OCR error for {file_path}: {e}")
-                failed += 1
+                return False, file_path
+        
+        # Use managed thread pool for parallel OCR processing
+        with thread_manager.managed_pool("ocr_batch", max_workers=requested_workers) as pool:
+            # Submit all OCR tasks
+            futures = {}
+            for i, file_path in enumerate(files):
+                future = thread_manager.submit_with_backpressure(
+                    "ocr_batch",
+                    process_single_ocr_file,
+                    file_path,
+                    i
+                )
+                futures[future] = (file_path, i)
             
-            # Update progress
-            progress = ((i + 1) / total_files) * 100
-            self.root.after(0, lambda p=progress: self.ocr_progress_var.set(p))
+            # Process completed futures
+            for future in concurrent.futures.as_completed(futures):
+                file_path, index = futures[future]
+                completed += 1
+                
+                try:
+                    success, _ = future.result()
+                    if success:
+                        processed += 1
+                    else:
+                        failed += 1
+                except Exception as e:
+                    self.logger.error(f"OCR future error for {file_path}: {e}")
+                    failed += 1
+                
+                # Update progress
+                progress = (completed / total_files) * 100
+                self.root.after(0, lambda p=progress: self.ocr_progress_var.set(p))
         
         # Show completion
         self.update_status(f"Batch OCR complete - {processed} successful, {failed} failed")
@@ -1884,6 +1929,13 @@ Cache Information:
     
     def cleanup_resources(self):
         """Clean up file handlers and other resources"""
+        # Shutdown all thread pools properly
+        try:
+            self.logger.info("Shutting down thread pools...")
+            thread_manager.shutdown_all(wait=True, timeout=10)
+        except Exception as e:
+            self.logger.error(f"Error shutting down thread pools: {e}")
+        
         # Close logging handlers
         if hasattr(self, 'file_handler'):
             self.file_handler.close()

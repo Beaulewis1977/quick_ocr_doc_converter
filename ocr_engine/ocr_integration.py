@@ -7,9 +7,13 @@ import time
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import logging
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import as_completed
 from .ocr_engine import OCREngine
 from .format_detector import OCRFormatDetector
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from thread_pool_manager import thread_manager
 
 class OCRIntegration:
     """Integrates OCR functionality with the document converter"""
@@ -77,13 +81,19 @@ class OCRIntegration:
         successful = 0
         failed = 0
         
-        # Process files with threading
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            # Submit all tasks
-            future_to_file = {
-                executor.submit(self._process_single_file, file_path, output_dir, output_format): file_path
-                for file_path in supported_files
-            }
+        # Process files with thread pool manager
+        with thread_manager.managed_pool("ocr_directory", max_workers=max_workers) as pool:
+            # Submit all tasks with backpressure handling
+            future_to_file = {}
+            for file_path in supported_files:
+                future = thread_manager.submit_with_backpressure(
+                    "ocr_directory",
+                    self._process_single_file,
+                    file_path,
+                    output_dir,
+                    output_format
+                )
+                future_to_file[future] = file_path
             
             # Process completed tasks
             for future in as_completed(future_to_file):
