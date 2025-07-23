@@ -15,9 +15,12 @@ from typing import List, Dict, Any, Optional, Tuple, Callable, Generator
 import json
 import hashlib
 import tempfile
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import as_completed
 import threading
 import numpy as np
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from thread_pool_manager import thread_manager
 
 try:
     import pytesseract
@@ -459,12 +462,18 @@ class OCREngine:
         """
         results = []
         
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            # Submit all tasks
-            future_to_path = {
-                executor.submit(self.extract_text, path, options): path
-                for path in image_paths
-            }
+        # Use thread pool manager with resource validation
+        with thread_manager.managed_pool("ocr_batch_process", max_workers=max_workers) as pool:
+            # Submit all tasks with backpressure handling
+            future_to_path = {}
+            for path in image_paths:
+                future = thread_manager.submit_with_backpressure(
+                    "ocr_batch_process",
+                    self.extract_text,
+                    path,
+                    options
+                )
+                future_to_path[future] = path
             
             # Process completed tasks
             for i, future in enumerate(as_completed(future_to_path)):
@@ -512,12 +521,19 @@ class OCREngine:
         for i in range(0, len(image_paths), batch_size):
             batch = image_paths[i:i + batch_size]
             
-            with ThreadPoolExecutor(max_workers=min(max_workers, len(batch))) as executor:
-                # Submit batch tasks
-                future_to_path = {
-                    executor.submit(self.extract_text, path, options): path
-                    for path in batch
-                }
+            # Use thread pool manager with adaptive worker count
+            batch_workers = min(max_workers, len(batch))
+            with thread_manager.managed_pool("ocr_streaming", max_workers=batch_workers) as pool:
+                # Submit batch tasks with backpressure
+                future_to_path = {}
+                for path in batch:
+                    future = thread_manager.submit_with_backpressure(
+                        "ocr_streaming",
+                        self.extract_text,
+                        path,
+                        options
+                    )
+                    future_to_path[future] = path
                 
                 # Yield results as they complete
                 for future in as_completed(future_to_path):
