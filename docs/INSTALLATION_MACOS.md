@@ -30,11 +30,11 @@ This guide provides comprehensive installation instructions for macOS systems.
 #### Download and Install
 ```bash
 # Download the DMG file
-curl -L -o QuickDocumentConvertor-2.0.0.dmg \
-  https://github.com/Beaulewis1977/quick_doc_convertor/releases/latest/download/QuickDocumentConvertor-2.0.0.dmg
+curl -L -o QuickDocumentConvertor-3.1.0.dmg \
+  https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/QuickDocumentConvertor-3.1.0.dmg
 
 # Mount and install
-open QuickDocumentConvertor-2.0.0.dmg
+open QuickDocumentConvertor-3.1.0.dmg
 ```
 
 #### Manual Installation Steps
@@ -49,11 +49,11 @@ open QuickDocumentConvertor-2.0.0.dmg
 #### Enterprise/Automated Installation
 ```bash
 # Download the PKG installer
-curl -L -o QuickDocumentConvertor-2.0.0.pkg \
-  https://github.com/Beaulewis1977/quick_doc_convertor/releases/latest/download/QuickDocumentConvertor-2.0.0.pkg
+curl -L -o QuickDocumentConvertor-3.1.0.pkg \
+  https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/QuickDocumentConvertor-3.1.0.pkg
 
 # Install via command line
-sudo installer -pkg QuickDocumentConvertor-2.0.0.pkg -target /
+sudo installer -pkg QuickDocumentConvertor-3.1.0.pkg -target /
 ```
 
 ### Method 3: Homebrew Installation
@@ -90,8 +90,8 @@ brew install python-tk
 #### Installation Steps
 ```bash
 # Clone the repository
-git clone https://github.com/Beaulewis1977/quick_doc_convertor.git
-cd quick_doc_convertor
+git clone https://github.com/Beaulewis1977/quick_ocr_doc_converter.git
+cd quick_ocr_doc_converter
 
 # Install Python dependencies
 pip3 install -r requirements.txt
@@ -103,7 +103,7 @@ pip3 install py2app
 python3 setup_shortcuts.py
 
 # Run the application
-python3 universal_document_converter.py
+python3 universal_document_converter_ocr.py
 ```
 
 ### Method 5: Development Installation
@@ -111,8 +111,8 @@ python3 universal_document_converter.py
 #### For Contributors and Developers
 ```bash
 # Clone the repository
-git clone https://github.com/Beaulewis1977/quick_doc_convertor.git
-cd quick_doc_convertor
+git clone https://github.com/Beaulewis1977/quick_ocr_doc_converter.git
+cd quick_ocr_doc_converter
 
 # Create virtual environment
 python3 -m venv venv
@@ -284,7 +284,7 @@ brew upgrade quick-document-convertor
 
 ### Source Update
 ```bash
-cd quick_doc_convertor
+cd quick_ocr_doc_converter
 git pull origin main
 pip3 install -r requirements.txt --upgrade
 python3 setup_shortcuts.py
@@ -341,7 +341,7 @@ The app is notarized by Apple for additional security verification.
 python setup_macos.py py2app
 
 # Using PyInstaller
-pyinstaller --windowed --onedir --name "Quick Document Convertor" universal_document_converter.py
+pyinstaller --windowed --onedir --name "Quick Document Convertor" universal_document_converter_ocr.py
 
 # Using the build script
 python build_all_platforms.py --platform macos
@@ -354,7 +354,7 @@ python -c "
 from packaging.build_macos import create_standalone_dmg
 from pathlib import Path
 app_bundle = Path('dist/Quick Document Convertor.app')
-dmg_path = Path('dist/QuickDocumentConvertor-2.0.0.dmg')
+dmg_path = Path('dist/QuickDocumentConvertor-3.1.0.dmg')
 create_standalone_dmg(app_bundle, dmg_path)
 "
 ```
@@ -362,8 +362,8 @@ create_standalone_dmg(app_bundle, dmg_path)
 ## 📞 Support
 
 ### Getting Help
-- **GitHub Issues**: https://github.com/Beaulewis1977/quick_doc_convertor/issues
-- **Documentation**: https://github.com/Beaulewis1977/quick_doc_convertor/docs
+- **GitHub Issues**: https://github.com/Beaulewis1977/quick_ocr_doc_converter/issues
+- **Documentation**: https://github.com/Beaulewis1977/quick_ocr_doc_converter/docs
 - **Email**: blewisxx@gmail.com
 
 ### Reporting Bugs

@@ -29,3 +29,9 @@ lxml>=4.9.0
 requests>=2.28.0
 tqdm>=4.64.0
 colorama>=0.4.5
+
+# Security and encryption
+cryptography>=3.4.0
+
+# Cloud API integrations (optional)
+google-cloud-vision>=3.0.0

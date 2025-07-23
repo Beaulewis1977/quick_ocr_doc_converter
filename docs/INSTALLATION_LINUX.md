@@ -27,10 +27,10 @@ This guide provides comprehensive installation instructions for Linux distributi
 #### Ubuntu/Debian (.deb package)
 ```bash
 # Download the .deb package
-wget https://github.com/Beaulewis1977/quick_doc_convertor/releases/latest/download/quick-document-convertor_2.0.0_all.deb
+wget https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/quick-document-convertor_3.1.0_all.deb
 
 # Install the package
-sudo dpkg -i quick-document-convertor_2.0.0_all.deb
+sudo dpkg -i quick-document-convertor_3.1.0_all.deb
 
 # Install dependencies if needed
 sudo apt-get install -f
@@ -39,31 +39,31 @@ sudo apt-get install -f
 #### CentOS/RHEL/Fedora (.rpm package)
 ```bash
 # Download the .rpm package
-wget https://github.com/Beaulewis1977/quick_doc_convertor/releases/latest/download/quick-document-convertor-2.0.0-1.noarch.rpm
+wget https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/quick-document-convertor-3.1.0-1.noarch.rpm
 
 # Install the package
-sudo rpm -ivh quick-document-convertor-2.0.0-1.noarch.rpm
+sudo rpm -ivh quick-document-convertor-3.1.0-1.noarch.rpm
 
 # Or using dnf (Fedora)
-sudo dnf install quick-document-convertor-2.0.0-1.noarch.rpm
+sudo dnf install quick-document-convertor-3.1.0-1.noarch.rpm
 
 # Or using yum (CentOS/RHEL)
-sudo yum install quick-document-convertor-2.0.0-1.noarch.rpm
+sudo yum install quick-document-convertor-3.1.0-1.noarch.rpm
 ```
 
 #### Universal AppImage
 ```bash
 # Download the AppImage
-wget https://github.com/Beaulewis1977/quick_doc_convertor/releases/latest/download/QuickDocumentConvertor-2.0.0-x86_64.AppImage
+wget https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/QuickDocumentConvertor-3.1.0-x86_64.AppImage
 
 # Make it executable
-chmod +x QuickDocumentConvertor-2.0.0-x86_64.AppImage
+chmod +x QuickDocumentConvertor-3.1.0-x86_64.AppImage
 
 # Run the application
-./QuickDocumentConvertor-2.0.0-x86_64.AppImage
+./QuickDocumentConvertor-3.1.0-x86_64.AppImage
 
 # Optional: Move to /usr/local/bin for system-wide access
-sudo mv QuickDocumentConvertor-2.0.0-x86_64.AppImage /usr/local/bin/quick-document-convertor
+sudo mv QuickDocumentConvertor-3.1.0-x86_64.AppImage /usr/local/bin/quick-document-convertor
 ```
 
 ### Method 2: Source Installation
@@ -84,8 +84,8 @@ sudo pacman -S python python-pip tk git
 #### Installation Steps
 ```bash
 # Clone the repository
-git clone https://github.com/Beaulewis1977/quick_doc_convertor.git
-cd quick_doc_convertor
+git clone https://github.com/Beaulewis1977/quick_ocr_doc_converter.git
+cd quick_ocr_doc_converter
 
 # Install Python dependencies
 pip3 install -r requirements.txt
@@ -94,7 +94,7 @@ pip3 install -r requirements.txt
 python3 setup_shortcuts.py
 
 # Run the application
-python3 universal_document_converter.py
+python3 universal_document_converter_ocr.py
 ```
 
 ### Method 3: Development Installation
@@ -102,8 +102,8 @@ python3 universal_document_converter.py
 #### For Contributors and Developers
 ```bash
 # Clone the repository
-git clone https://github.com/Beaulewis1977/quick_doc_convertor.git
-cd quick_doc_convertor
+git clone https://github.com/Beaulewis1977/quick_ocr_doc_converter.git
+cd quick_ocr_doc_converter
 
 # Create virtual environment
 python3 -m venv venv
@@ -188,7 +188,7 @@ quick-document-convertor
 python3 /path/to/quick_doc_convertor/universal_document_converter.py
 
 # If using AppImage
-./QuickDocumentConvertor-2.0.0-x86_64.AppImage
+./QuickDocumentConvertor-3.1.0-x86_64.AppImage
 ```
 
 #### From File Manager
@@ -292,11 +292,11 @@ python3 setup_shortcuts.py
 ### AppImage Update
 ```bash
 # Download new version
-wget https://github.com/Beaulewis1977/quick_doc_convertor/releases/latest/download/QuickDocumentConvertor-2.0.0-x86_64.AppImage
+wget https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/QuickDocumentConvertor-3.1.0-x86_64.AppImage
 
 # Replace old version
-chmod +x QuickDocumentConvertor-2.0.0-x86_64.AppImage
-sudo mv QuickDocumentConvertor-2.0.0-x86_64.AppImage /usr/local/bin/quick-document-convertor
+chmod +x QuickDocumentConvertor-3.1.0-x86_64.AppImage
+sudo mv QuickDocumentConvertor-3.1.0-x86_64.AppImage /usr/local/bin/quick-document-convertor
 ```
 
 ## 🗑️ Uninstallation
@@ -334,8 +334,8 @@ update-mime-database ~/.local/share/mime
 ## 📞 Support
 
 ### Getting Help
-- **GitHub Issues**: https://github.com/Beaulewis1977/quick_doc_convertor/issues
-- **Documentation**: https://github.com/Beaulewis1977/quick_doc_convertor/docs
+- **GitHub Issues**: https://github.com/Beaulewis1977/quick_ocr_doc_converter/issues
+- **Documentation**: https://github.com/Beaulewis1977/quick_ocr_doc_converter/docs
 - **Email**: blewisxx@gmail.com
 
 ### Reporting Bugs

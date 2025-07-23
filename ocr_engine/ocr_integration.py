@@ -14,9 +14,15 @@ from .format_detector import OCRFormatDetector
 class OCRIntegration:
     """Integrates OCR functionality with the document converter"""
     
-    def __init__(self, logger: Optional[logging.Logger] = None):
+    def __init__(self, logger: Optional[logging.Logger] = None, config_manager=None):
         self.logger = logger or logging.getLogger(__name__)
-        self.ocr_engine = OCREngine(logger)
+        
+        # Load config from config manager if provided
+        ocr_config = {}
+        if config_manager:
+            ocr_config = config_manager.config
+        
+        self.ocr_engine = OCREngine(ocr_config, logger)
         self.is_available = len(self.ocr_engine.get_available_backends()) > 0
         
     def check_availability(self) -> Dict[str, Any]:

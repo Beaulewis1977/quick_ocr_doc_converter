@@ -10,6 +10,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial project setup and documentation
 
+## [3.1.0] - 2024-12-22
+
+### Added
+- **Complete GUI Integration**: All features now unified in single main GUI interface
+- **Google Vision API Support**: Full cloud OCR integration with service account authentication
+- **Dual OCR Engine System**: Choice between free (Tesseract/EasyOCR) and API-based OCR
+- **Secure Configuration Manager**: Encrypted storage for API keys and sensitive settings
+- **Advanced OCR Settings GUI**: Tabbed interface for backends, processing, and security
+- **Bidirectional Markdown Editor**: Live preview and real-time editing capabilities
+- **Thread Control System**: Adjustable processing threads with quality settings
+- **VB6/VFP9 Integration Package**: Complete legacy application support with examples
+- **Legacy Integration GUI Tab**: Integrated VB6/VFP9 code generation and DLL builder in main interface
+- **Enhanced Windows Installer**: Improved PyInstaller build with proper dependencies
+- **Unified Launcher System**: Consolidated to main GUI and VB6/VFP9 tools only
+
+### Enhanced
+- **Main GUI Interface**: Tabbed design with all tools, settings, and functions integrated (now includes Legacy Integration tab)
+- **OCR Processing**: Support for multiple backends with seamless switching
+- **Document Reader**: Enhanced file type support and preview capabilities
+- **Cross-Platform Support**: Updated installers for Windows, macOS, and Linux
+- **Version Consistency**: All references updated to v3.1.0 across entire codebase
+
+### Fixed
+- **PyInstaller Path Errors**: Resolved file existence evaluation issues
+- **Google Vision Implementation**: Added missing backend that was listed but not implemented
+- **Import Dependencies**: Made encryption optional with graceful fallback
+- **GUI Navigation**: Unified interface eliminates separate dialogs and windows
+- **Installer Consistency**: All platforms now reference correct main application file
+
+### Technical Improvements
+- **Security**: Optional encryption for sensitive configuration data
+- **Performance**: Multi-threaded processing with user-configurable thread counts
+- **Reliability**: Comprehensive error handling and user feedback systems
+- **Maintainability**: Consolidated codebase with clear separation of concerns
+
 ## [2.0.0] - 2024-12-11
 
 ### Added

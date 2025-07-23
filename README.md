@@ -115,12 +115,19 @@ OCR Document Converter is a **professional-grade, enterprise-ready OCR applicati
 - **Background Processing**: Non-blocking operations
 
 ### 🎯 **User Interface**
-- **Professional GUI**: Modern, intuitive interface
+- **Professional GUI**: Modern, intuitive interface with tabbed design
 - **Drag & Drop**: Easy file handling
 - **Batch Processing**: Multiple file selection and processing
-- **Settings Panel**: Comprehensive configuration options
+- **Input Format Selection**: NEW - Choose input format explicitly for better processing
+- **OCR Engine Selection**: Real-time switching between Tesseract, EasyOCR, and Google Vision API
+- **Settings Panel**: Comprehensive configuration options with 4 dedicated tabs
 - **Preview Mode**: View processed results before saving
 - **Export Options**: Multiple output formats and destinations
+- **🔧 Legacy Integration Tab**: Complete VB6/VFP9 integration with:
+  - Code generation for Visual Basic 6 and Visual FoxPro 9
+  - One-click DLL/executable builder with real-time logs
+  - Integration testing and validation tools
+  - Examples folder access and comprehensive setup validation
 
 ---
 
@@ -142,8 +149,11 @@ OCR Document Converter is a **professional-grade, enterprise-ready OCR applicati
 - **Rich Text** (`.rtf`) - Formatted text with styling
 - **Microsoft Word** (`.docx`) - Professional documents
 - **PDF** (`.pdf`) - Searchable PDF with OCR layer
+- **Markdown** (`.md`) - GitHub-flavored markdown format
+- **HTML** (`.html`) - Web-ready formatted documents
 - **JSON** (`.json`) - Structured data with metadata
 - **CSV** (`.csv`) - Tabular data extraction
+- **EPUB** (`.epub`) - E-book format
 
 ---
 
@@ -180,6 +190,62 @@ OCR Document Converter is a **professional-grade, enterprise-ready OCR applicati
     "confidence_threshold": 0.5
 }
 ```
+
+#### Google Vision API Configuration
+```python
+# google_vision_config.json
+{
+    "engine": "google_vision",
+    "enabled": true,
+    "service_account_key": "path/to/service-account.json",
+    "confidence_threshold": 0.8,
+    "features": ["TEXT_DETECTION", "DOCUMENT_TEXT_DETECTION"],
+    "language_hints": ["en", "fr", "de"],
+    "fallback_enabled": true,           # NEW: Auto-fallback to free OCR
+    "fallback_engines": ["tesseract", "easyocr"],  # Fallback order
+    "encryption": {
+        "enabled": true,
+        "encrypt_api_keys": true
+    }
+}
+```
+
+**🔄 Intelligent Fallback System:**
+- Automatically falls back to Tesseract/EasyOCR if Google Vision API fails
+- Real-time status updates in GUI showing current OCR engine
+- No service interruption - seamless transition between engines
+- Preserves OCR quality with cost optimization
+
+**🔑 Google Vision API Setup:**
+
+1. **Create Google Cloud Project:**
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create new project or select existing one
+
+2. **Enable Vision API:**
+   - Navigate to APIs & Services > Library
+   - Search for "Cloud Vision API" and enable it
+
+3. **Create Service Account:**
+   - Go to IAM & Admin > Service Accounts
+   - Click "Create Service Account"
+   - Give it a name (e.g., "ocr-converter")
+   - Grant "Vision API User" role
+
+4. **Download API Key:**
+   - Click on your service account
+   - Go to "Keys" tab → "Add Key" → "Create New Key"
+   - Choose JSON format and download
+
+5. **Configure in Application:**
+   - Open application → OCR Settings → Google Vision API tab
+   - Upload your JSON key file or paste the content
+   - Test connection to verify setup
+
+**💡 Cost Information:**
+- First 1,000 requests per month: FREE
+- Additional requests: $1.50 per 1,000 requests
+- See [Google Vision Pricing](https://cloud.google.com/vision/pricing) for details
 
 ### 🎛️ **Application Settings**
 
@@ -259,6 +325,12 @@ sudo apt-get install tesseract-ocr-[LANG]
    - Configure batch settings in the Settings panel
    - Monitor progress in real-time
    - Review results in the output directory
+
+4. **🔧 Legacy Integration Tab** (New in v3.1.0):
+   - **VB6/VFP9 Code Generation**: Select project type and generate integration code
+   - **One-Click DLL Builder**: Build executable/DLL with real-time build logs
+   - **Integration Testing**: Test conversion functionality and validate setup
+   - **Examples Access**: Open examples folder with VB6/VFP9 template files
 
 ### 💻 **Command Line Interface (CLI)**
 
@@ -412,6 +484,12 @@ ocr_document_converter/
 ├── 📁 temp/                          # Temporary processing files
 ├── 📁 cache/                         # OCR result cache
 ├── 📁 logs/                          # Application logs
+├── 📁 vb6_vfp9_integration/          # Legacy VB6/VFP9 integration package
+│   ├── UniversalConverter32.py       # Main integration module
+│   ├── VB6_Example.vb                # VB6 integration template
+│   ├── VFP9_Example.prg              # VFP9 integration template
+│   ├── build_dll.bat                 # DLL/executable builder script
+│   └── README.md                     # Legacy integration documentation
 │
 ├── 📄 requirements.txt               # Python dependencies
 ├── 📄 setup_ocr_environment.py       # Automated setup script
@@ -487,7 +565,7 @@ Contains EVERYTHING including:
 
 ```bash
 # Download from GitHub Releases
-https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/Universal-Document-Converter-v2.1.0-Windows-Complete.zip
+https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/Universal-Document-Converter-v3.1.0-Windows-Complete.zip
 ```
 
 ### 2️⃣ **32-bit DLL Package** (VFP9/VB6 Only)
@@ -750,6 +828,16 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
+<div align="center">
+
+**Made with ❤️ for the OCR community**
+
+⭐ **Star this repository if it helped you!** ⭐
+
+</div>
+
+---
+
 ## 🤝 **Support Open Source**
 
 Building and maintaining OCR Document Converter takes time and resources. While the tool is completely free, 
@@ -772,14 +860,6 @@ Together, we're making document conversion accessible to everyone. Thank you! �
 - **Email**: [Create an issue for support](https://github.com/Beaulewis1977/quick_ocr_document_converter/issues/new)
 
 ---
-
-<div align="center">
-
-**Made with ❤️ for the OCR community**
-
-⭐ **Star this repository if it helped you!** ⭐
-
-</div>
 
 ### 📦 **Create Standalone Executable (No Python Required)**
 

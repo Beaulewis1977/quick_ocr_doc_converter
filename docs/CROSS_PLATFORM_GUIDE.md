@@ -127,25 +127,25 @@ from packaging.build_linux import build_all_linux_packages
 
 app_dir = Path("./")
 output_dir = Path("./dist")
-packages = build_all_linux_packages(app_dir, output_dir, "2.0.0")
+packages = build_all_linux_packages(app_dir, output_dir, "3.1.0")
 ```
 
 #### macOS Package Building
 ```python
 from packaging.build_macos import build_all_macos_packages
 
-script_path = Path("./universal_document_converter.py")
+script_path = Path("./universal_document_converter_ocr.py")
 output_dir = Path("./dist")
-packages = build_all_macos_packages(script_path, output_dir, "2.0.0")
+packages = build_all_macos_packages(script_path, output_dir, "3.1.0")
 ```
 
 #### Windows Package Building
 ```python
 from packaging.build_windows import build_all_windows_packages
 
-script_path = Path("./universal_document_converter.py")
+script_path = Path("./universal_document_converter_ocr.py")
 output_dir = Path("./dist")
-packages = build_all_windows_packages(script_path, output_dir, "2.0.0")
+packages = build_all_windows_packages(script_path, output_dir, "3.1.0")
 ```
 
 ## 📦 Dependencies

@@ -40,8 +40,8 @@ def main():
     )
     parser.add_argument(
         "--version",
-        default="2.0.0",
-        help="Package version (default: 2.0.0)"
+        default="3.1.0",
+        help="Package version (default: 3.1.0)"
     )
     parser.add_argument(
         "--icon",

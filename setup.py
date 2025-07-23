@@ -16,7 +16,7 @@ setup(
     version="3.1.0",
     author="Beau Lewis",
     author_email="blewisxx@gmail.com",
-    description="Enterprise-grade OCR and document conversion tool with dual OCR engines",
+    description="Enterprise-grade OCR and document conversion tool with dual OCR engines and VB6/VFP9 legacy integration",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Beaulewis1977/quick_ocr_doc_converter",
