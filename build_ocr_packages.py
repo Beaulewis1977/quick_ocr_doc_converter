@@ -71,6 +71,10 @@ class OCRPackageBuilder:
             "ocr_engine/error_handler.py",
             "ocr_engine/memory_processor.py",
             "ocr_engine/security.py",
+            "ocr_engine/config_manager.py",
+            
+            # Cross-platform Tesseract configuration
+            "tesseract_config.py",
             
             # Launchers
             "run_ocr_converter.bat",

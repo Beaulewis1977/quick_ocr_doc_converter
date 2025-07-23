@@ -41,24 +41,56 @@ def create_icon():
 def create_executable():
     """Create standalone executable"""
     app_dir = Path(__file__).parent
-    main_script = app_dir / "universal_document_converter.py"
     
-    if not main_script.exists():
-        print("❌ Main application script not found!")
+    # Look for the OCR-enabled version first, then fall back to basic version
+    potential_main_scripts = [
+        app_dir / "universal_document_converter_ocr.py",
+        app_dir / "universal_document_converter.py"
+    ]
+    
+    main_script = None
+    for script in potential_main_scripts:
+        if script.exists():
+            main_script = script
+            print(f"✅ Found main script: {script.name}")
+            break
+    
+    if not main_script:
+        print("❌ No main application script found!")
+        print("   Looking for: universal_document_converter_ocr.py or universal_document_converter.py")
         return False
+    
+    # Determine executable name based on script
+    exe_name = "OCR Document Converter" if "ocr" in main_script.name.lower() else "Quick Document Convertor"
     
     # PyInstaller command
     cmd = [
         sys.executable, '-m', 'PyInstaller',
         '--onefile',
         '--windowed',
-        '--name', 'Quick Document Convertor',
+        '--name', exe_name,
         '--distpath', str(app_dir / 'dist'),
         '--workpath', str(app_dir / 'build'),
         '--specpath', str(app_dir),
         '--add-data', f'{app_dir / "icon.ico"};.',
+        # GUI dependencies
         '--hidden-import', 'tkinterdnd2',
         '--hidden-import', 'pywin32',
+        # OCR dependencies for hardened code
+        '--hidden-import', 'pytesseract',
+        '--hidden-import', 'PIL',
+        '--hidden-import', 'cv2',
+        '--hidden-import', 'numpy',
+        '--hidden-import', 'easyocr',
+        # Document processing dependencies  
+        '--hidden-import', 'docx',
+        '--hidden-import', 'reportlab',
+        '--hidden-import', 'weasyprint',
+        '--hidden-import', 'markdown',
+        '--hidden-import', 'bs4',
+        # Our hardened modules
+        '--hidden-import', 'ocr_engine',
+        '--hidden-import', 'tesseract_config',
         str(main_script)
     ]
     

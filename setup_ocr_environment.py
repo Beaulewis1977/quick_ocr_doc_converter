@@ -36,10 +36,26 @@ class OCRSetup:
             return False
     
     def check_tesseract(self):
-        """Check Tesseract installation"""
+        """Check Tesseract installation using cross-platform detection"""
         try:
+            # Try to use our hardened tesseract_config module
+            try:
+                import tesseract_config
+                if tesseract_config.configure_tesseract():
+                    logger.info("Tesseract configured successfully using cross-platform detection")
+                    return True
+            except ImportError:
+                logger.warning("tesseract_config module not available, using fallback detection")
+            
+            # Fallback: Try system PATH first (works on all platforms)
+            import shutil
+            tesseract_path = shutil.which('tesseract')
+            if tesseract_path:
+                logger.info(f"Tesseract found in PATH: {tesseract_path}")
+                return True
+            
+            # Platform-specific fallback paths
             if self.is_windows:
-                # Common Windows installation paths
                 tesseract_paths = [
                     r"C:\Program Files\Tesseract-OCR\tesseract.exe",
                     r"C:\Users\%USERNAME%\AppData\Local\Tesseract-OCR\tesseract.exe",
@@ -54,7 +70,7 @@ class OCRSetup:
                         return True
                         
             else:
-                # Unix-like systems
+                # Unix-like systems fallback
                 result = subprocess.run(["which", "tesseract"], capture_output=True, text=True)
                 if result.returncode == 0:
                     logger.info(f"Tesseract found at: {result.stdout.strip()}")
