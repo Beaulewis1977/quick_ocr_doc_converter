@@ -29,7 +29,7 @@ class OCRSetup:
                 return ctypes.windll.shell32.IsUserAnAdmin()
             else:
                 return os.geteuid() == 0
-        except:
+        except (AttributeError, OSError, PermissionError):
             return False
     
     def install_python_packages(self):
