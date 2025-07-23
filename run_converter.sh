@@ -10,7 +10,7 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 echo -e "${CYAN}###########################################################${NC}"
-echo -e "${CYAN}# QUICK DOCUMENT CONVERTOR v3.1.0                        #${NC}"
+echo -e "${CYAN}# UNIVERSAL DOCUMENT CONVERTER v3.1.0                     #${NC}"
 echo -e "${CYAN}###########################################################${NC}"
 echo ""
 
@@ -36,7 +36,7 @@ PYTHON_VERSION=$($PYTHON_CMD --version 2>&1)
 echo -e "${GREEN}✅ $PYTHON_VERSION${NC}"
 
 # Check if main script exists
-MAIN_SCRIPT="universal_document_converter_ocr.py"
+MAIN_SCRIPT="universal_document_converter.py"
 if [[ ! -f "$MAIN_SCRIPT" ]]; then
     echo -e "${RED}❌ APPLICATION FILES MISSING${NC}"
     echo ""

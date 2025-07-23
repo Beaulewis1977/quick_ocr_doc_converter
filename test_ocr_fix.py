@@ -114,22 +114,22 @@ def test_gui_ocr_compatibility():
 def test_universal_converter_threading():
     """Test that universal converter has thread-safe updates"""
     try:
-        converter_path = Path("universal_document_converter_ocr.py")
+        converter_path = Path("universal_document_converter.py")
         if converter_path.exists():
             with open(converter_path, "r") as f:
                 content = f.read()
             
             # Check for thread-safe updates
             if "self.root.after(0, lambda:" in content:
-                print("✅ universal_document_converter_ocr.py has thread-safe updates")
+                print("✅ universal_document_converter.py has thread-safe updates")
             else:
-                print("❌ universal_document_converter_ocr.py missing thread-safe updates")
+                print("❌ universal_document_converter.py missing thread-safe updates")
                 return False
         else:
-            print("⚠️  universal_document_converter_ocr.py not found")
+            print("⚠️  universal_document_converter.py not found")
             return False
     except Exception as e:
-        print(f"❌ Error checking universal_document_converter_ocr.py: {e}")
+        print(f"❌ Error checking universal_document_converter.py: {e}")
         return False
     
     return True

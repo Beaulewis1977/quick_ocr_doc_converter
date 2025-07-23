@@ -45,9 +45,9 @@ The OCR Document Converter has been comprehensively tested for release readiness
 - ✅ `security.py` - Security features
 
 #### Main Application
-- ✅ `universal_document_converter_ocr.py` - GUI application
+- ✅ `universal_document_converter.py` - GUI application
 - ✅ Proper imports from OCR engine
-- ✅ DocumentConverterApp class structure
+- ✅ UniversalDocumentConverter class structure
 
 ### 4. Cross-Platform Support
 
@@ -83,7 +83,7 @@ Required packages (from requirements.txt):
 
 ### 7. Known Issues
 
-1. **Launcher Script**: `run_converter.bat` references `universal_document_converter.py` instead of `universal_document_converter_ocr.py`
+1. **Launcher Script**: `run_converter.bat` correctly references `universal_document_converter.py`
    - **Recommendation**: Update launcher scripts or create symlink
 
 2. **Python Package Dependencies**: Unable to test runtime functionality due to missing packages in test environment

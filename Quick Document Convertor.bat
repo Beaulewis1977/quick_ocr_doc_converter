@@ -21,7 +21,7 @@ if errorlevel 1 (
 )
 
 REM Check if the main application file exists
-if not exist "universal_document_converter_ocr.py" (
+if not exist "universal_document_converter.py" (
     echo ERROR: Application file not found
     echo Make sure you're running this from the correct directory
     pause
@@ -29,8 +29,8 @@ if not exist "universal_document_converter_ocr.py" (
 )
 
 REM Launch the application
-echo Starting OCR Document Converter...
-python universal_document_converter_ocr.py
+echo Starting Universal Document Converter...
+python universal_document_converter.py
 
 REM If we get here, the application has closed
 if errorlevel 1 (

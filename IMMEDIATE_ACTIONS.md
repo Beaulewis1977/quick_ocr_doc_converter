@@ -32,7 +32,7 @@ This PR brings the complete OCR Document Converter with all fixes and improvemen
 
 ### ✨ Major Changes
 - Updated all version numbers to v3.1.0
-- Fixed all launchers to use OCR version (`universal_document_converter_ocr.py`)
+- Fixed all launchers to use main version (`universal_document_converter.py`)
 - Added VFP9/VB6 integration with DLL wrapper
 - Created PyPI package structure
 - Added GitHub Actions for CI/CD

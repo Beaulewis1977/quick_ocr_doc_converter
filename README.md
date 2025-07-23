@@ -59,11 +59,11 @@ OCR Document Converter is a **professional-grade, enterprise-ready OCR applicati
 
 3. **Launch the application**:
    ```bash
-   python universal_document_converter_ocr.py
+   python universal_document_converter.py
    ```
    
    Or use one of the launchers:
-   - **Windows**: Double-click `run_ocr_converter.bat` or `⚡ Quick Launch OCR.bat`
+   - **Windows**: Double-click `run_converter.bat` or `Quick Document Convertor.bat`
    - **Cross-platform**: `python launch_ocr.py`
    - **CLI**: `python cli.py input.pdf -o output.txt -t txt --ocr`
 
@@ -245,7 +245,7 @@ sudo apt-get install tesseract-ocr-[LANG]
 
 1. **Launch the application**:
    ```bash
-   python universal_document_converter_ocr.py
+   python universal_document_converter.py
    ```
 
 2. **Basic OCR Process**:
@@ -390,9 +390,9 @@ ocr_document_converter/
 │   └── ocr_integration.py            # Integration layer
 │
 ├── 📁 gui/                           # GUI components
-│   ├── universal_document_converter_ocr.py      # Main GUI application
-│   ├── universal_document_converter_enhanced.py # Enhanced GUI features
-│   └── ocr_gui_integration.py        # GUI-OCR integration
+│   ├── universal_document_converter.py          # Main GUI application
+│   ├── document_converter_gui.py                # Simple markdown GUI
+│   └── gui_ocr.py                    # Dedicated OCR GUI
 │
 ├── 📁 tests/                         # Test suite
 │   ├── test_ocr_integration.py       # Integration tests
@@ -427,7 +427,7 @@ ocr_document_converter/
 | File | Purpose | Key Features |
 |------|---------|-------------|
 | `ocr_engine/ocr_engine.py` | Main OCR processing | Dual engine support, batch processing |
-| `universal_document_converter_ocr.py` | GUI application | Drag-drop, settings panel, progress tracking |
+| `universal_document_converter.py` | GUI application | Drag-drop, settings panel, progress tracking |
 | `setup_ocr_environment.py` | Automated installer | Dependencies, Tesseract, language packs |
 | `test_ocr_integration.py` | Comprehensive tests | Unit tests, integration tests, benchmarks |
 | `validate_ocr_integration.py` | Validation suite | System validation, performance tests |
@@ -475,7 +475,7 @@ python test_ocr_integration.py --category performance
 ## 📥 **Download Options**
 
 ### 1️⃣ **Complete Application Package** (Recommended)
-**File**: `Universal-Document-Converter-v2.1.0-Windows-Complete.zip` (63 KB)
+**File**: `Universal-Document-Converter-v3.1.0-Windows-Complete.zip`
 
 Contains EVERYTHING including:
 - ✅ Full GUI application with OCR
@@ -487,7 +487,7 @@ Contains EVERYTHING including:
 
 ```bash
 # Download from GitHub Releases
-https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/Universal-Document-Converter-v2.1.0-Windows-Complete.zip
+https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/download/Universal-Document-Converter-v3.1.0-Windows-Complete.zip
 ```
 
 ### 2️⃣ **32-bit DLL Package** (VFP9/VB6 Only)
@@ -512,7 +512,7 @@ https://github.com/Beaulewis1977/quick_ocr_doc_converter/releases/latest/downloa
 1. **Download** the complete package
 2. **Extract** to any folder
 3. **Run** `install.bat` as Administrator
-4. **Launch** using desktop shortcut or `run_ocr_converter.bat`
+4. **Launch** using desktop shortcut or `run_converter.bat`
 
 ### 🚀 **Method 2: From Source (Development)**
 
@@ -604,7 +604,7 @@ WORKDIR /app
 RUN pip install -r requirements.txt
 
 # Run application
-CMD ["python", "universal_document_converter_ocr.py"]
+CMD ["python", "universal_document_converter.py"]
 ```
 
 ```bash
@@ -664,7 +664,7 @@ config = {
 ```bash
 # Enable debug logging
 export OCR_DEBUG=1
-python universal_document_converter_ocr.py --debug
+python universal_document_converter.py --debug
 
 # Check log files
 tail -f logs/ocr_debug.log

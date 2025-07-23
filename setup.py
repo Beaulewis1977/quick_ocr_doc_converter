@@ -80,7 +80,7 @@ setup(
             "doc-convert=cli:main",
         ],
         "gui_scripts": [
-            "ocr-document-converter=universal_document_converter_ocr:main",
+            "universal-document-converter=universal_document_converter:main",
         ],
     },
     include_package_data=True,

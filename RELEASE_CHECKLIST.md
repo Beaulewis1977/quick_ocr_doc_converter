@@ -3,7 +3,7 @@
 ## 📋 Pre-Release Verification
 
 ### ✅ Code Quality
-- [x] All launchers point to `universal_document_converter_ocr.py`
+- [x] All launchers point to `universal_document_converter.py`
 - [x] Version numbers updated to v3.1.0 in all files
 - [x] Security scan completed (no critical issues)
 - [x] Memory leak checks passed
@@ -19,7 +19,7 @@
 
 #### 1. **Complete Application Package** (`Universal-Document-Converter-v3.1.0-Windows-Complete.zip`)
 Contains:
-- [x] `universal_document_converter_ocr.py` - Main GUI application
+- [x] `universal_document_converter.py` - Main GUI application
 - [x] `cli_ocr.py` - OCR command-line interface
 - [x] `cli.py` - Document conversion CLI
 - [x] `ocr_engine/` - Complete OCR engine directory

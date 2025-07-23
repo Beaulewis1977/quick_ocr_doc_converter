@@ -41,4 +41,4 @@ ocr-convert = "cli_ocr:main"
 doc-convert = "cli:main"
 
 [project.gui-scripts]
-ocr-document-converter = "universal_document_converter_ocr:main"
+universal-document-converter = "universal_document_converter:main"

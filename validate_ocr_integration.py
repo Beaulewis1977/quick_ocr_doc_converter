@@ -172,13 +172,13 @@ class OCRIntegrationValidator:
         try:
             # Test if GUI can be imported
             import tkinter as tk
-            from universal_document_converter_ocr import DocumentConverterApp
+            from universal_document_converter import UniversalDocumentConverter
             
             # Test basic initialization (without showing GUI)
             root = tk.Tk()
             root.withdraw()  # Hide window
             
-            app = DocumentConverterApp(root)
+            app = UniversalDocumentConverter(root)
             
             # Test OCR integration in GUI
             if hasattr(app, 'ocr_integration'):
