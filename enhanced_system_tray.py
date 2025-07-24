@@ -11,6 +11,7 @@ import sys
 import os
 import subprocess
 import json
+import logging
 from pathlib import Path
 from typing import Optional, Dict, Any
 
@@ -33,6 +34,10 @@ class QuickConverterTray:
     """Enhanced system tray application for Quick Document Convertor"""
     
     def __init__(self):
+        # Initialize logging
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        self.logger = logging.getLogger("TrayApp")
+        
         self.app_dir = Path(__file__).parent
         self.main_app = self.app_dir / "universal_document_converter.py"
         self.config_file = self.app_dir / "tray_config.json"
@@ -355,19 +360,35 @@ Features:
     def run(self):
         """Run the system tray application"""
         if not TRAY_AVAILABLE:
-            self.show_error("System Tray Error", 
-                          "System tray not available. Please install pystray and pillow:\n"
-                          "pip install pystray pillow")
+            error_msg = ("System tray not available. Missing dependencies.\n\n"
+                        "To enable system tray functionality, install:\n"
+                        "pip install pystray pillow\n\n"
+                        "Then restart the tray application.")
+            self.logger.error("System tray dependencies not available")
+            self.show_error("System Tray Error", error_msg)
             return
         
         self.running = True
+        self.logger.info("Starting system tray application...")
         
         # Create menu
-        menu = self.create_menu()
+        try:
+            menu = self.create_menu()
+            self.logger.debug("Menu created successfully")
+        except Exception as e:
+            self.logger.error(f"Failed to create menu: {e}")
+            self.show_error("Menu Error", f"Failed to create tray menu: {e}")
+            return
         
         # Create icon
-        icon_image = self.create_icon_image()
-        self.icon = pystray.Icon("Quick Document Convertor", icon_image, menu=menu)
+        try:
+            icon_image = self.create_icon_image()
+            self.icon = pystray.Icon("Quick Document Convertor", icon_image, menu=menu)
+            self.logger.debug("Tray icon created successfully")
+        except Exception as e:
+            self.logger.error(f"Failed to create tray icon: {e}")
+            self.show_error("Icon Error", f"Failed to create tray icon: {e}")
+            return
         
         # Show startup notification
         if self.config.get("show_notifications", True):
@@ -375,18 +396,42 @@ Features:
             def show_startup_notification():
                 import time
                 time.sleep(2)
-                self.show_notification("Quick Document Convertor", "System tray loaded")
+                try:
+                    self.show_notification("Quick Document Convertor", "System tray loaded")
+                except Exception as e:
+                    self.logger.warning(f"Failed to show startup notification: {e}")
             
             threading.Thread(target=show_startup_notification, daemon=True).start()
         
         # Run the icon
         try:
+            self.logger.info("System tray icon starting...")
             self.icon.run()
         except Exception as e:
+            self.logger.error(f"System tray failed to start: {e}")
             self.show_error("Tray Error", f"System tray failed: {e}")
 
 def main():
     """Main entry point"""
+    print("Starting Quick Document Converter System Tray...")
+    
+    # Check dependencies first
+    if not TRAY_AVAILABLE:
+        print("❌ System tray dependencies missing!")
+        print("   Missing: pystray and/or pillow")
+        print("   To install: pip install pystray pillow")
+        return
+    else:
+        print("✅ System tray dependencies available")
+    
+    # Check if main application exists
+    main_app_path = Path(__file__).parent / "universal_document_converter.py"
+    if main_app_path.exists():
+        print("✅ Main application found")
+    else:
+        print(f"❌ Main application not found: {main_app_path}")
+        print("   The tray app needs the main GUI application to function properly")
+    
     # Check if already running
     if PSUTIL_AVAILABLE:
         current_pid = os.getpid()
@@ -396,15 +441,22 @@ def main():
                     proc.info['name'] and 
                     'python' in proc.info['name'].lower() and
                     proc.info['cmdline'] and
-                    any('tray_app' in arg for arg in proc.info['cmdline'])):
-                    print("Tray application already running")
+                    any('enhanced_system_tray' in arg for arg in proc.info['cmdline'])):
+                    print("⚠️ Tray application already running")
                     return
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
     
     # Create and run tray application
-    app = QuickConverterTray()
-    app.run()
+    try:
+        print("🚀 Creating tray application...")
+        app = QuickConverterTray()
+        print("🔄 Starting tray icon...")
+        app.run()
+    except Exception as e:
+        print(f"❌ Failed to start tray application: {e}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main() 

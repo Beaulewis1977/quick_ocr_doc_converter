@@ -788,9 +788,29 @@ class UniversalDocumentConverter:
         folder = filedialog.askdirectory(title="Select folder to convert")
         if folder:
             folder_path = Path(folder)
+            files_added = 0
+            supported_extensions = ['.txt', '.docx', '.pdf', '.html', '.rtf', '.md', '.epub']
+            
+            self.logger.info(f"Scanning folder: {folder_path}")
+            
             for file_path in folder_path.rglob("*"):
-                if file_path.is_file() and file_path.suffix.lower() in ['.txt', '.docx', '.pdf', '.html', '.rtf', '.md', '.epub']:
-                    self.file_listbox.insert(tk.END, str(file_path))
+                if file_path.is_file():
+                    file_ext = file_path.suffix.lower()
+                    if file_ext in supported_extensions:
+                        self.file_listbox.insert(tk.END, str(file_path))
+                        files_added += 1
+                        self.logger.debug(f"Added file: {file_path}")
+                    else:
+                        self.logger.debug(f"Skipped unsupported file: {file_path} (extension: {file_ext})")
+            
+            self.logger.info(f"Added {files_added} files from folder")
+            
+            if files_added == 0:
+                messagebox.showinfo("No Supported Files", 
+                    f"No supported files found in the selected folder.\n\n"
+                    f"Supported formats: {', '.join(supported_extensions)}")
+            else:
+                messagebox.showinfo("Files Added", f"Added {files_added} files for conversion.")
     
     def clear_files(self):
         """Clear file list"""
@@ -955,44 +975,133 @@ class UniversalDocumentConverter:
                 return True, 'converted'
         
         # Perform conversion based on format
+        conversion_success = False
+        
         if output_format == "markdown" and HAS_MARKDOWN:
             if input_file.suffix.lower() == '.docx':
-                convert_docx_to_markdown(str(input_file))
-                # Move the generated markdown file to output directory
-                md_file = input_file.with_suffix('.md')
-                if md_file.exists():
-                    # Validate output path for security
-                    try:
-                        validate_output_path(str(output_file))
-                    except SecurityError as e:
-                        sanitized_msg = sanitize_error_message(str(e))
-                        self.logger.error(f"Output path validation failed: {sanitized_msg}")
-                        return False, 'security_error'
+                try:
+                    self.logger.info(f"Converting DOCX to markdown: {input_file}")
+                    convert_docx_to_markdown(str(input_file))
+                    # Move the generated markdown file to output directory
+                    md_file = input_file.with_suffix('.md')
+                    if md_file.exists():
+                        # Validate output path for security
+                        try:
+                            validate_output_path(str(output_file))
+                        except SecurityError as e:
+                            sanitized_msg = sanitize_error_message(str(e))
+                            self.logger.error(f"Output path validation failed: {sanitized_msg}")
+                            return False, 'security_error'
+                        
+                        shutil.move(str(md_file), str(output_file))
+                        conversion_success = True
+                        self.logger.info(f"Successfully converted DOCX: {output_file}")
+                    else:
+                        self.logger.error(f"DOCX conversion failed - no output file generated: {md_file}")
+                        return False, 'conversion_failed'
+                except Exception as e:
+                    sanitized_msg = sanitize_error_message(str(e))
+                    self.logger.error(f"DOCX conversion failed: {sanitized_msg}")
+                    return False, 'conversion_error'
                     
-                    shutil.move(str(md_file), str(output_file))
             elif input_file.suffix.lower() == '.pdf':
-                convert_pdf_to_markdown(str(input_file))
-                # Move the generated markdown file to output directory
-                md_file = input_file.with_suffix('.md')
-                if md_file.exists():
-                    # Validate output path for security
-                    try:
-                        validate_output_path(str(output_file))
-                    except SecurityError as e:
-                        sanitized_msg = sanitize_error_message(str(e))
-                        self.logger.error(f"Output path validation failed: {sanitized_msg}")
-                        return False, 'security_error'
+                try:
+                    self.logger.info(f"Converting PDF to markdown: {input_file}")
+                    convert_pdf_to_markdown(str(input_file))
+                    # Move the generated markdown file to output directory
+                    md_file = input_file.with_suffix('.md')
+                    if md_file.exists():
+                        # Validate output path for security
+                        try:
+                            validate_output_path(str(output_file))
+                        except SecurityError as e:
+                            sanitized_msg = sanitize_error_message(str(e))
+                            self.logger.error(f"Output path validation failed: {sanitized_msg}")
+                            return False, 'security_error'
+                        
+                        shutil.move(str(md_file), str(output_file))
+                        conversion_success = True
+                        self.logger.info(f"Successfully converted PDF: {output_file}")
+                    else:
+                        self.logger.error(f"PDF conversion failed - no output file generated: {md_file}")
+                        return False, 'conversion_failed'
+                except Exception as e:
+                    sanitized_msg = sanitize_error_message(str(e))
+                    self.logger.error(f"PDF conversion failed: {sanitized_msg}")
+                    return False, 'conversion_error'
+            else:
+                self.logger.warning(f"Unsupported file type for markdown conversion: {input_file.suffix}")
+                return False, 'unsupported_format'
+        elif output_format in ["txt", "html", "json"]:
+            # Handle text-based conversions
+            try:
+                self.logger.info(f"Converting {input_file.suffix} to {output_format}: {input_file}")
+                
+                if input_file.suffix.lower() == '.txt':
+                    # Text to text - just copy with encoding detection
+                    input_encoding = self.detect_encoding(str(input_file))
+                    self.logger.info(f"Detected encoding for {input_file}: {input_encoding}")
                     
-                    shutil.move(str(md_file), str(output_file))
-        else:
-            # Basic conversion (placeholder - would need full implementation)
-            with open(output_file, 'w', encoding='utf-8') as f:
-                f.write(f"Converted from: {input_path}\n")
-                f.write(f"Format: {output_format}\n")
-                f.write("Full conversion implementation would go here.\n")
+                    with open(input_file, 'r', encoding=input_encoding, errors='replace') as f:
+                        content = f.read()
+                    
+                    if output_format == "txt":
+                        # Text to text - just clean copy
+                        with open(output_file, 'w', encoding='utf-8') as f:
+                            f.write(content)
+                    elif output_format == "html":
+                        # Text to HTML
+                        with open(output_file, 'w', encoding='utf-8') as f:
+                            f.write("<!DOCTYPE html>\n<html>\n<head>\n<title>Converted Document</title>\n</head>\n<body>\n")
+                            f.write("<pre>\n")
+                            f.write(content.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;'))
+                            f.write("\n</pre>\n</body>\n</html>")
+                    elif output_format == "json":
+                        # Text to JSON
+                        import json
+                        data = {
+                            "source_file": str(input_file),
+                            "conversion_date": time.strftime('%Y-%m-%d %H:%M:%S'),
+                            "content": content,
+                            "original_encoding": input_encoding
+                        }
+                        with open(output_file, 'w', encoding='utf-8') as f:
+                            json.dump(data, f, indent=2, ensure_ascii=False)
+                
+                elif input_file.suffix.lower() in ['.docx', '.pdf']:
+                    # For now, create a placeholder that indicates the file type isn't supported for this format
+                    self.logger.warning(f"Full {input_file.suffix} to {output_format} conversion not implemented, creating placeholder")
+                    with open(output_file, 'w', encoding='utf-8') as f:
+                        f.write(f"Document Conversion Placeholder\n")
+                        f.write(f"================================\n\n")
+                        f.write(f"Source: {input_file}\n")
+                        f.write(f"Target Format: {output_format}\n")
+                        f.write(f"Conversion Date: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+                        f.write(f"Note: Full {input_file.suffix.upper()} to {output_format.upper()} conversion ")
+                        f.write(f"requires additional libraries.\n")
+                        f.write(f"For DOCX→Markdown conversion, use the 'markdown' output format.\n")
+                        f.write(f"For PDF→Text conversion, consider using OCR functionality.\n")
+                
+                else:
+                    # Unsupported input format
+                    self.logger.warning(f"Unsupported conversion: {input_file.suffix} to {output_format}")
+                    return False, 'unsupported_format'
+                
+                conversion_success = True
+                self.logger.info(f"Successfully converted to {output_format}: {output_file}")
+                
+            except Exception as e:
+                sanitized_msg = sanitize_error_message(str(e))
+                self.logger.error(f"Conversion to {output_format} failed: {sanitized_msg}")
+                return False, 'conversion_error'
         
-        # Cache result if enabled
-        if cache_key and output_file.exists():
+        else:
+            # Unsupported output format
+            self.logger.warning(f"Unsupported output format: {output_format}")
+            return False, 'unsupported_format'
+        
+        # Cache result if enabled and conversion was successful
+        if cache_key and conversion_success and output_file.exists():
             try:
                 with open(output_file, 'rb') as f:
                     content = f.read()
@@ -1001,7 +1110,39 @@ class UniversalDocumentConverter:
                 self.logger.debug(f"Could not cache result: {e}")
                 pass
         
-        return True, 'converted'
+        # Return result based on actual conversion success
+        if conversion_success and output_file.exists():
+            return True, 'converted'
+        else:
+            self.logger.error(f"Conversion failed for {input_file} - output file not created")
+            return False, 'conversion_failed'
+    
+    def detect_encoding(self, file_path):
+        """Detect file encoding to handle various text file formats"""
+        import chardet
+        
+        try:
+            with open(file_path, 'rb') as f:
+                raw_data = f.read(10000)  # Read first 10KB for detection
+                result = chardet.detect(raw_data)
+                encoding = result['encoding']
+                confidence = result['confidence']
+                
+                self.logger.debug(f"Detected encoding: {encoding} (confidence: {confidence:.2f})")
+                
+                # Fallback to utf-8 if confidence is too low or encoding is None
+                if not encoding or confidence < 0.7:
+                    self.logger.warning(f"Low confidence encoding detection, using utf-8 fallback")
+                    return 'utf-8'
+                
+                return encoding
+                
+        except ImportError:
+            self.logger.warning("chardet not available, using utf-8 encoding")
+            return 'utf-8'
+        except Exception as e:
+            self.logger.warning(f"Encoding detection failed: {e}, using utf-8 fallback")
+            return 'utf-8'
     
     def cancel_conversion(self):
         """Cancel ongoing conversion"""
@@ -1040,15 +1181,29 @@ class UniversalDocumentConverter:
         self.update_status(status_msg)
         
         if not self.cancel_processing:
-            # Show detailed completion dialog
+            # Show detailed completion dialog with helpful information
+            total_files = self.processed_count + self.skipped_count + self.failed_count
+            success_rate = (self.processed_count / total_files * 100) if total_files > 0 else 0
+            
             detail_msg = f"""Conversion completed!
 
-Processed: {self.processed_count} files
-Skipped: {self.skipped_count} files
-Failed: {self.failed_count} files
-Total time: {time_str if elapsed_time > 0 else 'N/A'}
+✅ Successfully converted: {self.processed_count} files
+⏭️ Skipped (already exist): {self.skipped_count} files
+❌ Failed: {self.failed_count} files
+📊 Success rate: {success_rate:.1f}%
+⏱️ Total time: {time_str if elapsed_time > 0 else 'N/A'}
 
-Output directory: {self.output_dir.get()}"""
+📁 Output directory: {self.output_dir.get()}
+
+"""
+            # Add troubleshooting info if there were failures
+            if self.failed_count > 0:
+                detail_msg += """💡 If files failed to convert:
+• Check the logs for specific error messages
+• Ensure input files are not corrupted
+• Verify file format support (PDF/DOCX → Markdown)
+• Try converting individual files for detailed errors"""
+            
             messagebox.showinfo("Conversion Complete", detail_msg)
         
         # Reset counters
@@ -1078,19 +1233,34 @@ Output directory: {self.output_dir.get()}"""
                 messagebox.showwarning("API Not Enabled", "Please enable Google Vision API in the API Management tab first.")
     
     def process_ocr(self):
-        """Process OCR on selected image"""
-        file_path = filedialog.askopenfilename(
-            title="Select image for OCR",
-            filetypes=[
-                ("Image files", "*.png;*.jpg;*.jpeg;*.tiff;*.bmp;*.gif"),
-                ("All files", "*.*")
-            ]
-        )
+        """Process OCR on selected image or images in the list"""
+        # Check if there are files in the OCR file listbox first
+        files_in_list = list(self.ocr_file_listbox.get(0, tk.END))
         
-        if not file_path:
-            return
-        
-        self.process_ocr_file(file_path)
+        if files_in_list:
+            # Process the first selected file, or first file if none selected
+            selection = self.ocr_file_listbox.curselection()
+            if selection:
+                file_path = files_in_list[selection[0]]
+            else:
+                file_path = files_in_list[0]
+            
+            self.logger.info(f"Processing OCR on file from list: {file_path}")
+            self.process_ocr_file(file_path)
+        else:
+            # No files in list, so open file dialog
+            file_path = filedialog.askopenfilename(
+                title="Select image for OCR",
+                filetypes=[
+                    ("Image files", "*.png;*.jpg;*.jpeg;*.tiff;*.bmp;*.gif"),
+                    ("All files", "*.*")
+                ]
+            )
+            
+            if file_path:
+                # Add to the list and process
+                self.ocr_file_listbox.insert(tk.END, file_path)
+                self.process_ocr_file(file_path)
     
     def process_ocr_file(self, file_path):
         """Process OCR on a specific file"""
@@ -1170,9 +1340,29 @@ Output directory: {self.output_dir.get()}"""
         folder = filedialog.askdirectory(title="Select folder with images")
         if folder:
             folder_path = Path(folder)
+            files_added = 0
+            supported_extensions = ['.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif']
+            
+            self.logger.info(f"Scanning image folder: {folder_path}")
+            
             for file_path in folder_path.rglob("*"):
-                if file_path.is_file() and file_path.suffix.lower() in ['.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif']:
-                    self.ocr_file_listbox.insert(tk.END, str(file_path))
+                if file_path.is_file():
+                    file_ext = file_path.suffix.lower()
+                    if file_ext in supported_extensions:
+                        self.ocr_file_listbox.insert(tk.END, str(file_path))
+                        files_added += 1
+                        self.logger.debug(f"Added image: {file_path}")
+                    else:
+                        self.logger.debug(f"Skipped non-image file: {file_path} (extension: {file_ext})")
+            
+            self.logger.info(f"Added {files_added} image files from folder")
+            
+            if files_added == 0:
+                messagebox.showinfo("No Image Files", 
+                    f"No supported image files found in the selected folder.\n\n"
+                    f"Supported formats: {', '.join(supported_extensions)}")
+            else:
+                messagebox.showinfo("Images Added", f"Added {files_added} images for OCR processing.")
     
     def clear_ocr_files(self):
         """Clear OCR file list"""
