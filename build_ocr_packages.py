@@ -171,7 +171,7 @@ python setup_ocr_environment.py
 
 :: Create desktop shortcut
 echo Creating desktop shortcut...
-python -c "import subprocess; subprocess.run(['powershell', '-Command', '$WshShell = New-Object -comObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut(\\\"$Home\\\\Desktop\\\\OCR Document Converter.lnk\\\"); $Shortcut.TargetPath = \\\"%CD%\\\\run_ocr_converter.bat\\\"; $Shortcut.Save()'], check=False)"
+python create_desktop_shortcut.py
 
 echo.
 echo Installation complete!

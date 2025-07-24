@@ -139,10 +139,12 @@ class OCRGUI:
             self.file_path.set(folder)
     
     def log_message(self, message):
-        """Add message to log"""
-        self.log_text.insert(tk.END, f"{message}\n")
-        self.log_text.see(tk.END)
-        self.root.update_idletasks()
+        """Add message to log in a thread-safe manner"""
+        def _update():
+            self.log_text.insert(tk.END, f"{message}\n")
+            self.log_text.see(tk.END)
+        # Schedule GUI update in main thread
+        self.root.after(0, _update)
     
     def clear_log(self):
         """Clear the log"""
@@ -188,9 +190,11 @@ class OCRGUI:
             for i, file_path in enumerate(files_to_process, 1):
                 self.log_message(f"Processing file {i}/{total_files}: {os.path.basename(file_path)}")
                 
-                # Update progress
-                self.progress['value'] = (i / total_files) * 100
-                self.progress_label.config(text=f"Processing {i}/{total_files}")
+                # Update progress in thread-safe manner
+                def _update_progress():
+                    self.progress['value'] = (i / total_files) * 100
+                    self.progress_label.config(text=f"Processing {i}/{total_files}")
+                self.root.after(0, _update_progress)
                 
                 try:
                     # Convert file
@@ -204,14 +208,20 @@ class OCRGUI:
                     self.log_message(f"Error processing {file_path}: {str(e)}")
             
             self.log_message("Conversion completed!")
-            self.progress['value'] = 100
-            self.progress_label.config(text="Complete")
             
-            messagebox.showinfo("Complete", f"Processed {total_files} files!")
+            # Update progress in thread-safe manner
+            def _complete_update():
+                self.progress['value'] = 100
+                self.progress_label.config(text="Complete")
+                messagebox.showinfo("Complete", f"Processed {total_files} files!")
+            self.root.after(0, _complete_update)
             
         except Exception as e:
             self.log_message(f"Conversion error: {str(e)}")
-            messagebox.showerror("Error", str(e))
+            # Show error in thread-safe manner
+            def _show_error():
+                messagebox.showerror("Error", str(e))
+            self.root.after(0, _show_error)
     
     def convert_single_file(self, file_path):
         """Convert a single file"""

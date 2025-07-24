@@ -1,71 +1,128 @@
 #!/usr/bin/env python3
 """
-Create desktop shortcut for Quick Document Convertor
+Create a desktop shortcut for OCR Document Converter safely.
+This script avoids command injection vulnerabilities by using proper path validation.
 """
+
 import os
 import sys
+import platform
 from pathlib import Path
 
-def create_desktop_shortcut():
-    """Create a desktop shortcut for the application"""
+
+def create_windows_shortcut():
+    """Create a Windows desktop shortcut using COM objects."""
     try:
-        # Get paths
-        current_dir = Path(__file__).parent.absolute()
+        import win32com.client
+    except ImportError:
+        print("Installing pywin32 for shortcut creation...")
+        import subprocess
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "pywin32"])
+        import win32com.client
+    
+    # Get safe, validated paths
+    desktop = Path.home() / "Desktop"
+    current_dir = Path.cwd().resolve()
+    target_path = current_dir / "run_ocr_converter.bat"
+    shortcut_path = desktop / "OCR Document Converter.lnk"
+    
+    # Validate paths
+    if not desktop.exists():
+        print(f"Desktop folder not found at {desktop}")
+        return False
+    
+    if not target_path.exists():
+        print(f"Target file not found: {target_path}")
+        return False
+    
+    # Create shortcut using COM
+    shell = win32com.client.Dispatch("WScript.Shell")
+    shortcut = shell.CreateShortCut(str(shortcut_path))
+    shortcut.TargetPath = str(target_path)
+    shortcut.WorkingDirectory = str(current_dir)
+    shortcut.IconLocation = str(target_path)
+    shortcut.Description = "OCR Document Converter - Transform documents with AI-powered OCR"
+    shortcut.Save()
+    
+    print(f"Shortcut created successfully at: {shortcut_path}")
+    return True
+
+
+def create_linux_desktop_entry():
+    """Create a Linux desktop entry file."""
+    desktop_dir = Path.home() / ".local" / "share" / "applications"
+    desktop_dir.mkdir(parents=True, exist_ok=True)
+    
+    current_dir = Path.cwd().resolve()
+    desktop_file = desktop_dir / "ocr-document-converter.desktop"
+    
+    content = f"""[Desktop Entry]
+Version=1.0
+Type=Application
+Name=OCR Document Converter
+Comment=Transform documents with AI-powered OCR
+Exec=python3 {current_dir}/universal_document_converter.py
+Icon={current_dir}/icon.png
+Terminal=false
+Categories=Office;Graphics;
+"""
+    
+    desktop_file.write_text(content)
+    desktop_file.chmod(0o755)
+    
+    print(f"Desktop entry created at: {desktop_file}")
+    return True
+
+
+def create_macos_alias():
+    """Create a macOS alias/shortcut."""
+    try:
+        import subprocess
+        current_dir = Path.cwd().resolve()
+        app_path = current_dir / "OCR Document Converter.app"
         desktop = Path.home() / "Desktop"
         
-        if sys.platform == "win32":
-            # Windows shortcut
-            import winshell
-            
-            shortcut_path = desktop / "Quick Document Convertor.lnk"
-            target = current_dir / "🚀 Launch Quick Document Convertor.bat"
-            
-            winshell.CreateShortcut(
-                Path=str(shortcut_path),
-                Target=str(target),
-                Icon=(str(current_dir / "run_app.py"), 0),
-                Description="Quick Document Convertor - Fast document conversion tool"
-            )
-            
-            print(f"✅ Desktop shortcut created: {shortcut_path}")
-            
-        else:
-            # Linux/macOS desktop file
-            shortcut_content = f"""[Desktop Entry]
-Name=Quick Document Convertor
-Comment=Fast document conversion tool
-Exec=python3 "{current_dir}/run_app.py"
-Icon=document-properties
-Terminal=false
-Type=Application
-Categories=Office;Utility;
-"""
-            
-            shortcut_path = desktop / "Quick Document Convertor.desktop"
-            with open(shortcut_path, 'w') as f:
-                f.write(shortcut_content)
-            
-            # Make executable
-            os.chmod(shortcut_path, 0o755)
-            print(f"✅ Desktop shortcut created: {shortcut_path}")
-            
-    except ImportError:
-        print("⚠️  Creating simple batch file instead...")
-        # Fallback: create simple batch file
-        if sys.platform == "win32":
-            batch_content = f"""@echo off
-cd /d "{current_dir}"
-python run_app.py
-pause
-"""
-            shortcut_path = desktop / "Quick Document Convertor.bat"
-            with open(shortcut_path, 'w') as f:
-                f.write(batch_content)
-            print(f"✅ Desktop launcher created: {shortcut_path}")
+        # Create alias using osascript
+        script = f'''
+        tell application "Finder"
+            make alias file to POSIX file "{app_path}" at desktop
+            set name of result to "OCR Document Converter"
+        end tell
+        '''
         
+        subprocess.run(['osascript', '-e', script], check=True)
+        print("macOS alias created on Desktop")
+        return True
     except Exception as e:
-        print(f"❌ Failed to create desktop shortcut: {e}")
-        print("💡 You can manually create a shortcut to '🚀 Launch Quick Document Convertor.bat'")
+        print(f"Could not create macOS alias: {e}")
+        return False
+
+
+def main():
+    """Main function to create appropriate shortcut based on OS."""
+    system = platform.system()
+    
+    print(f"Creating shortcut for {system} system...")
+    
+    try:
+        if system == "Windows":
+            success = create_windows_shortcut()
+        elif system == "Linux":
+            success = create_linux_desktop_entry()
+        elif system == "Darwin":  # macOS
+            success = create_macos_alias()
+        else:
+            print(f"Unsupported operating system: {system}")
+            success = False
+        
+        if not success:
+            print("Failed to create shortcut")
+            sys.exit(1)
+            
+    except Exception as e:
+        print(f"Error creating shortcut: {e}")
+        sys.exit(1)
+
 
 if __name__ == "__main__":
-    create_desktop_shortcut() 
+    main()
