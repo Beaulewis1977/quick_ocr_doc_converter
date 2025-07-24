@@ -103,24 +103,65 @@ Create a **modern, beautiful desktop application** for legacy document conversio
 
 ## 📄 Core Features (MUST IMPLEMENT)
 
-### **Document Conversion Core:**
-1. **Bidirectional Conversions:**
-   - DOCX ↔ RTF ↔ Markdown
-   - TXT → RTF, Markdown
-   - HTML → RTF, Markdown
-   - PDF → RTF, Markdown (text extraction only)
+### **Core Functions (EXACTLY What Your Friend Needs):**
 
-2. **Batch Processing:**
-   - Multiple file selection
-   - Folder recursion with file filtering
-   - Parallel processing with progress tracking
-   - Error handling and retry mechanisms
+#### **Primary Functions (Lightweight DLL - <5MB):**
+```rust
+// Core bidirectional conversion functions (THE MAIN REQUIREMENT)
+1. Rtf2MD(input_rtf: String) -> String      // RTF → Markdown conversion
+2. MD2Rtf(input_md: String) -> String       // Markdown → RTF conversion
 
-3. **Legacy System Integration:**
-   - Export settings for VB6/VFP9 integration
-   - COM-compatible file paths (Windows-style)
-   - Registry integration for system-wide settings
-   - Command-line interface for automation
+// File-based versions for VB6/VFP9 compatibility  
+3. ConvertRtfFileToMd(input_path: String, output_path: String) -> i32
+4. ConvertMdFileToRtf(input_path: String, output_path: String) -> i32
+```
+
+#### **Essential Legacy Helper Functions:**
+```rust
+// Document validation (prevents crashes in legacy systems)
+5. ValidateRtfDocument(rtf_content: String) -> i32    // Returns 1=valid, 0=invalid
+6. ValidateMarkdownDocument(md_content: String) -> i32 // Returns 1=valid, 0=invalid
+
+// Text processing utilities (common legacy needs)
+7. ExtractPlainText(document_content: String, format: String) -> String
+8. CleanRtfFormatting(rtf_content: String) -> String  // Remove complex formatting
+9. NormalizeMarkdown(md_content: String) -> String    // Standardize markdown syntax
+
+// Error handling (critical for VB6/VFP9)
+10. GetLastError() -> String              // Detailed error messages
+11. TestConnection() -> i32               // Returns 1 if DLL working, 0 if not
+12. GetVersionInfo() -> String            // DLL version and build info
+```
+
+#### **Batch Processing (Legacy-Friendly):**
+```rust
+// Simple batch operations for legacy systems
+13. ConvertFolderRtfToMd(input_folder: String, output_folder: String) -> i32
+14. ConvertFolderMdToRtf(input_folder: String, output_folder: String) -> i32
+15. GetBatchProgress() -> String          // JSON: {"processed": 5, "total": 10, "current": "file.rtf"}
+16. CancelBatchOperation() -> i32         // Returns 1 if cancelled successfully
+```
+
+#### **Legacy Template System:**
+```rust
+// RTF template functionality (useful for legacy reports)  
+17. ApplyRtfTemplate(content: String, template_path: String) -> String
+18. CreateRtfTemplate(sample_rtf: String, template_name: String) -> i32
+19. ListAvailableTemplates() -> String    // JSON array of template names
+
+// Markdown template system
+20. ApplyMarkdownTemplate(content: String, template_path: String) -> String
+21. ValidateTemplate(template_path: String, format: String) -> i32
+```
+
+#### **Database Integration (Legacy Systems Love This):**
+```rust
+// Simple database export functions (common legacy need)
+22. ExportToCSV(markdown_content: String, delimiter: String) -> String
+23. ImportFromCSV(csv_content: String, delimiter: String) -> String  // Returns markdown
+24. ConvertTableToRtf(csv_data: String) -> String         // Creates RTF table
+25. ExtractTablesFromRtf(rtf_content: String) -> String   // Returns CSV format
+```
 
 ### **Advanced Features:**
 4. **Template System:**
