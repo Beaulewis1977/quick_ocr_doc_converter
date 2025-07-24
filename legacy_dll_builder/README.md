@@ -2,6 +2,30 @@
 
 A standalone 32-bit DLL builder and integration system for Visual Basic 6 and Visual FoxPro 9 applications. This module has been separated from the main Universal Document Converter to provide a clean, focused solution for legacy system integration.
 
+## 📑 Table of Contents
+
+- [Overview](#overview)
+- [Quick Start](#quick-start)
+  - [Requirements](#requirements)
+  - [Installation](#installation)
+  - [Basic Usage](#basic-usage)
+- [Advanced CLI (Click-based)](#advanced-cli-click-based)
+- [Configuration](#configuration)
+- [DLL Functions](#dll-functions)
+  - [Core Functions](#core-functions)
+  - [Format-Specific Functions](#format-specific-functions)
+  - [Information Functions](#information-functions)
+- [VB6 Integration Example](#vb6-integration-example)
+- [VFP9 Integration Example](#vfp9-integration-example)
+- [Testing](#testing)
+- [Troubleshooting](#troubleshooting)
+  - [Compiler Not Found](#compiler-not-found)
+  - [DLL Not Loading in VB6/VFP9](#dll-not-loading-in-vb6vfp9)
+  - [Python CLI Not Found](#python-cli-not-found)
+- [Architecture](#architecture)
+- [Security Notes](#security-notes)
+- [License](#license)
+
 ## Overview
 
 The Legacy DLL Builder provides:

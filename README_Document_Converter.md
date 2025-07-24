@@ -2,6 +2,23 @@
 
 A simple, user-friendly desktop application for converting documents (DOCX, PDF, TXT) to Markdown format with batch processing capabilities.
 
+## 📑 Table of Contents
+
+- [🚀 Quick Start](#-quick-start)
+  - [Option 1: Simple Launch (Recommended)](#option-1-simple-launch-recommended)
+  - [Option 2: PowerShell Launch](#option-2-powershell-launch)
+  - [Option 3: Python Direct](#option-3-python-direct)
+- [📦 Installation & Setup](#-installation--setup)
+  - [First Time Setup](#first-time-setup)
+  - [Manual Dependency Installation](#manual-dependency-installation)
+- [✨ Features](#-features)
+- [🎯 GUI Features](#-gui-features)
+- [🛠️ Technical Details](#️-technical-details)
+- [📋 Requirements](#-requirements)
+- [🔧 Configuration](#-configuration)
+- [🐛 Troubleshooting](#-troubleshooting)
+- [📄 License](#-license)
+
 ## 🚀 Quick Start
 
 ### Option 1: Simple Launch (Recommended)
