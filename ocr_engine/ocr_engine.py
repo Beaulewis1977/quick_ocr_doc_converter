@@ -407,10 +407,19 @@ class OCREngine:
             else:
                 pil_image = Image.fromarray(image)
             
-            # Extract text
+            # Configure Tesseract before use
+            import tesseract_config
+            tesseract_config.configure_tesseract()
+            
+            # Extract text - use 'eng' as language code, not 'en'
+            lang_codes = options.get('languages', ['eng'])
+            # Map common language codes to Tesseract codes
+            lang_map = {'en': 'eng', 'english': 'eng', 'fr': 'fra', 'de': 'deu', 'es': 'spa'}
+            mapped_langs = [lang_map.get(lang, lang) for lang in lang_codes]
+            
             text = pytesseract.image_to_string(
                 pil_image,
-                lang='+'.join(options.get('languages', ['en'])),
+                lang='+'.join(mapped_langs),
                 config=options.get('tesseract_config', '--oem 3 --psm 6')
             )
             
@@ -418,7 +427,7 @@ class OCREngine:
             try:
                 data = pytesseract.image_to_data(
                     pil_image,
-                    lang='+'.join(options.get('languages', ['en'])),
+                    lang='+'.join(mapped_langs),
                     output_type=pytesseract.Output.DICT
                 )
                 confidences = [int(conf) for conf in data['conf'] if int(conf) > 0]

@@ -784,10 +784,26 @@ class UniversalDocumentConverter:
         files = self.md_editor.tk.splitlist(event.data)
         for file_path in files:
             if Path(file_path).is_file():
-                # Check file type and convert
-                if file_path.lower().endswith(('.docx', '.pdf')):
-                    self.convert_dropped_to_markdown(file_path)
-                    break  # Only process first file
+                # Check direction
+                direction = self.md_direction.get()
+                
+                if direction == "to_markdown":
+                    # Convert TO markdown
+                    if file_path.lower().endswith(('.docx', '.pdf', '.txt', '.html', '.rtf')):
+                        self.convert_dropped_to_markdown(file_path)
+                        break  # Only process first file
+                else:
+                    # Load markdown file into editor for conversion FROM markdown
+                    if file_path.lower().endswith(('.md', '.markdown', '.txt')):
+                        try:
+                            with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
+                                content = f.read()
+                            self.md_editor.delete(1.0, tk.END)
+                            self.md_editor.insert(tk.END, content)
+                            self.update_status(f"Loaded {Path(file_path).name} - ready to convert from markdown")
+                        except Exception as e:
+                            messagebox.showerror("Load Error", f"Could not load file: {e}")
+                        break  # Only process first file
     
     # File management methods
     def add_files(self):
@@ -1125,6 +1141,36 @@ class UniversalDocumentConverter:
                         with open(output_file, 'w', encoding='utf-8') as f:
                             json.dump(data, f, indent=2, ensure_ascii=False)
                 
+                elif input_file.suffix.lower() in ['.md', '.markdown']:
+                    # Handle markdown to txt/html/json conversion
+                    self.logger.info(f"Converting markdown to {output_format}")
+                    
+                    with open(input_file, 'r', encoding='utf-8', errors='replace') as f:
+                        content = f.read()
+                    
+                    if output_format == "txt":
+                        # Simple markdown to text - just copy content
+                        with open(output_file, 'w', encoding='utf-8') as f:
+                            f.write(content)
+                    elif output_format == "html":
+                        # Markdown to HTML - basic conversion
+                        with open(output_file, 'w', encoding='utf-8') as f:
+                            f.write("<!DOCTYPE html>\n<html>\n<head>\n<title>Converted from Markdown</title>\n</head>\n<body>\n")
+                            f.write("<pre>\n")
+                            f.write(content.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;'))
+                            f.write("\n</pre>\n</body>\n</html>")
+                    elif output_format == "json":
+                        # Markdown to JSON
+                        import json
+                        data = {
+                            "source_file": str(input_file),
+                            "conversion_date": time.strftime('%Y-%m-%d %H:%M:%S'),
+                            "content": content,
+                            "format": "markdown"
+                        }
+                        with open(output_file, 'w', encoding='utf-8') as f:
+                            json.dump(data, f, indent=2, ensure_ascii=False)
+                
                 elif input_file.suffix.lower() in ['.docx', '.pdf']:
                     # For now, create a placeholder that indicates the file type isn't supported for this format
                     self.logger.warning(f"Full {input_file.suffix} to {output_format} conversion not implemented, creating placeholder")
@@ -1355,7 +1401,7 @@ class UniversalDocumentConverter:
             
             options = {
                 'engine': engine,
-                'language': self.ocr_language.get(),
+                'languages': [self.ocr_language.get()],  # OCR engine expects a list
                 'confidence_threshold': confidence_threshold,
                 'preprocess': preprocess
             }
@@ -1491,8 +1537,21 @@ class UniversalDocumentConverter:
                     
                     if output_format == "json":
                         import json
+                        # Clean up the result for JSON output
+                        json_result = {
+                            "source_file": str(file_path),
+                            "text": result.get('text', ''),
+                            "confidence": result.get('confidence', 0),
+                            "backend": result.get('backend', 'unknown'),
+                            "word_count": result.get('word_count', 0),
+                            "character_count": result.get('character_count', 0)
+                        }
+                        # Only add error if text is empty
+                        if not json_result['text'] and 'error' in result:
+                            json_result['error'] = result['error']
+                        
                         with open(output_file, 'w', encoding='utf-8') as f:
-                            json.dump(result, f, indent=2)
+                            json.dump(json_result, f, indent=2, ensure_ascii=False)
                     elif output_format == "markdown":
                         with open(output_file, 'w', encoding='utf-8') as f:
                             f.write(f"# OCR Result: {input_name}\n\n")
@@ -1562,7 +1621,7 @@ class UniversalDocumentConverter:
             
             options = {
                 'engine': engine,
-                'language': self.ocr_language.get(),
+                'languages': [self.ocr_language.get()],  # OCR engine expects a list
                 'confidence_threshold': confidence_threshold,
                 'preprocess': preprocess
             }
@@ -1753,12 +1812,43 @@ class UniversalDocumentConverter:
     
     def preview_markdown(self):
         """Preview markdown content"""
-        content = self.md_editor.get(1.0, tk.END)
-        # Simple preview (would need markdown renderer for full preview)
+        content = self.md_editor.get(1.0, tk.END).strip()
+        
+        if not content:
+            messagebox.showwarning("No Content", "No markdown content to preview")
+            return
+        
+        # Simple text-based markdown preview
+        preview_text = "=== MARKDOWN PREVIEW ===\n\n"
+        
+        # Basic markdown rendering
+        lines = content.split('\n')
+        for line in lines:
+            # Headers
+            if line.startswith('# '):
+                preview_text += f"\n{line[2:].upper()}\n{'='*len(line[2:])}\n"
+            elif line.startswith('## '):
+                preview_text += f"\n{line[3:]}\n{'-'*len(line[3:])}\n"
+            elif line.startswith('### '):
+                preview_text += f"\n{line[4:]} \n"
+            # Bold text (simple replacement)
+            elif '**' in line:
+                preview_text += line.replace('**', '') + '\n'
+            # Code blocks
+            elif line.strip() == '```':
+                preview_text += '\n--- CODE BLOCK ---\n'
+            # Lists
+            elif line.strip().startswith('- ') or line.strip().startswith('* '):
+                preview_text += '  • ' + line.strip()[2:] + '\n'
+            else:
+                preview_text += line + '\n'
+        
         self.md_preview.config(state=tk.NORMAL)
         self.md_preview.delete(1.0, tk.END)
-        self.md_preview.insert(tk.END, f"Markdown Preview:\n\n{content}")
+        self.md_preview.insert(tk.END, preview_text)
         self.md_preview.config(state=tk.DISABLED)
+        
+        self.update_status("Markdown preview updated")
     
     def clear_markdown_source(self):
         """Clear the markdown source editor"""

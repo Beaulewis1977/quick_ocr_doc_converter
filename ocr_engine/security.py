@@ -23,7 +23,7 @@ class OCRSecurityValidator:
         self.config = config or {}
         self.max_file_size = self.config.get('max_file_size_mb', 50) * 1024 * 1024  # 50MB default
         self.allowed_extensions = set(self.config.get('allowed_extensions', 
-            ['.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.pdf']))
+            ['.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.pdf', '.docx', '.html', '.htm', '.md', '.markdown', '.txt', '.rtf', '.epub', '.webp']))
         self.allowed_mime_types = {
             'image/png', 'image/jpeg', 'image/tiff', 'image/bmp', 'application/pdf'
         }
@@ -114,6 +114,8 @@ class OCRSecurityValidator:
                 '.pdf': [b'%PDF-'],
                 '.tiff': [b'II*\x00', b'MM\x00*'],  # Little-endian and big-endian TIFF
                 '.bmp': [b'BM'],
+                '.docx': [b'PK\x03\x04'],  # ZIP file header (DOCX is a ZIP file)
+                '.webp': [b'RIFF'],  # WebP files start with RIFF then have WEBP at offset 8
             }
             
             file_ext = path_obj.suffix.lower()
@@ -132,6 +134,11 @@ class OCRSecurityValidator:
             if file_ext in ['.jpg', '.jpeg']:
                 # JPEG files can have various markers, but should start with FFD8
                 if header.startswith(b'\xff\xd8'):
+                    return True
+            
+            # Special case for WebP files - check for WEBP at offset 8
+            if file_ext == '.webp' and len(header) >= 12:
+                if header.startswith(b'RIFF') and header[8:12] == b'WEBP':
                     return True
             
             self.logger.warning(f"File content doesn't match expected type: {file_ext}")
