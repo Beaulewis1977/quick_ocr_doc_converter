@@ -13,6 +13,8 @@ reportlab>=3.6.0
 weasyprint>=56.0
 markdown>=3.4.0
 beautifulsoup4>=4.11.0
+striprtf>=0.0.22
+fpdf2>=2.5.0
 
 # GUI and utilities
 tkinterdnd2>=0.3.0
@@ -32,6 +34,8 @@ colorama>=0.4.5
 
 # Security and encryption
 cryptography>=3.4.0
+keyring>=23.0.0
+python-dotenv>=0.19.0
 
 # PDF processing
 PyMuPDF>=1.23.0
@@ -39,3 +43,5 @@ PyPDF2>=3.0.1
 
 # Cloud API integrations (optional)
 google-cloud-vision>=3.0.0
+cloudconvert>=2.1.0
+openai>=0.27.0

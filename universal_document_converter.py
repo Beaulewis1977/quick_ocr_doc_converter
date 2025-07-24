@@ -286,6 +286,7 @@ class UniversalDocumentConverter:
         self.create_api_tab()
         self.create_tools_tab()
         self.create_settings_tab()
+        self.create_about_tab()
         
         # Status bar at bottom
         self.create_status_bar(main_container)
@@ -523,12 +524,31 @@ class UniversalDocumentConverter:
         ttk.Button(md_control_frame, text="🗑 Clear Preview", command=self.clear_markdown_preview).pack(side=tk.LEFT)
     
     def create_api_tab(self):
-        """Create API management tab"""
+        """Create API management tab with comprehensive key management"""
         api_frame = ttk.Frame(self.notebook)
         self.notebook.add(api_frame, text="🌐 API Management")
         
+        # Initialize API key manager
+        try:
+            from api_key_manager import APIKeyManager, APIKeyGUI
+            self.api_key_manager = APIKeyManager()
+            
+            # Create API key management GUI
+            api_gui = APIKeyGUI(api_frame, self.api_key_manager)
+            
+            # Update config based on API manager
+            self.gv_enabled = tk.BooleanVar(value=self.api_key_manager.is_api_enabled('google_vision'))
+            self.cloudconvert_enabled = tk.BooleanVar(value=self.api_key_manager.is_api_enabled('cloudconvert'))
+            
+        except ImportError:
+            # Fallback to old API management UI
+            self.logger.warning("API Key Manager not available, using legacy UI")
+            self._create_legacy_api_tab(api_frame)
+    
+    def _create_legacy_api_tab(self, parent):
+        """Create legacy API management tab (fallback)"""
         # Google Vision API
-        gv_frame = ttk.LabelFrame(api_frame, text="Google Vision API", padding=10)
+        gv_frame = ttk.LabelFrame(parent, text="Google Vision API", padding=10)
         gv_frame.pack(fill=tk.X, pady=(0, 10))
         
         self.gv_enabled = tk.BooleanVar(value=self.config.get('api', {}).get('google_vision', {}).get('enabled', False))
@@ -564,7 +584,7 @@ class UniversalDocumentConverter:
         self.api_status_label.pack(side=tk.LEFT)
         
         # Usage statistics
-        stats_frame = ttk.LabelFrame(api_frame, text="API Usage Statistics", padding=10)
+        stats_frame = ttk.LabelFrame(parent, text="API Usage Statistics", padding=10)
         stats_frame.pack(fill=tk.BOTH, expand=True)
         
         self.api_stats = scrolledtext.ScrolledText(stats_frame, height=10, state=tk.DISABLED)
@@ -713,6 +733,84 @@ class UniversalDocumentConverter:
         self.log_level = ttk.Combobox(level_frame, values=["DEBUG", "INFO", "WARNING", "ERROR"], state="readonly")
         self.log_level.set(self.config.get('logging', {}).get('level', 'INFO'))
         self.log_level.grid(row=0, column=1, sticky=tk.W)
+    
+    def create_about_tab(self):
+        """Create About tab with developer info and donation links"""
+        about_frame = ttk.Frame(self.notebook)
+        self.notebook.add(about_frame, text="ℹ️ About")
+        
+        # Main container with centered content
+        container = ttk.Frame(about_frame)
+        container.pack(expand=True)
+        
+        # Title
+        title_label = ttk.Label(container, text="Universal Document Converter", 
+                               font=('Arial', 18, 'bold'))
+        title_label.pack(pady=(20, 10))
+        
+        version_label = ttk.Label(container, text="Version 3.1.0", 
+                                 font=('Arial', 12))
+        version_label.pack(pady=(0, 20))
+        
+        # Developer info
+        dev_frame = ttk.LabelFrame(container, text="Developer", padding=20)
+        dev_frame.pack(pady=(0, 20))
+        
+        dev_info = ttk.Label(dev_frame, text="Designed and built by Beau Lewis\n(blewisxx@gmail.com)",
+                            font=('Arial', 11))
+        dev_info.pack()
+        
+        # Support the Developer section
+        support_frame = ttk.LabelFrame(container, text="Support Development", padding=20)
+        support_frame.pack(pady=(0, 20))
+        
+        support_msg = ttk.Label(support_frame, 
+                               text="This software is free and open source.\n"
+                                    "If you find it useful, please consider supporting its development.\n\n"
+                                    "I'm working on an old laptop that freezes frequently.\n"
+                                    "My goal is to save for a new computer to continue developing\n"
+                                    "better tools for the community.",
+                               font=('Arial', 10), justify=tk.CENTER)
+        support_msg.pack(pady=(0, 15))
+        
+        # Donation buttons
+        donation_frame = ttk.Frame(support_frame)
+        donation_frame.pack()
+        
+        # Ko-fi button
+        kofi_btn = ttk.Button(donation_frame, text="☕ Support on Ko-fi", 
+                             command=lambda: self.open_url("https://ko-fi.com/beaulewis"))
+        kofi_btn.pack(side=tk.LEFT, padx=(0, 10))
+        
+        # Venmo info
+        venmo_frame = ttk.Frame(support_frame)
+        venmo_frame.pack(pady=(15, 0))
+        
+        venmo_label = ttk.Label(venmo_frame, text="Venmo: @Terragon1123", 
+                               font=('Arial', 10, 'italic'))
+        venmo_label.pack()
+        
+        # Features
+        features_frame = ttk.LabelFrame(container, text="Features", padding=20)
+        features_frame.pack(pady=(0, 20), fill=tk.X)
+        
+        features_text = """• Full document conversion (DOCX, PDF, TXT, HTML, RTF, EPUB, Markdown)
+• Advanced OCR with multiple engines (Tesseract, EasyOCR, Google Vision)
+• Bidirectional Markdown conversion
+• Batch processing with multi-threading
+• Cross-platform support (Windows, macOS, Linux)
+• API integration for cloud services
+• Drag-and-drop support
+• Enterprise-grade security and logging"""
+        
+        features_label = ttk.Label(features_frame, text=features_text,
+                                  font=('Arial', 9), justify=tk.LEFT)
+        features_label.pack()
+        
+    def open_url(self, url):
+        """Open URL in default browser"""
+        import webbrowser
+        webbrowser.open(url)
     
     def create_status_bar(self, parent):
         """Create status bar at bottom"""
@@ -1198,6 +1296,61 @@ class UniversalDocumentConverter:
                 self.logger.error(f"Conversion to {output_format} failed: {sanitized_msg}")
                 return False, 'conversion_error'
         
+        elif output_format in ["rtf", "docx", "pdf", "epub"]:
+            # Advanced format conversions
+            try:
+                from advanced_converters import get_advanced_converter
+                
+                # Get converter with API config
+                api_config = {}
+                if hasattr(self, 'api_key_manager'):
+                    cloudconvert_config = self.api_key_manager.get_api_key('cloudconvert')
+                    if cloudconvert_config and cloudconvert_config.get('enabled'):
+                        api_config['cloudconvert'] = cloudconvert_config
+                
+                converter = get_advanced_converter(api_config)
+                
+                # Read input content
+                if input_file.suffix.lower() in ['.txt', '.md', '.markdown']:
+                    with open(input_file, 'r', encoding='utf-8', errors='replace') as f:
+                        content = f.read()
+                elif input_file.suffix.lower() == '.rtf':
+                    # Extract text from RTF
+                    content = converter.convert_from_rtf(str(input_file))
+                    if not content:
+                        self.logger.error("Failed to extract text from RTF")
+                        return False, 'conversion_error'
+                else:
+                    self.logger.warning(f"Input format {input_file.suffix} not supported for {output_format} conversion")
+                    return False, 'unsupported_format'
+                
+                # Convert to target format
+                success = False
+                if output_format == "rtf":
+                    success = converter.convert_to_rtf(str(input_file), str(output_file), content)
+                elif output_format == "docx":
+                    success = converter.convert_to_docx(str(input_file), str(output_file), content)
+                elif output_format == "pdf":
+                    success = converter.convert_to_pdf(str(input_file), str(output_file), content)
+                elif output_format == "epub":
+                    # EPUB conversion not yet implemented
+                    self.logger.warning("EPUB output format not yet implemented")
+                    return False, 'unsupported_format'
+                
+                if success:
+                    conversion_success = True
+                    self.logger.info(f"Successfully converted to {output_format}: {output_file}")
+                else:
+                    return False, 'conversion_error'
+                    
+            except ImportError:
+                self.logger.error(f"Advanced converters not available. Install required packages for {output_format} support.")
+                return False, 'missing_dependencies'
+            except Exception as e:
+                sanitized_msg = sanitize_error_message(str(e))
+                self.logger.error(f"Advanced conversion failed: {sanitized_msg}")
+                return False, 'conversion_error'
+                
         else:
             # Unsupported output format
             self.logger.warning(f"Unsupported output format: {output_format}")
