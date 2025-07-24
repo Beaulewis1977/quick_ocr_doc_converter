@@ -17,9 +17,66 @@
 
 A powerful, enterprise-ready OCR (Optical Character Recognition) document converter with advanced image processing, multi-language support, and intelligent text extraction. Features Tesseract and EasyOCR engines, batch processing, and professional deployment options.
 
-[🚀 Quick Start](#-quick-start) • [✨ Features](#-features) • [📄 Formats](#-supported-formats) • [🛠️ Installation](#️-installation) • [⚙️ Configuration](#️-configuration) • [📖 Usage](#-usage) • [📁 Project Structure](#-project-structure) • [🤝 Contributing](#-contributing)
-
 </div>
+
+---
+
+## 📑 **Table of Contents**
+
+- [🎯 What is OCR Document Converter?](#-what-is-ocr-document-converter)
+  - [🌟 Why Choose OCR Document Converter?](#-why-choose-ocr-document-converter)
+- [🚀 Quick Start](#-quick-start)
+  - [🖱️ Easiest Way - Automated Setup](#️-easiest-way---automated-setup)
+  - [🔧 Manual Installation](#-manual-installation)
+- [✨ Features](#-features)
+  - [🔍 OCR Engines](#-ocr-engines)
+  - [🌍 Multi-Language Support](#-multi-language-support)
+  - [🎨 Image Processing](#-image-processing)
+  - [🚀 Performance & Efficiency](#-performance--efficiency)
+  - [🎯 User Interface](#-user-interface)
+- [📄 Supported Formats](#-supported-formats)
+  - [📥 Input Formats](#-input-formats)
+  - [📤 Output Formats](#-output-formats)
+- [⚙️ Configuration](#️-configuration)
+  - [🔧 OCR Engine Settings](#-ocr-engine-settings)
+  - [🎛️ Application Settings](#️-application-settings)
+  - [🌍 Language Configuration](#-language-configuration)
+- [🌐 OCR Engines and API Configuration](#-ocr-engines-and-api-configuration)
+  - [🔍 Available OCR Engines](#-available-ocr-engines)
+  - [🔑 Setting Up Google Vision API](#-setting-up-google-vision-api)
+  - [☁️ Setting Up CloudConvert API](#️-setting-up-cloudconvert-api)
+  - [🔐 API Key Security](#-api-key-security)
+  - [🎯 Choosing the Right Engine](#-choosing-the-right-engine)
+  - [⚡ Performance Tips](#-performance-tips)
+- [📖 Usage](#-usage)
+  - [🖥️ GUI Application](#️-gui-application)
+  - [💻 Command Line Interface (CLI)](#-command-line-interface-cli)
+  - [🔧 Python API](#-python-api)
+- [📁 Project Structure](#-project-structure)
+  - [📋 Key Files Description](#-key-files-description)
+- [🧪 Testing & Validation](#-testing--validation)
+  - [🔬 Run Test Suite](#-run-test-suite)
+  - [📊 Test Coverage](#-test-coverage)
+  - [🎯 Benchmarks](#-benchmarks)
+- [📥 Download Options](#-download-options)
+- [🛠️ Installation Methods](#️-installation-methods)
+  - [🚀 Method 1: From Complete Package](#-method-1-from-complete-package)
+  - [🚀 Method 2: From Source (Development)](#-method-2-from-source-development)
+  - [🔧 Method 3: Manual Installation](#-method-3-manual-installation)
+  - [🐳 Method 4: Docker Installation](#-method-4-docker-installation)
+- [🔧 Troubleshooting](#-troubleshooting)
+  - [❗ Common Issues](#-common-issues)
+  - [📋 Debug Mode](#-debug-mode)
+  - [🆘 Getting Help](#-getting-help)
+- [🤝 Contributing](#-contributing)
+  - [🌟 How to Contribute](#-how-to-contribute)
+  - [🎯 Areas for Contribution](#-areas-for-contribution)
+  - [📝 Development Setup](#-development-setup)
+  - [🏷️ Code Style](#️-code-style)
+- [📄 License](#-license)
+- [🙏 Acknowledgments](#-acknowledgments)
+- [🤝 Support Open Source](#-support-open-source)
+- [📞 Support](#-support)
 
 ---
 
@@ -660,7 +717,7 @@ cd quick_ocr_document_converter
 python setup_ocr_environment.py
 ```
 
-### 🔧 **Method 2: Manual Installation**
+### 🔧 **Method 3: Manual Installation**
 
 #### Step 1: Python Environment
 ```bash
@@ -718,7 +775,7 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 ```
 
-### 🐳 **Method 3: Docker Installation**
+### 🐳 **Method 4: Docker Installation**
 
 ```dockerfile
 # Dockerfile
@@ -889,14 +946,25 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 🤝 **Support Open Source**
 
-Building and maintaining OCR Document Converter takes time and resources. While the tool is completely free, 
-your voluntary support helps ensure continued development and improvements.
+Building and maintaining OCR Document Converter takes time and resources. While the tool is completely free, your voluntary support helps ensure continued development and improvements.
 
 If this tool has saved you time or added value to your work, consider showing your appreciation:
 
-**Venmo**: @BeauinTulsa
+<div align="center">
 
-Together, we're making document conversion accessible to everyone. Thank you! 💪
+### ☕ **Buy Me a Coffee**
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/beaulewis)
+
+**[Support on Ko-fi](https://ko-fi.com/beaulewis)** - Buy me a coffee to fuel more open source projects!
+
+### 💳 **Venmo**
+[![Venmo](https://img.shields.io/badge/Venmo-3D95CE?style=for-the-badge&logo=venmo&logoColor=white)](https://venmo.com/BeauinTulsa)
+
+**[@BeauinTulsa](https://venmo.com/BeauinTulsa)** - Quick and easy way to show support!
+
+</div>
+
+Your support means the world! Every donation, no matter the size, helps me dedicate more time to creating free, open source tools that help developers and businesses worldwide. Together, we're making document conversion accessible to everyone. Thank you! 💪
 
 ---
 

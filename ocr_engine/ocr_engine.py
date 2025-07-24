@@ -19,6 +19,8 @@ from concurrent.futures import as_completed
 import threading
 import numpy as np
 import sys
+import weakref
+import atexit
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from thread_pool_manager import thread_manager
 
@@ -94,7 +96,7 @@ class OCREngine:
         self.logger = logger or logging.getLogger("OCREngine")
         
         # Initialize thread safety locks FIRST
-        self._active_readers = {}  # thread_id -> reader mapping
+        self._active_readers = weakref.WeakValueDictionary()  # thread_id -> reader mapping with weak refs
         self._readers_lock = threading.Lock()  # Lock for reader tracking
         self._cache_lock = threading.RLock()  # Reentrant lock for cache operations
         self._config_lock = threading.RLock()  # Lock for configuration changes
@@ -102,6 +104,9 @@ class OCREngine:
         
         # Thread-local storage for OCR readers
         self._thread_local = threading.local()
+        
+        # Register cleanup on exit
+        atexit.register(self._cleanup_all_readers)
         
         # Cache directory for OCR results
         self.cache_dir = Path.home() / ".quick_document_convertor" / "ocr_cache"
@@ -218,6 +223,9 @@ class OCREngine:
 
     def _get_easyocr_reader(self, languages: List[str] = None):
         """Get thread-local EasyOCR reader with global tracking"""
+        # Clean up dead threads periodically
+        self._cleanup_dead_thread_readers()
+        
         if not hasattr(self._thread_local, 'easyocr_reader'):
             if languages is None:
                 languages = self.config['languages']
@@ -228,12 +236,28 @@ class OCREngine:
             )
             self._thread_local.easyocr_reader = reader
             
-            # Track reader globally for cleanup
+            # Track reader globally for cleanup with weak reference
             thread_id = threading.get_ident()
             with self._readers_lock:
                 self._active_readers[thread_id] = reader
                 
         return self._thread_local.easyocr_reader
+    
+    def _cleanup_dead_thread_readers(self):
+        """Clean up readers from threads that no longer exist"""
+        import threading
+        active_threads = {t.ident for t in threading.enumerate() if t.ident}
+        
+        with self._readers_lock:
+            dead_threads = [tid for tid in self._active_readers.keys() if tid not in active_threads]
+            for tid in dead_threads:
+                try:
+                    # WeakValueDictionary will automatically remove dead references
+                    if tid in self._active_readers:
+                        del self._active_readers[tid]
+                        self.logger.debug(f"Cleaned up reader for dead thread {tid}")
+                except Exception as e:
+                    self.logger.warning(f"Error cleaning up reader for thread {tid}: {e}")
 
     def _get_cache_key(self, image_path: Path, options: Dict[str, Any]) -> str:
         """Generate cache key for OCR result"""
@@ -312,88 +336,120 @@ class OCREngine:
         Returns:
             Dictionary with extracted text and metadata
         """
-        # Input validation and security checks
-        if not isinstance(image_path, (str, Path)):
-            raise TypeError("image_path must be a string or Path object")
-            
-        image_path = Path(image_path)
-        
-        # Security check: ensure path is safe (no directory traversal)
-        try:
-            image_path.resolve()
-        except (OSError, RuntimeError) as e:
-            raise ValueError(f"Invalid or unsafe path: {e}")
-            
-        if not image_path.exists():
-            raise FileNotFoundError(f"Image file not found: {image_path}")
-        
-        # Check file size (prevent processing of extremely large files)
-        file_size = image_path.stat().st_size
-        max_file_size = self.config.get('max_file_size', 50 * 1024 * 1024)  # 50MB default
-        if file_size > max_file_size:
-            raise ValueError(f"File too large: {file_size / 1024 / 1024:.1f}MB exceeds limit of {max_file_size / 1024 / 1024:.1f}MB")
-        
-        # Check if it's actually a file (not a directory)
-        if not image_path.is_file():
-            raise ValueError(f"Path is not a file: {image_path}")
-        
-        if not self.format_detector.is_ocr_supported(str(image_path)):
-            raise ValueError(f"Unsupported image format: {image_path.suffix}")
+        # Validate and prepare the image path
+        validated_path = self._validate_image_path(image_path)
         
         # Merge options with config
         ocr_options = {**self.config, **(options or {})}
         
-        # Check cache first
-        if ocr_options.get('use_cache', True):
-            cache_key = self._get_cache_key(image_path, ocr_options)
-            cached_text = self._load_from_cache(cache_key)
-            if cached_text:
-                return {
-                    'text': cached_text,
-                    'source': 'cache',
-                    'confidence': None,
-                    'word_count': len(cached_text.split()),
-                    'character_count': len(cached_text)
-                }
+        # Try to get from cache first
+        cached_result = self._try_get_cached_result(validated_path, ocr_options)
+        if cached_result:
+            return cached_result
         
-        # Select backend
-        backend = ocr_options.get('backend', 'auto')
-        if backend == 'auto':
-            backend = self.get_preferred_backend()
+        # Process the image
+        processed_image = self._preprocess_image_for_ocr(validated_path, ocr_options)
         
-        # Preprocess image
+        # Extract text using selected backend
+        result = self._perform_ocr_extraction(processed_image, ocr_options)
+        
+        # Add metadata and cache the result
+        final_result = self._finalize_ocr_result(result, validated_path, ocr_options)
+        
+        return final_result
+    
+    def _validate_image_path(self, image_path: str) -> Path:
+        """Validate and secure the image path"""
+        if not isinstance(image_path, (str, Path)):
+            raise TypeError("image_path must be a string or Path object")
+            
+        path = Path(image_path)
+        
+        # Security check: ensure path is safe (no directory traversal)
+        try:
+            path.resolve()
+        except (OSError, RuntimeError) as e:
+            raise ValueError(f"Invalid or unsafe path: {e}")
+            
+        if not path.exists():
+            raise FileNotFoundError(f"Image file not found: {path}")
+        
+        # Check if it's actually a file (not a directory)
+        if not path.is_file():
+            raise ValueError(f"Path is not a file: {path}")
+        
+        # Check file size (prevent processing of extremely large files)
+        file_size = path.stat().st_size
+        max_file_size = self.config.get('max_file_size', 50 * 1024 * 1024)  # 50MB default
+        if file_size > max_file_size:
+            raise ValueError(f"File too large: {file_size / 1024 / 1024:.1f}MB exceeds limit of {max_file_size / 1024 / 1024:.1f}MB")
+        
+        if not self.format_detector.is_ocr_supported(str(path)):
+            raise ValueError(f"Unsupported image format: {path.suffix}")
+            
+        return path
+    
+    def _try_get_cached_result(self, image_path: Path, options: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Try to get OCR result from cache"""
+        if not options.get('use_cache', True):
+            return None
+            
+        cache_key = self._get_cache_key(image_path, options)
+        cached_text = self._load_from_cache(cache_key)
+        
+        if cached_text:
+            return {
+                'text': cached_text,
+                'source': 'cache',
+                'confidence': None,
+                'word_count': len(cached_text.split()),
+                'character_count': len(cached_text)
+            }
+        return None
+    
+    def _preprocess_image_for_ocr(self, image_path: Path, options: Dict[str, Any]) -> np.ndarray:
+        """Preprocess image for OCR extraction"""
         try:
             processed_image = self.image_processor.preprocess_image(
                 str(image_path), 
-                ocr_options.get('preprocessing', {})
+                options.get('preprocessing', {})
             )
+            return processed_image
         except Exception as e:
             raise ImageProcessingError(f"Image preprocessing failed: {e}")
+    
+    def _perform_ocr_extraction(self, processed_image: np.ndarray, options: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform the actual OCR extraction"""
+        backend = options.get('backend', 'auto')
+        if backend == 'auto':
+            backend = self.get_preferred_backend()
         
-        # Extract text based on backend
         start_time = time.time()
         
         if backend == 'tesseract' and self.is_tesseract_available():
-            result = self._extract_with_tesseract(processed_image, ocr_options)
+            result = self._extract_with_tesseract(processed_image, options)
         elif backend == 'easyocr' and self.is_easyocr_available():
-            result = self._extract_with_easyocr(processed_image, ocr_options)
+            result = self._extract_with_easyocr(processed_image, options)
         else:
             raise OCRBackendError(f"Selected backend '{backend}' is not available")
         
-        duration = time.time() - start_time
+        result['backend'] = backend
+        result['duration'] = time.time() - start_time
         
+        return result
+    
+    def _finalize_ocr_result(self, result: Dict[str, Any], image_path: Path, options: Dict[str, Any]) -> Dict[str, Any]:
+        """Add metadata and cache the OCR result"""
         # Add metadata
         result.update({
-            'backend': backend,
-            'duration': duration,
             'image_path': str(image_path),
             'word_count': len(result['text'].split()),
             'character_count': len(result['text'])
         })
         
         # Cache result
-        if ocr_options.get('use_cache', True):
-            cache_key = self._get_cache_key(image_path, ocr_options)
+        if options.get('use_cache', True):
+            cache_key = self._get_cache_key(image_path, options)
             self._save_to_cache(cache_key, result['text'])
         
         return result
@@ -766,6 +822,13 @@ class OCREngine:
             self.logger.error(f"PDF OCR extraction failed: {e}")
             return ""
     
+    def _cleanup_all_readers(self):
+        """Clean up all EasyOCR readers on exit"""
+        try:
+            self.cleanup()
+        except Exception as e:
+            self.logger.error(f"Error during cleanup: {e}")
+    
     def cleanup(self):
         """Clean up OCR engine resources"""
         # Clean up all tracked EasyOCR readers
@@ -806,4 +869,4 @@ class OCREngine:
             self.cleanup()
         except Exception as e:
             # Use print since logger might not be available during destruction
-            print(f"Warning: Error during OCR engine destruction: {e}")
+            self.logger.warning(f"Error during OCR engine destruction: {e}")

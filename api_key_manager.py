@@ -323,7 +323,7 @@ class APIKeyManager:
                 'Content-Type': 'application/json'
             }
             
-            response = requests.get('https://api.cloudconvert.com/v2/users/me', headers=headers)
+            response = requests.get('https://api.cloudconvert.com/v2/users/me', headers=headers, verify=True)
             
             if response.status_code == 200:
                 user_data = response.json()

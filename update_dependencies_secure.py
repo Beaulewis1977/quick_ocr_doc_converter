@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 from typing import List, Dict, Any
 import logging
+from utils.safe_input import safe_input, safe_yes_no
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -176,10 +177,12 @@ class SecureDependencyUpdater:
                 security_critical = ["cryptography", "requests", "urllib3", "pillow"]
                 
                 if package.lower() in security_critical:
-                    response = input(f"Update security-critical package {package}? (y/n/s=skip): ").lower()
-                    if response == 's':
+                    response = safe_input(f"Update security-critical package {package}?", 
+                                        valid_options=["y", "n", "s", "yes", "no", "skip"],
+                                        max_length=10)
+                    if response.lower() in ['s', 'skip']:
                         continue
-                    elif response != 'y':
+                    elif response.lower() not in ['y', 'yes']:
                         continue
                 
                 # Update the package
@@ -194,8 +197,7 @@ class SecureDependencyUpdater:
             # Run security scan
             if not self.run_security_scan_after_update():
                 logger.warning("Security scan failed, consider reviewing updates")
-                response = input("Continue despite security warnings? (y/n): ").lower()
-                if response != 'y':
+                if not safe_yes_no("Continue despite security warnings?"):
                     logger.info("Restoring previous requirements...")
                     self.restore_requirements()
                     return False
@@ -225,8 +227,7 @@ def main():
     print("with security scanning and backup/restore functionality.")
     print()
     
-    response = input("Start interactive dependency update? (y/n): ").lower()
-    if response != 'y':
+    if not safe_yes_no("Start interactive dependency update?"):
         print("Update cancelled.")
         sys.exit(0)
     

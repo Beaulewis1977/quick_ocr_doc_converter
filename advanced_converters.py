@@ -366,7 +366,7 @@ class AdvancedConverter:
                 
                 # Download file
                 import requests
-                response = requests.get(file_url)
+                response = requests.get(file_url, verify=True)
                 with open(output_file, 'wb') as f:
                     f.write(response.content)
                 

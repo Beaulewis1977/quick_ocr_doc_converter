@@ -2,6 +2,28 @@
 
 Complete OCR-powered document converter with enhanced functionality and cross-platform support.
 
+## 📑 Table of Contents
+
+- [🚀 Features](#-features)
+  - [Core Features](#core-features)
+  - [OCR Features](#ocr-features)
+- [📦 Installation](#-installation)
+  - [Quick Setup (Recommended)](#quick-setup-recommended)
+  - [Manual Installation](#manual-installation)
+- [🔧 Usage](#-usage)
+  - [GUI Interface](#gui-interface)
+  - [Command Line](#command-line)
+  - [Advanced Options](#advanced-options)
+- [🎯 OCR Configuration](#-ocr-configuration)
+  - [Tesseract Setup](#tesseract-setup)
+  - [Language Packs](#language-packs)
+  - [Performance Tuning](#performance-tuning)
+- [📋 Supported Formats](#-supported-formats)
+- [🏗️ Architecture](#️-architecture)
+- [🔍 Troubleshooting](#-troubleshooting)
+- [📊 Performance](#-performance)
+- [🤝 Contributing](#-contributing)
+
 ## 🚀 Features
 
 ### Core Features
