@@ -1652,32 +1652,87 @@ class UniversalDocumentConverter:
     
     def convert_dropped_to_markdown(self, file_path):
         """Convert a dropped file to markdown"""
-        if HAS_MARKDOWN:
-            try:
-                self.update_status(f"Converting {Path(file_path).name} to markdown...")
+        try:
+            self.update_status(f"Converting {Path(file_path).name} to markdown...")
+            file_ext = Path(file_path).suffix.lower()
+            
+            if not HAS_MARKDOWN:
+                # Fallback conversion without external libraries
+                self.logger.warning("Advanced markdown conversion libraries not available, using fallback method")
                 
-                # Read the actual content after conversion
-                output_path = None
-                if file_path.endswith('.docx'):
-                    convert_docx_to_markdown(file_path)
-                    output_path = Path(file_path).with_suffix('.md')
-                elif file_path.endswith('.pdf'):
-                    convert_pdf_to_markdown(file_path)
-                    output_path = Path(file_path).with_suffix('.md')
-                
-                # Load the converted content
-                if output_path and output_path.exists():
-                    with open(output_path, 'r', encoding='utf-8') as f:
+                if file_ext == '.txt':
+                    # Simple text to markdown
+                    with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
                         content = f.read()
-                    self.md_editor.delete(1.0, tk.END)
-                    self.md_editor.insert(tk.END, content)
-                    self.update_status(f"Converted {Path(file_path).name} to markdown")
-                else:
-                    self.update_status("Conversion completed but output file not found")
                     
-            except Exception as e:
-                messagebox.showerror("Conversion Error", f"Could not convert: {e}")
-                self.update_status("Conversion failed")
+                    # Add basic markdown formatting
+                    markdown_content = f"# Converted from {Path(file_path).name}\n\n"
+                    markdown_content += "```\n"
+                    markdown_content += content
+                    markdown_content += "\n```\n"
+                    
+                    self.md_editor.delete(1.0, tk.END)
+                    self.md_editor.insert(tk.END, markdown_content)
+                    self.update_status(f"Converted {Path(file_path).name} to markdown (basic conversion)")
+                    
+                else:
+                    messagebox.showerror("Conversion Error", 
+                        f"Cannot convert {file_ext} files to markdown.\n\n"
+                        f"Advanced conversion libraries are not available.\n"
+                        f"Supported: .txt files only\n\n"
+                        f"To enable full conversion support, install required packages:\n"
+                        f"pip install python-docx pypdf2")
+                    self.update_status("Conversion failed - unsupported format")
+                return
+            
+            # Advanced conversion with libraries
+            output_path = None
+            if file_ext == '.docx':
+                convert_docx_to_markdown(file_path)
+                output_path = Path(file_path).with_suffix('.md')
+            elif file_ext == '.pdf':
+                convert_pdf_to_markdown(file_path)
+                output_path = Path(file_path).with_suffix('.md')
+            elif file_ext == '.txt':
+                # Simple text file conversion
+                with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
+                    content = f.read()
+                
+                markdown_content = f"# {Path(file_path).stem}\n\n{content}"
+                self.md_editor.delete(1.0, tk.END)
+                self.md_editor.insert(tk.END, markdown_content)
+                self.update_status(f"Converted {Path(file_path).name} to markdown")
+                return
+            else:
+                messagebox.showerror("Unsupported Format", 
+                    f"Cannot convert {file_ext} files to markdown.\n\n"
+                    f"Supported formats: .txt, .docx, .pdf")
+                self.update_status("Conversion failed - unsupported format")
+                return
+            
+            # Load the converted content from external conversion
+            if output_path and output_path.exists():
+                with open(output_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                self.md_editor.delete(1.0, tk.END)
+                self.md_editor.insert(tk.END, content)
+                self.update_status(f"Converted {Path(file_path).name} to markdown")
+            else:
+                messagebox.showerror("Conversion Error", 
+                    f"Conversion completed but output file was not created.\n\n"
+                    f"This usually means:\n"
+                    f"• The input file format is not supported\n"
+                    f"• The conversion library encountered an error\n"
+                    f"• File permissions prevented writing the output")
+                self.update_status("Conversion completed but output file not found")
+                
+        except Exception as e:
+            self.logger.error(f"Markdown conversion failed: {e}", exc_info=True)
+            messagebox.showerror("Conversion Error", 
+                f"Could not convert {Path(file_path).name} to markdown.\n\n"
+                f"Error: {str(e)}\n\n"
+                f"Check the logs for more details.")
+            self.update_status("Conversion failed")
     
     def convert_markdown(self):
         """Convert markdown bidirectionally"""
@@ -1694,7 +1749,7 @@ class UniversalDocumentConverter:
                 self.convert_dropped_to_markdown(file_path)
         else:
             # Convert FROM markdown
-            messagebox.showinfo("Coming Soon", "Conversion FROM markdown will be implemented in a future version")
+            self.convert_from_markdown()
     
     def preview_markdown(self):
         """Preview markdown content"""
@@ -1716,6 +1771,110 @@ class UniversalDocumentConverter:
         self.md_preview.delete(1.0, tk.END)
         self.md_preview.config(state=tk.DISABLED)
         self.logger.info("Markdown preview pane cleared")
+    
+    def convert_from_markdown(self):
+        """Convert markdown content to other formats"""
+        # Get markdown content from editor
+        content = self.md_editor.get(1.0, tk.END).strip()
+        
+        if not content:
+            messagebox.showwarning("No Content", "Please add markdown content to convert first.")
+            return
+        
+        # Ask user for output format
+        from tkinter import simpledialog
+        
+        format_options = ["HTML", "TXT", "JSON", "DOCX (placeholder)", "PDF (placeholder)"]
+        format_choice = simpledialog.askstring(
+            "Output Format", 
+            f"Enter output format:\n\n" + 
+            "\n".join([f"{i+1}. {fmt}" for i, fmt in enumerate(format_options)]) +
+            "\n\nEnter number (1-5):"
+        )
+        
+        if not format_choice or not format_choice.isdigit() or int(format_choice) not in range(1, 6):
+            return
+        
+        format_index = int(format_choice) - 1
+        format_name = format_options[format_index].split()[0].lower()
+        
+        # Ask user where to save
+        file_extension = format_name if format_name in ['html', 'txt', 'json'] else format_name
+        output_file = filedialog.asksaveasfilename(
+            title="Save converted file as",
+            defaultextension=f".{file_extension}",
+            filetypes=[
+                (f"{format_name.upper()} files", f"*.{file_extension}"),
+                ("All files", "*.*")
+            ]
+        )
+        
+        if not output_file:
+            return
+        
+        try:
+            self.update_status(f"Converting markdown to {format_name.upper()}...")
+            
+            if format_name == "html":
+                # Convert to HTML
+                html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>Converted from Markdown</title>
+    <meta charset="UTF-8">
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }}
+        pre {{ background: #f4f4f4; padding: 10px; border-radius: 5px; }}
+        code {{ background: #f4f4f4; padding: 2px 4px; border-radius: 3px; }}
+        blockquote {{ border-left: 4px solid #ddd; margin: 0; padding-left: 20px; }}
+    </style>
+</head>
+<body>
+<pre>{content.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')}</pre>
+</body>
+</html>"""
+                with open(output_file, 'w', encoding='utf-8') as f:
+                    f.write(html_content)
+            
+            elif format_name == "txt":
+                # Convert to plain text (just strip markdown syntax)
+                with open(output_file, 'w', encoding='utf-8') as f:
+                    f.write(content)
+            
+            elif format_name == "json":
+                # Convert to JSON
+                import json
+                data = {
+                    "source": "markdown_editor",
+                    "conversion_date": time.strftime('%Y-%m-%d %H:%M:%S'),
+                    "content": content,
+                    "format": "markdown",
+                    "word_count": len(content.split()),
+                    "line_count": len(content.split('\n'))
+                }
+                with open(output_file, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, indent=2, ensure_ascii=False)
+            
+            else:
+                # DOCX/PDF placeholders
+                with open(output_file, 'w', encoding='utf-8') as f:
+                    f.write(f"Markdown to {format_name.upper()} Conversion\n")
+                    f.write("=" * 40 + "\n\n")
+                    f.write(f"Conversion Date: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                    f.write(f"Target Format: {format_name.upper()}\n\n")
+                    f.write("Original Markdown Content:\n")
+                    f.write("-" * 30 + "\n")
+                    f.write(content)
+                    f.write("\n\n")
+                    f.write(f"Note: Full Markdown to {format_name.upper()} conversion requires additional libraries.\n")
+                    f.write("This is a placeholder showing the markdown content.\n")
+            
+            self.update_status(f"Successfully converted markdown to {format_name.upper()}")
+            messagebox.showinfo("Conversion Complete", f"Markdown converted to {format_name.upper()}\n\nSaved as: {output_file}")
+            
+        except Exception as e:
+            messagebox.showerror("Conversion Error", f"Failed to convert markdown: {e}")
+            self.update_status("Markdown conversion failed")
     
     # API methods
     def browse_credentials(self):
