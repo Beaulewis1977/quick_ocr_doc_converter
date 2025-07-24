@@ -88,6 +88,7 @@ class UniversalDocumentConverter:
         self.processing_thread = None
         self.processed_count = 0
         self.total_files = 0
+        self._after_ids = []  # Track after callbacks for cleanup
         self.cancel_processing = False
         self.failed_count = 0
         self.skipped_count = 0
@@ -160,7 +161,9 @@ class UniversalDocumentConverter:
         try:
             log_dir.mkdir(parents=True, exist_ok=True)
         except (OSError, PermissionError) as e:
-            print(f"Warning: Could not create log directory {log_dir}: {e}")
+            # Use stderr for early logging issues before logger is initialized
+            import sys
+            sys.stderr.write(f"Warning: Could not create log directory {log_dir}: {e}\n")
             log_dir = Path.home()  # Fallback to home directory
         
         # Setup file handler
@@ -195,7 +198,7 @@ class UniversalDocumentConverter:
         # Force immediate flush
         self.file_handler.flush()
         
-        print(f"Logging initialized - File: {log_file}")  # Console confirmation
+        self.logger.info(f"Logging initialized - File: {log_file}")  # Use logger instead of print
     
     def flush_logs(self):
         """Force flush all log handlers"""
@@ -2695,6 +2698,44 @@ Cache Information:
     
     def cleanup_resources(self):
         """Clean up file handlers and other resources"""
+        # Cancel any pending after callbacks
+        if hasattr(self, '_after_ids'):
+            for after_id in self._after_ids:
+                try:
+                    self.root.after_cancel(after_id)
+                except Exception:
+                    pass
+            self._after_ids.clear()
+        
+        # Unbind all event handlers to prevent memory leaks
+        try:
+            for widget in self.root.winfo_children():
+                try:
+                    widget.unbind_all()
+                except Exception:
+                    pass
+        except Exception as e:
+            self.logger.error(f"Error unbinding events: {e}")
+        
+        # Clear large data structures
+        if hasattr(self, 'conversion_cache'):
+            self.conversion_cache.clear()
+        if hasattr(self, 'file_listbox'):
+            try:
+                self.file_listbox.delete(0, tk.END)
+            except Exception:
+                pass
+        
+        # Clear text widgets to free memory
+        text_widgets = ['result_text', 'api_stats', 'markdown_text']
+        for widget_name in text_widgets:
+            if hasattr(self, widget_name):
+                try:
+                    widget = getattr(self, widget_name)
+                    widget.delete(1.0, tk.END)
+                except Exception:
+                    pass
+        
         # Shutdown all thread pools properly
         try:
             self.logger.info("Shutting down thread pools...")
@@ -2714,6 +2755,10 @@ Cache Information:
                 self.ocr_engine.cleanup()
             except Exception as e:
                 self.logger.error(f"Error cleaning up OCR engine: {e}")
+        
+        # Force garbage collection
+        import gc
+        gc.collect()
 
     def update_api_stats(self, message):
         """Update API statistics display"""
