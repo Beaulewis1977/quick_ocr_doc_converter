@@ -286,6 +286,7 @@ class UniversalDocumentConverter:
         self.create_api_tab()
         self.create_tools_tab()
         self.create_settings_tab()
+        self.create_about_tab()
         
         # Status bar at bottom
         self.create_status_bar(main_container)
@@ -523,12 +524,31 @@ class UniversalDocumentConverter:
         ttk.Button(md_control_frame, text="🗑 Clear Preview", command=self.clear_markdown_preview).pack(side=tk.LEFT)
     
     def create_api_tab(self):
-        """Create API management tab"""
+        """Create API management tab with comprehensive key management"""
         api_frame = ttk.Frame(self.notebook)
         self.notebook.add(api_frame, text="🌐 API Management")
         
+        # Initialize API key manager
+        try:
+            from api_key_manager import APIKeyManager, APIKeyGUI
+            self.api_key_manager = APIKeyManager()
+            
+            # Create API key management GUI
+            api_gui = APIKeyGUI(api_frame, self.api_key_manager)
+            
+            # Update config based on API manager
+            self.gv_enabled = tk.BooleanVar(value=self.api_key_manager.is_api_enabled('google_vision'))
+            self.cloudconvert_enabled = tk.BooleanVar(value=self.api_key_manager.is_api_enabled('cloudconvert'))
+            
+        except ImportError:
+            # Fallback to old API management UI
+            self.logger.warning("API Key Manager not available, using legacy UI")
+            self._create_legacy_api_tab(api_frame)
+    
+    def _create_legacy_api_tab(self, parent):
+        """Create legacy API management tab (fallback)"""
         # Google Vision API
-        gv_frame = ttk.LabelFrame(api_frame, text="Google Vision API", padding=10)
+        gv_frame = ttk.LabelFrame(parent, text="Google Vision API", padding=10)
         gv_frame.pack(fill=tk.X, pady=(0, 10))
         
         self.gv_enabled = tk.BooleanVar(value=self.config.get('api', {}).get('google_vision', {}).get('enabled', False))
@@ -564,7 +584,7 @@ class UniversalDocumentConverter:
         self.api_status_label.pack(side=tk.LEFT)
         
         # Usage statistics
-        stats_frame = ttk.LabelFrame(api_frame, text="API Usage Statistics", padding=10)
+        stats_frame = ttk.LabelFrame(parent, text="API Usage Statistics", padding=10)
         stats_frame.pack(fill=tk.BOTH, expand=True)
         
         self.api_stats = scrolledtext.ScrolledText(stats_frame, height=10, state=tk.DISABLED)
@@ -714,6 +734,84 @@ class UniversalDocumentConverter:
         self.log_level.set(self.config.get('logging', {}).get('level', 'INFO'))
         self.log_level.grid(row=0, column=1, sticky=tk.W)
     
+    def create_about_tab(self):
+        """Create About tab with developer info and donation links"""
+        about_frame = ttk.Frame(self.notebook)
+        self.notebook.add(about_frame, text="ℹ️ About")
+        
+        # Main container with centered content
+        container = ttk.Frame(about_frame)
+        container.pack(expand=True)
+        
+        # Title
+        title_label = ttk.Label(container, text="Universal Document Converter", 
+                               font=('Arial', 18, 'bold'))
+        title_label.pack(pady=(20, 10))
+        
+        version_label = ttk.Label(container, text="Version 3.1.0", 
+                                 font=('Arial', 12))
+        version_label.pack(pady=(0, 20))
+        
+        # Developer info
+        dev_frame = ttk.LabelFrame(container, text="Developer", padding=20)
+        dev_frame.pack(pady=(0, 20))
+        
+        dev_info = ttk.Label(dev_frame, text="Designed and built by Beau Lewis\n(blewisxx@gmail.com)",
+                            font=('Arial', 11))
+        dev_info.pack()
+        
+        # Support the Developer section
+        support_frame = ttk.LabelFrame(container, text="Support Development", padding=20)
+        support_frame.pack(pady=(0, 20))
+        
+        support_msg = ttk.Label(support_frame, 
+                               text="This software is free and open source.\n"
+                                    "If you find it useful, please consider supporting its development.\n\n"
+                                    "I'm working on an old laptop that freezes frequently.\n"
+                                    "My goal is to save for a new computer to continue developing\n"
+                                    "better tools for the community.",
+                               font=('Arial', 10), justify=tk.CENTER)
+        support_msg.pack(pady=(0, 15))
+        
+        # Donation buttons
+        donation_frame = ttk.Frame(support_frame)
+        donation_frame.pack()
+        
+        # Ko-fi button
+        kofi_btn = ttk.Button(donation_frame, text="☕ Support on Ko-fi", 
+                             command=lambda: self.open_url("https://ko-fi.com/beaulewis"))
+        kofi_btn.pack(side=tk.LEFT, padx=(0, 10))
+        
+        # Venmo info
+        venmo_frame = ttk.Frame(support_frame)
+        venmo_frame.pack(pady=(15, 0))
+        
+        venmo_label = ttk.Label(venmo_frame, text="Venmo: @Terragon1123", 
+                               font=('Arial', 10, 'italic'))
+        venmo_label.pack()
+        
+        # Features
+        features_frame = ttk.LabelFrame(container, text="Features", padding=20)
+        features_frame.pack(pady=(0, 20), fill=tk.X)
+        
+        features_text = """• Full document conversion (DOCX, PDF, TXT, HTML, RTF, EPUB, Markdown)
+• Advanced OCR with multiple engines (Tesseract, EasyOCR, Google Vision)
+• Bidirectional Markdown conversion
+• Batch processing with multi-threading
+• Cross-platform support (Windows, macOS, Linux)
+• API integration for cloud services
+• Drag-and-drop support
+• Enterprise-grade security and logging"""
+        
+        features_label = ttk.Label(features_frame, text=features_text,
+                                  font=('Arial', 9), justify=tk.LEFT)
+        features_label.pack()
+        
+    def open_url(self, url):
+        """Open URL in default browser"""
+        import webbrowser
+        webbrowser.open(url)
+    
     def create_status_bar(self, parent):
         """Create status bar at bottom"""
         status_frame = ttk.Frame(parent)
@@ -784,10 +882,26 @@ class UniversalDocumentConverter:
         files = self.md_editor.tk.splitlist(event.data)
         for file_path in files:
             if Path(file_path).is_file():
-                # Check file type and convert
-                if file_path.lower().endswith(('.docx', '.pdf')):
-                    self.convert_dropped_to_markdown(file_path)
-                    break  # Only process first file
+                # Check direction
+                direction = self.md_direction.get()
+                
+                if direction == "to_markdown":
+                    # Convert TO markdown
+                    if file_path.lower().endswith(('.docx', '.pdf', '.txt', '.html', '.rtf')):
+                        self.convert_dropped_to_markdown(file_path)
+                        break  # Only process first file
+                else:
+                    # Load markdown file into editor for conversion FROM markdown
+                    if file_path.lower().endswith(('.md', '.markdown', '.txt')):
+                        try:
+                            with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
+                                content = f.read()
+                            self.md_editor.delete(1.0, tk.END)
+                            self.md_editor.insert(tk.END, content)
+                            self.update_status(f"Loaded {Path(file_path).name} - ready to convert from markdown")
+                        except Exception as e:
+                            messagebox.showerror("Load Error", f"Could not load file: {e}")
+                        break  # Only process first file
     
     # File management methods
     def add_files(self):
@@ -1125,6 +1239,36 @@ class UniversalDocumentConverter:
                         with open(output_file, 'w', encoding='utf-8') as f:
                             json.dump(data, f, indent=2, ensure_ascii=False)
                 
+                elif input_file.suffix.lower() in ['.md', '.markdown']:
+                    # Handle markdown to txt/html/json conversion
+                    self.logger.info(f"Converting markdown to {output_format}")
+                    
+                    with open(input_file, 'r', encoding='utf-8', errors='replace') as f:
+                        content = f.read()
+                    
+                    if output_format == "txt":
+                        # Simple markdown to text - just copy content
+                        with open(output_file, 'w', encoding='utf-8') as f:
+                            f.write(content)
+                    elif output_format == "html":
+                        # Markdown to HTML - basic conversion
+                        with open(output_file, 'w', encoding='utf-8') as f:
+                            f.write("<!DOCTYPE html>\n<html>\n<head>\n<title>Converted from Markdown</title>\n</head>\n<body>\n")
+                            f.write("<pre>\n")
+                            f.write(content.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;'))
+                            f.write("\n</pre>\n</body>\n</html>")
+                    elif output_format == "json":
+                        # Markdown to JSON
+                        import json
+                        data = {
+                            "source_file": str(input_file),
+                            "conversion_date": time.strftime('%Y-%m-%d %H:%M:%S'),
+                            "content": content,
+                            "format": "markdown"
+                        }
+                        with open(output_file, 'w', encoding='utf-8') as f:
+                            json.dump(data, f, indent=2, ensure_ascii=False)
+                
                 elif input_file.suffix.lower() in ['.docx', '.pdf']:
                     # For now, create a placeholder that indicates the file type isn't supported for this format
                     self.logger.warning(f"Full {input_file.suffix} to {output_format} conversion not implemented, creating placeholder")
@@ -1152,6 +1296,61 @@ class UniversalDocumentConverter:
                 self.logger.error(f"Conversion to {output_format} failed: {sanitized_msg}")
                 return False, 'conversion_error'
         
+        elif output_format in ["rtf", "docx", "pdf", "epub"]:
+            # Advanced format conversions
+            try:
+                from advanced_converters import get_advanced_converter
+                
+                # Get converter with API config
+                api_config = {}
+                if hasattr(self, 'api_key_manager'):
+                    cloudconvert_config = self.api_key_manager.get_api_key('cloudconvert')
+                    if cloudconvert_config and cloudconvert_config.get('enabled'):
+                        api_config['cloudconvert'] = cloudconvert_config
+                
+                converter = get_advanced_converter(api_config)
+                
+                # Read input content
+                if input_file.suffix.lower() in ['.txt', '.md', '.markdown']:
+                    with open(input_file, 'r', encoding='utf-8', errors='replace') as f:
+                        content = f.read()
+                elif input_file.suffix.lower() == '.rtf':
+                    # Extract text from RTF
+                    content = converter.convert_from_rtf(str(input_file))
+                    if not content:
+                        self.logger.error("Failed to extract text from RTF")
+                        return False, 'conversion_error'
+                else:
+                    self.logger.warning(f"Input format {input_file.suffix} not supported for {output_format} conversion")
+                    return False, 'unsupported_format'
+                
+                # Convert to target format
+                success = False
+                if output_format == "rtf":
+                    success = converter.convert_to_rtf(str(input_file), str(output_file), content)
+                elif output_format == "docx":
+                    success = converter.convert_to_docx(str(input_file), str(output_file), content)
+                elif output_format == "pdf":
+                    success = converter.convert_to_pdf(str(input_file), str(output_file), content)
+                elif output_format == "epub":
+                    # EPUB conversion not yet implemented
+                    self.logger.warning("EPUB output format not yet implemented")
+                    return False, 'unsupported_format'
+                
+                if success:
+                    conversion_success = True
+                    self.logger.info(f"Successfully converted to {output_format}: {output_file}")
+                else:
+                    return False, 'conversion_error'
+                    
+            except ImportError:
+                self.logger.error(f"Advanced converters not available. Install required packages for {output_format} support.")
+                return False, 'missing_dependencies'
+            except Exception as e:
+                sanitized_msg = sanitize_error_message(str(e))
+                self.logger.error(f"Advanced conversion failed: {sanitized_msg}")
+                return False, 'conversion_error'
+                
         else:
             # Unsupported output format
             self.logger.warning(f"Unsupported output format: {output_format}")
@@ -1355,7 +1554,7 @@ class UniversalDocumentConverter:
             
             options = {
                 'engine': engine,
-                'language': self.ocr_language.get(),
+                'languages': [self.ocr_language.get()],  # OCR engine expects a list
                 'confidence_threshold': confidence_threshold,
                 'preprocess': preprocess
             }
@@ -1491,8 +1690,21 @@ class UniversalDocumentConverter:
                     
                     if output_format == "json":
                         import json
+                        # Clean up the result for JSON output
+                        json_result = {
+                            "source_file": str(file_path),
+                            "text": result.get('text', ''),
+                            "confidence": result.get('confidence', 0),
+                            "backend": result.get('backend', 'unknown'),
+                            "word_count": result.get('word_count', 0),
+                            "character_count": result.get('character_count', 0)
+                        }
+                        # Only add error if text is empty
+                        if not json_result['text'] and 'error' in result:
+                            json_result['error'] = result['error']
+                        
                         with open(output_file, 'w', encoding='utf-8') as f:
-                            json.dump(result, f, indent=2)
+                            json.dump(json_result, f, indent=2, ensure_ascii=False)
                     elif output_format == "markdown":
                         with open(output_file, 'w', encoding='utf-8') as f:
                             f.write(f"# OCR Result: {input_name}\n\n")
@@ -1562,7 +1774,7 @@ class UniversalDocumentConverter:
             
             options = {
                 'engine': engine,
-                'language': self.ocr_language.get(),
+                'languages': [self.ocr_language.get()],  # OCR engine expects a list
                 'confidence_threshold': confidence_threshold,
                 'preprocess': preprocess
             }
@@ -1753,12 +1965,43 @@ class UniversalDocumentConverter:
     
     def preview_markdown(self):
         """Preview markdown content"""
-        content = self.md_editor.get(1.0, tk.END)
-        # Simple preview (would need markdown renderer for full preview)
+        content = self.md_editor.get(1.0, tk.END).strip()
+        
+        if not content:
+            messagebox.showwarning("No Content", "No markdown content to preview")
+            return
+        
+        # Simple text-based markdown preview
+        preview_text = "=== MARKDOWN PREVIEW ===\n\n"
+        
+        # Basic markdown rendering
+        lines = content.split('\n')
+        for line in lines:
+            # Headers
+            if line.startswith('# '):
+                preview_text += f"\n{line[2:].upper()}\n{'='*len(line[2:])}\n"
+            elif line.startswith('## '):
+                preview_text += f"\n{line[3:]}\n{'-'*len(line[3:])}\n"
+            elif line.startswith('### '):
+                preview_text += f"\n{line[4:]} \n"
+            # Bold text (simple replacement)
+            elif '**' in line:
+                preview_text += line.replace('**', '') + '\n'
+            # Code blocks
+            elif line.strip() == '```':
+                preview_text += '\n--- CODE BLOCK ---\n'
+            # Lists
+            elif line.strip().startswith('- ') or line.strip().startswith('* '):
+                preview_text += '  • ' + line.strip()[2:] + '\n'
+            else:
+                preview_text += line + '\n'
+        
         self.md_preview.config(state=tk.NORMAL)
         self.md_preview.delete(1.0, tk.END)
-        self.md_preview.insert(tk.END, f"Markdown Preview:\n\n{content}")
+        self.md_preview.insert(tk.END, preview_text)
         self.md_preview.config(state=tk.DISABLED)
+        
+        self.update_status("Markdown preview updated")
     
     def clear_markdown_source(self):
         """Clear the markdown source editor"""

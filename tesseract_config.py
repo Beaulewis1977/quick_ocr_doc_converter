@@ -66,6 +66,15 @@ def find_tessdata_directory(tesseract_path: str) -> Optional[str]:
         tesseract_dir.parent / "share" / "tesseract-ocr" / "5.00" / "tessdata"
     ]
     
+    # Windows-specific paths
+    if platform.system().lower() == 'windows':
+        possible_tessdata_dirs.extend([
+            Path("C:/Program Files/Tesseract-OCR/tessdata"),
+            Path("C:/Program Files (x86)/Tesseract-OCR/tessdata"),
+            tesseract_dir.parent / "Tesseract-OCR" / "tessdata",
+            tesseract_dir / ".." / "tessdata"  # Sometimes tessdata is next to bin
+        ])
+    
     # System-wide locations
     system_tessdata_dirs = [
         Path("/usr/share/tessdata"),

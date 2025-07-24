@@ -239,6 +239,119 @@ sudo apt-get install tesseract-ocr-[LANG]
 
 ---
 
+## 🌐 **OCR Engines and API Configuration**
+
+### 🔍 **Available OCR Engines**
+
+#### 1. **Tesseract OCR** (Free, Offline)
+- **Best for**: General text extraction, printed documents
+- **Languages**: 100+ languages supported
+- **Accuracy**: High for printed text (95%+)
+- **Speed**: Fast
+- **Requirements**: Tesseract installation
+
+#### 2. **EasyOCR** (Free, Offline)
+- **Best for**: Handwritten text, mixed languages, scene text
+- **Languages**: 80+ languages with GPU acceleration
+- **Accuracy**: Very high for diverse text types
+- **Speed**: Moderate (faster with GPU)
+- **Requirements**: No external installation needed
+
+#### 3. **Google Vision API** (Paid, Cloud)
+- **Best for**: Production environments, highest accuracy
+- **Languages**: 50+ languages with automatic detection
+- **Accuracy**: Industry-leading (98%+)
+- **Speed**: Very fast
+- **Requirements**: Google Cloud account and API key
+
+### 🔑 **Setting Up Google Vision API**
+
+1. **Create a Google Cloud Project**:
+   - Go to [Google Cloud Console](https://console.cloud.google.com)
+   - Create a new project or select existing
+   - Enable the Vision API
+
+2. **Create Service Account Credentials**:
+   ```bash
+   # Using gcloud CLI
+   gcloud auth application-default login
+   gcloud projects create YOUR_PROJECT_ID
+   gcloud services enable vision.googleapis.com
+   
+   # Create service account
+   gcloud iam service-accounts create ocr-service-account \
+     --display-name="OCR Service Account"
+   
+   # Download credentials
+   gcloud iam service-accounts keys create credentials.json \
+     --iam-account=ocr-service-account@YOUR_PROJECT_ID.iam.gserviceaccount.com
+   ```
+
+3. **Configure in Application**:
+   - Open the app and go to **API Management** tab
+   - Click **Add API Key**
+   - Select **Google Vision API**
+   - Browse to your `credentials.json` file
+   - Enable the API and test connection
+
+4. **Using .env File** (Recommended):
+   ```bash
+   # Copy the example environment file
+   cp .env.example .env
+   
+   # Edit .env and add your credentials
+   GOOGLE_VISION_ENABLED=true
+   GOOGLE_VISION_API_KEY=your-api-key-here
+   GOOGLE_VISION_CREDENTIALS_PATH=path/to/credentials.json
+   ```
+
+### ☁️ **Setting Up CloudConvert API**
+
+1. **Get API Key**:
+   - Sign up at [CloudConvert](https://cloudconvert.com)
+   - Go to API Console
+   - Create new API key
+
+2. **Configure in Application**:
+   ```bash
+   # In .env file
+   CLOUDCONVERT_ENABLED=true
+   CLOUDCONVERT_API_KEY=your-cloudconvert-api-key
+   CLOUDCONVERT_SANDBOX_MODE=false  # Set to true for testing
+   ```
+
+3. **Supported Conversions**:
+   - High-quality DOCX ↔️ PDF conversions
+   - Complex document formatting preservation
+   - Batch processing with webhooks
+
+### 🔐 **API Key Security**
+
+- All API keys are encrypted using industry-standard encryption
+- Keys are stored in secure system keyring when available
+- Fallback to encrypted file storage with restricted permissions
+- Never commit API keys to version control
+
+### 🎯 **Choosing the Right Engine**
+
+| Use Case | Recommended Engine | Why |
+|----------|-------------------|-----|
+| Printed documents | Tesseract | Fast, accurate, free |
+| Handwritten notes | EasyOCR | Better at recognizing handwriting |
+| Production/Business | Google Vision | Highest accuracy, cloud scale |
+| Mixed content | Auto (default) | Automatically selects best engine |
+| Offline only | Tesseract/EasyOCR | No internet required |
+
+### ⚡ **Performance Tips**
+
+1. **Enable Auto Mode**: Let the app choose the best engine
+2. **Use GPU**: Enable GPU acceleration for EasyOCR
+3. **Batch Processing**: Process multiple files at once
+4. **API Fallback**: Enable fallback to free engines if API fails
+5. **Caching**: Keep cache enabled for repeated OCR
+
+---
+
 ## 📖 **Usage**
 
 ### 🖥️ **GUI Application**
