@@ -12,7 +12,7 @@
 - **Lightweight DLL**: <5MB (vs Pandoc's 100MB)
 - **Bidirectional Conversion**: RTF ↔ Markdown with perfect fidelity
 - **Legacy Compatible**: VB6/VFP9 friendly function signatures
-- **Modern GUI**: Beautiful SvelteKit interface for ease of use
+- **Modern GUI**: Beautiful Next.js + shadcn/ui interface for ease of use
 - **Professional Quality**: Enterprise-grade reliability and error handling
 
 ---
@@ -31,25 +31,93 @@
 ### **Frontend (Modern GUI):**
 ```json
 {
-  "framework": "SvelteKit",
+  "framework": "Next.js",
   "styling": "Tailwind CSS",
-  "ui_library": "Skeleton UI",
-  "language": "TypeScript",
-  "build_tool": "Vite",
+  "ui_library": "shadcn/ui + Radix UI",
+  "language": "TypeScript", 
+  "build_tool": "Next.js built-in",
+  "animations": "Framer Motion",
+  "icons": "Lucide React",
   "desktop_wrapper": "Tauri",
-  "target_size": "<20MB total app"
+  "target_size": "~15MB total app"
 }
 ```
 
-### **Backend (Conversion Engine):**
+### **Desktop Wrapper:**
 ```json
 {
-  "language": "Rust",
-  "rtf_parser": "Custom Rust RTF parser (lightweight)",
-  "markdown_parser": "pulldown-cmark + comrak",
+  "desktop_framework": "Tauri",
+  "backend_language": "Rust",
+  "bundle_size_target": "~15MB",
+  "platforms": ["Windows", "macOS", "Linux"]
+}
+```
+
+### **Document Processing (Rust Backend):**
+```json
+{
+  "core_library": "Custom RTF parser (lightweight)",
+  "rtf_processing": "Custom Rust RTF parser",
+  "markdown_processing": "pulldown-cmark + comrak",
   "dll_export": "Windows 32-bit DLL with C ABI",
   "target_size": "<5MB DLL only"
 }
+```
+
+---
+
+## 🎨 UI/UX Requirements (CRITICAL FOR BEAUTY)
+
+### **Design System:**
+- **Theme**: Professional, clean, minimal (Linear/Vercel inspired)
+- **Colors**: shadcn/ui's built-in theme system + custom legacy-focused palette
+- **Typography**: Inter font family (modern, readable)
+- **Spacing**: Consistent 4px grid system
+- **Animations**: Smooth, 60fps, subtle (not distracting)
+
+### **Core UI Components Needed:**
+
+#### **1. File Drag-and-Drop Zone**
+```typescript
+// Required features:
+- Large, prominent drop area with dashed border
+- Animated hover states (border color change, scale effect)
+- File type validation with visual feedback
+- Multiple file selection support
+- Beautiful file preview cards with thumbnails
+- Remove/replace file functionality
+```
+
+#### **2. Document Conversion Progress**
+```typescript
+// Required features:
+- Animated progress bars (smooth filling animation)
+- File-by-file progress indicators
+- Overall batch progress
+- ETA calculations and display
+- Success/error states with icons
+- Conversion speed statistics
+```
+
+#### **3. Settings Panel**
+```typescript
+// Required features:
+- Collapsible sidebar or modal
+- Toggle switches for options (with smooth animations)
+- Dropdown selectors for formats
+- Input fields for paths and templates
+- Theme switcher (dark/light toggle)
+- Save/load configuration profiles
+```
+
+#### **4. Professional Layout**
+```typescript
+// Required structure:
+- Header with logo and theme toggle
+- Main content area with drag-drop
+- Sidebar for settings (collapsible)  
+- Footer with status information
+- Responsive design (works at different window sizes)
 ```
 
 ---
@@ -89,7 +157,7 @@
 
 ### **🎨 Text Processing Utilities (Priority 3):**
 ```rust
-// Common legacy text processing needs
+// Common legacy text processing needs  
 15. CleanRtfFormatting(rtf_content: String) -> String    // Remove complex formatting
 16. NormalizeMarkdown(md_content: String) -> String      // Standardize syntax
 ```
@@ -115,49 +183,13 @@
 
 ---
 
-## 🎨 UI Design Requirements
-
-### **Main Interface Layout:**
-```
-┌─────────────────────────────────────────────────────┐
-│ LegacyBridge          🌙 Theme    ⚙️ Settings      │
-├─────────────────────────────────────────────────────┤
-│                                                     │
-│  ┌─────────────────────────────────────────────┐   │
-│  │     📄 Drag & Drop Files Here              │   │
-│  │                                             │   │
-│  │     RTF ↔ Markdown Conversion              │   │
-│  │                                             │   │
-│  │     [Select Files] [Convert] [Clear]       │   │
-│  └─────────────────────────────────────────────┘   │
-│                                                     │
-│  Progress: ████████████████░░░░ 75%                │
-│  Status: Converting document 3 of 4...             │
-│                                                     │
-│  📊 Recent Conversions:                            │
-│  ✅ report.rtf → report.md (2.3s)                 │
-│  ✅ notes.md → notes.rtf (1.1s)                   │
-│  ❌ broken.rtf → Error: Invalid RTF syntax        │
-│                                                     │
-└─────────────────────────────────────────────────────┘
-```
-
-### **Visual Design:**
-- **Clean, Professional**: Similar to Linear/Vercel aesthetics
-- **Dark/Light Themes**: Automatic system detection + manual toggle
-- **Smooth Animations**: 60fps drag-drop, progress bars, state changes
-- **Legacy-Friendly Colors**: Professional blues with gold accents
-- **Clear Typography**: Inter font, excellent readability
-
----
-
 ## 🏗️ MVP Build Phases
 
 ### **Phase 1: Core MVP (Week 1-2)**
 **Goal**: Basic working RTF ↔ Markdown conversion
 ```typescript
 // Build these components first:
-1. Basic SvelteKit + Tauri setup
+1. Basic Next.js + Tauri setup
 2. Simple drag-drop file interface  
 3. Core Rust functions: Rtf2MD, MD2Rtf, ConvertFiles
 4. Basic error handling and validation
@@ -168,7 +200,7 @@
 **Goal**: Professional UI and batch processing
 ```typescript
 // Add these features:
-1. Beautiful Skeleton UI components
+1. Beautiful shadcn/ui components
 2. Dark/light theme switching
 3. Batch file processing
 4. Enhanced error messages
@@ -192,14 +224,19 @@
 
 ```
 legacybridge/
-├── src/                           # SvelteKit frontend
+├── src/                           # Next.js frontend
+│   ├── components/
+│   │   ├── ui/                    # shadcn/ui components
+│   │   │   ├── button.tsx
+│   │   │   ├── card.tsx
+│   │   │   ├── progress.tsx
+│   │   │   └── ...
+│   │   ├── DragDropZone.tsx
+│   │   ├── ConversionProgress.tsx
+│   │   ├── SettingsPanel.tsx
+│   │   ├── FileList.tsx
+│   │   └── ThemeToggle.tsx
 │   ├── lib/
-│   │   ├── components/
-│   │   │   ├── DragDropZone.svelte
-│   │   │   ├── ConversionProgress.svelte
-│   │   │   ├── SettingsPanel.svelte
-│   │   │   ├── FileList.svelte
-│   │   │   └── ThemeToggle.svelte
 │   │   ├── stores/
 │   │   │   ├── files.ts
 │   │   │   ├── conversion.ts
@@ -207,8 +244,11 @@ legacybridge/
 │   │   └── utils/
 │   │       ├── file-validation.ts
 │   │       └── tauri-api.ts
-│   └── routes/
-│       └── +page.svelte
+│   ├── app/
+│   │   ├── page.tsx
+│   │   ├── layout.tsx
+│   │   └── globals.css
+│   └── components.json              # shadcn/ui config
 ├── src-tauri/                     # Rust backend
 │   ├── src/
 │   │   ├── main.rs
@@ -234,7 +274,7 @@ legacybridge/
 
 ### **Performance Targets:**
 - **DLL Size**: <5MB (vs Pandoc's 100MB)
-- **App Bundle**: <20MB total
+- **App Bundle**: ~15MB total
 - **Conversion Speed**: <500ms for typical documents
 - **Memory Usage**: <100MB during processing
 - **Startup Time**: <2 seconds
@@ -285,7 +325,7 @@ End Sub
 
 ### **MUST HAVE (MVP):**
 1. ✅ RTF ↔ Markdown bidirectional conversion
-2. ✅ Beautiful drag-drop interface
+2. ✅ Beautiful drag-drop interface with shadcn/ui
 3. ✅ Batch file processing
 4. ✅ Dark/light themes
 5. ✅ VB6/VFP9 compatible DLL
@@ -310,13 +350,16 @@ End Sub
 
 ```bash
 # Initialize the project
-npm create svelte@latest legacybridge
+npx create-next-app@latest legacybridge --typescript --tailwind --eslint --app --src-dir
 cd legacybridge
 
 # Install dependencies
-npm install -D tailwindcss @tailwindcss/typography
-npm install @skeletonlabs/skeleton lucide-svelte
+npm install lucide-react framer-motion @radix-ui/react-slot
 npm install -D @tauri-apps/cli
+
+# Install shadcn/ui
+npx shadcn-ui@latest init
+npx shadcn-ui@latest add button card progress
 
 # Initialize Tauri
 npx tauri init
