@@ -518,7 +518,9 @@ class UniversalDocumentConverter:
         ttk.Button(md_control_frame, text="📂 Load File", command=self.load_markdown_file).pack(side=tk.LEFT, padx=(0, 5))
         ttk.Button(md_control_frame, text="💾 Save Markdown", command=self.save_markdown_file).pack(side=tk.LEFT, padx=(0, 5))
         ttk.Button(md_control_frame, text="🔄 Convert", command=self.convert_markdown).pack(side=tk.LEFT, padx=(0, 5))
-        ttk.Button(md_control_frame, text="👁 Preview", command=self.preview_markdown).pack(side=tk.LEFT)
+        ttk.Button(md_control_frame, text="👁 Preview", command=self.preview_markdown).pack(side=tk.LEFT, padx=(0, 5))
+        ttk.Button(md_control_frame, text="🗑 Clear Source", command=self.clear_markdown_source).pack(side=tk.LEFT, padx=(0, 5))
+        ttk.Button(md_control_frame, text="🗑 Clear Preview", command=self.clear_markdown_preview).pack(side=tk.LEFT)
     
     def create_api_tab(self):
         """Create API management tab"""
@@ -1702,6 +1704,18 @@ class UniversalDocumentConverter:
         self.md_preview.delete(1.0, tk.END)
         self.md_preview.insert(tk.END, f"Markdown Preview:\n\n{content}")
         self.md_preview.config(state=tk.DISABLED)
+    
+    def clear_markdown_source(self):
+        """Clear the markdown source editor"""
+        self.md_editor.delete(1.0, tk.END)
+        self.logger.info("Markdown source editor cleared")
+    
+    def clear_markdown_preview(self):
+        """Clear the markdown preview pane"""
+        self.md_preview.config(state=tk.NORMAL)
+        self.md_preview.delete(1.0, tk.END)
+        self.md_preview.config(state=tk.DISABLED)
+        self.logger.info("Markdown preview pane cleared")
     
     # API methods
     def browse_credentials(self):
