@@ -889,14 +889,25 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 🤝 **Support Open Source**
 
-Building and maintaining OCR Document Converter takes time and resources. While the tool is completely free, 
-your voluntary support helps ensure continued development and improvements.
+Building and maintaining OCR Document Converter takes time and resources. While the tool is completely free, your voluntary support helps ensure continued development and improvements.
 
 If this tool has saved you time or added value to your work, consider showing your appreciation:
 
-**Venmo**: @BeauinTulsa
+<div align="center">
 
-Together, we're making document conversion accessible to everyone. Thank you! 💪
+### ☕ **Buy Me a Coffee**
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/beaulewis)
+
+**[Support on Ko-fi](https://ko-fi.com/beaulewis)** - Buy me a coffee to fuel more open source projects!
+
+### 💳 **Venmo**
+[![Venmo](https://img.shields.io/badge/Venmo-3D95CE?style=for-the-badge&logo=venmo&logoColor=white)](https://venmo.com/BeauinTulsa)
+
+**[@BeauinTulsa](https://venmo.com/BeauinTulsa)** - Quick and easy way to show support!
+
+</div>
+
+Your support means the world! Every donation, no matter the size, helps me dedicate more time to creating free, open source tools that help developers and businesses worldwide. Together, we're making document conversion accessible to everyone. Thank you! 💪
 
 ---
 
