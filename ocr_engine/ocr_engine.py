@@ -92,8 +92,6 @@ class OCREngine:
         """
         self.config = config or {}
         self.logger = logger or logging.getLogger("OCREngine")
-        self.image_processor = ImageProcessor(self.logger)
-        self.format_detector = OCRFormatDetector()
         
         # Initialize thread safety locks FIRST
         self._active_readers = {}  # thread_id -> reader mapping
@@ -142,7 +140,11 @@ class OCREngine:
         # Merge user config with defaults
         self.config = {**self.default_config, **self.config}
         
-        # Initialize OCR backends (after locks and config are set up)
+        # Initialize image processor and format detector (after locks are ready)
+        self.image_processor = ImageProcessor(self.logger)
+        self.format_detector = OCRFormatDetector()
+        
+        # Initialize OCR backends (after everything else is set up)
         self._initialize_backends()
 
     def _initialize_backends(self):

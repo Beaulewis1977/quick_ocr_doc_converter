@@ -136,7 +136,8 @@ class UniversalDocumentConverter:
                 
                 self.ocr_engine = OCREngine(config=ocr_config)
             except Exception as e:
-                logging.warning(f"Could not initialize OCR engine: {e}")
+                self.logger.warning(f"Could not initialize OCR engine: {e}")
+                self.logger.debug(f"OCR initialization traceback:", exc_info=True)
         
         # Setup UI
         self.setup_ui()
@@ -167,19 +168,41 @@ class UniversalDocumentConverter:
         
         # Store handlers for proper cleanup
         self.file_handler = logging.FileHandler(log_file)
-        self.stream_handler = logging.StreamHandler()
+        self.file_handler.setLevel(getattr(logging, log_level.upper()))
+        self.file_handler.setFormatter(logging.Formatter(log_format))
         
-        logging.basicConfig(
-            level=getattr(logging, log_level.upper()),
-            format=log_format,
-            handlers=[
-                self.file_handler,
-                self.stream_handler
-            ]
-        )
+        self.stream_handler = logging.StreamHandler()
+        self.stream_handler.setLevel(getattr(logging, log_level.upper()))
+        self.stream_handler.setFormatter(logging.Formatter(log_format))
+        
+        # Configure root logger
+        root_logger = logging.getLogger()
+        root_logger.setLevel(getattr(logging, log_level.upper()))
+        
+        # Clear any existing handlers
+        for handler in root_logger.handlers[:]:
+            root_logger.removeHandler(handler)
+        
+        # Add our handlers
+        root_logger.addHandler(self.file_handler)
+        root_logger.addHandler(self.stream_handler)
         
         self.logger = logging.getLogger(__name__)
         self.logger.info("Universal Document Converter started")
+        self.logger.info(f"Logging to file: {log_file}")
+        self.logger.info(f"Log level: {log_level}")
+        
+        # Force immediate flush
+        self.file_handler.flush()
+        
+        print(f"Logging initialized - File: {log_file}")  # Console confirmation
+    
+    def flush_logs(self):
+        """Force flush all log handlers"""
+        if hasattr(self, 'file_handler'):
+            self.file_handler.flush()
+        if hasattr(self, 'stream_handler'):
+            self.stream_handler.flush()
     
     def load_config(self) -> dict:
         """Load configuration from file using secure configuration manager"""
@@ -780,8 +803,14 @@ class UniversalDocumentConverter:
                 ("EPUB files", "*.epub")
             ]
         )
+        self.logger.info(f"User selected {len(files)} files to add")
         for file in files:
             self.file_listbox.insert(tk.END, file)
+            self.logger.debug(f"Added file to conversion list: {file}")
+        
+        # Force log flush
+        if hasattr(self, 'file_handler'):
+            self.file_handler.flush()
     
     def add_folder(self):
         """Add folder for batch conversion"""
@@ -829,12 +858,21 @@ class UniversalDocumentConverter:
     def start_conversion(self):
         """Start document conversion process"""
         if self.is_processing:
+            self.logger.warning("Conversion already in progress, ignoring start request")
             return
         
         files = list(self.file_listbox.get(0, tk.END))
+        self.logger.info(f"Starting conversion process with {len(files)} files")
+        
         if not files:
+            self.logger.warning("No files selected for conversion")
             messagebox.showwarning("No Files", "Please add files to convert first.")
             return
+        
+        # Log all files being processed
+        self.logger.info("Files to convert:")
+        for i, file in enumerate(files, 1):
+            self.logger.info(f"  {i}. {file}")
         
         output_dir = Path(self.output_dir.get())
         try:
@@ -854,10 +892,18 @@ class UniversalDocumentConverter:
         self.start_button.config(state=tk.DISABLED)
         self.cancel_button.config(state=tk.NORMAL)
         
+        self.logger.info(f"Output format: {self.output_format.get()}")
+        self.logger.info(f"Output directory: {output_dir}")
+        self.logger.info(f"Preserve structure: {self.preserve_structure.get()}")
+        self.logger.info(f"Skip existing: {self.skip_existing.get()}")
+        
         # Start conversion in separate thread
         self.processing_thread = threading.Thread(target=self.conversion_worker, args=(files, output_dir))
         self.processing_thread.daemon = True
         self.processing_thread.start()
+        
+        self.logger.info("Conversion thread started")
+        self.flush_logs()
     
     def conversion_worker(self, files, output_dir):
         """Worker thread for file conversion with concurrent processing"""
@@ -918,13 +964,22 @@ class UniversalDocumentConverter:
     
     def convert_single_file_safe(self, file_path, output_dir, index):
         """Thread-safe wrapper for single file conversion"""
+        self.logger.info(f"[{index+1}/{self.total_files}] Starting conversion: {Path(file_path).name}")
         try:
             self.update_status(f"Processing {Path(file_path).name}...")
-            return self.convert_single_file(file_path, output_dir)
+            result = self.convert_single_file(file_path, output_dir)
+            success, status = result
+            if success:
+                self.logger.info(f"[{index+1}/{self.total_files}] ✅ SUCCESS ({status}): {Path(file_path).name}")
+            else:
+                self.logger.warning(f"[{index+1}/{self.total_files}] ❌ FAILED ({status}): {Path(file_path).name}")
+            self.flush_logs()
+            return result
         except Exception as e:
             sanitized_path = sanitize_path_for_logging(file_path)
             sanitized_msg = sanitize_error_message(str(e), file_path)
-            self.logger.error(f"Error converting {sanitized_path}: {sanitized_msg}")
+            self.logger.error(f"[{index+1}/{self.total_files}] 💥 CRITICAL ERROR: {sanitized_path} - {sanitized_msg}")
+            self.flush_logs()
             return False, 'error'
     
     def convert_single_file(self, input_path, output_dir):
@@ -1151,6 +1206,8 @@ class UniversalDocumentConverter:
     
     def processing_complete(self):
         """Handle conversion completion"""
+        self.logger.info("=== CONVERSION PROCESS COMPLETED ===")
+        
         self.is_processing = False
         self.start_button.config(state=tk.NORMAL)
         self.cancel_button.config(state=tk.DISABLED)
@@ -1158,6 +1215,13 @@ class UniversalDocumentConverter:
         # Calculate final statistics
         total_processed = self.processed_count + self.failed_count + self.skipped_count
         elapsed_time = time.time() - self.start_time if self.start_time else 0
+        
+        self.logger.info(f"Final Statistics:")
+        self.logger.info(f"  ✅ Successfully converted: {self.processed_count}")
+        self.logger.info(f"  ⏭️  Skipped (existing): {self.skipped_count}")
+        self.logger.info(f"  ❌ Failed: {self.failed_count}")
+        self.logger.info(f"  📊 Total processed: {total_processed}")
+        self.logger.info(f"  ⏱️  Elapsed time: {elapsed_time:.2f} seconds")
         
         # Build status message
         status_parts = [f"{self.processed_count} converted"]
@@ -1210,6 +1274,9 @@ class UniversalDocumentConverter:
         self.processed_count = 0
         self.failed_count = 0
         self.skipped_count = 0
+        
+        self.logger.info("=== CONVERSION PROCESS END ===")
+        self.flush_logs()
         self.start_time = None
         self.update_progress(0)
         self.progress_detail_label.config(text="")
