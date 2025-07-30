@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+# claude mcp severs
+.mcp.json
+.clude.json
+
 # Distribution / packaging
 .Python
 build/
